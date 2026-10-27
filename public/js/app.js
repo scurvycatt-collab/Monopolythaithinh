@@ -5,7 +5,7 @@ import { loadKit, building as houseBuilding } from './houses.js';
 import { colosseum, worldTour, lostIsland, startGate, chanceBox, beachHouse, festivalFlag, festivalPlaque, BEACH_LEVELS } from './specials.js';
 import { centerWorld } from './world.js';
 import qrcode from '../vendor/qrcode.mjs';
-import { createRoomCode, normalizeRoom, roomEndpoint, validRoom } from './room-session.mjs';
+import { normalizeRoom, roomEndpoint, selectRoomCode, validRoom } from './room-session.mjs';
 const HK = { loadKit, building: houseBuilding, colosseum, worldTour, lostIsland, startGate, chanceBox, beachHouse, festivalFlag, festivalPlaque, BEACH_LEVELS };
 
 const G = window.Game;
@@ -1352,7 +1352,7 @@ function showRoomGate() {
 function enterRoom(create) {
   const name = $('#gname').value.replace(/\s+/g, ' ').trim().slice(0, 16);
   if (!name) { toast('Hãy nhập username'); return $('#gname').focus(); }
-  const room = create ? createRoomCode() : normalizeRoom($('#groom').value);
+  const room = selectRoomCode($('#groom').value, create);
   if (!validRoom(room)) { toast('Mã phòng cần 3–24 ký tự'); return $('#groom').focus(); }
   ROOM = room;
   lobbyDraftName = name;

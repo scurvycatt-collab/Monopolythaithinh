@@ -24,6 +24,11 @@ export function createRoomCode(random = crypto) {
   return [...bytes].map((n) => alphabet[n % alphabet.length]).join('');
 }
 
+export function selectRoomCode(value, create, random = crypto) {
+  const entered = normalizeRoom(value);
+  return create && !entered ? createRoomCode(random) : entered;
+}
+
 export function roomEndpoint(baseHref, path, room, params = {}) {
   const url = new URL(path, baseHref);
   if (room) url.searchParams.set('room', room);

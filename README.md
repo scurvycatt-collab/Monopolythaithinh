@@ -39,7 +39,7 @@ Mở `public/index.html` qua một web server tĩnh bất kỳ (ví dụ GitHub 
 
 ## Chơi trên Cloudflare
 
-Mở bản cloud, nhập username rồi **Tạo phòng mới** hoặc nhập mã để **Vào phòng**. Mỗi room code là một ván tách biệt; link mời và mã QR đã mang sẵn room code. Trang chờ ban đầu không mở SSE hay đánh thức Durable Object cho tới khi người chơi xác nhận vào room.
+Mở bản cloud, nhập username rồi **Tạo phòng mới** hoặc nhập mã để **Vào phòng**. Khi tạo phòng, mã đã nhập sẽ được giữ nguyên; nếu để trống thì game tự sinh mã. Mỗi room code là một ván tách biệt; link mời và mã QR đã mang sẵn chính room code đó. Trang chờ ban đầu không mở SSE hay đánh thức Durable Object cho tới khi người chơi xác nhận vào room.
 
 ## Bộ luật chính (bắt buộc đọc trước khi sửa)
 
