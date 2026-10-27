@@ -42,6 +42,44 @@
 
   const LEVEL_NAMES = ['Ô đất', 'Nhà 1', 'Nhà 2', 'Nhà 3', 'Khách sạn']; // = Land, Villa, Building, Hotel, Landmark
 
+  /* Nội dung luật dùng chung cho rulebook, thông báo và thẻ thông tin ô.
+     Chuỗi trong TILE_INFO dùng placeholder {name}; app.js chỉ thay dữ liệu động,
+     không tự giữ thêm một bản mô tả luật riêng. */
+  const RULE_TEXT = {
+    TOUR_DESTINATION: 'một thành phố chưa có chủ; nếu không còn thành phố trống thì được chọn một ô của mình',
+  };
+
+  const TILE_INFO = {
+    start: { color: '#e2557f', subtitle: 'Điểm xuất phát', items: [
+      'Mỗi lần đi qua hoặc dừng ở Start nhận lương <b>{salary}</b>, kể cả khi bay World Tour qua Start.',
+      'Vòng đầu xây tối đa Nhà 2. Qua Start lần đầu mở khoá Nhà 3.',
+      'Khách sạn xây được khi quay lại ô đã có Nhà 3.',
+    ] },
+    island: { color: '#3aa0f0', subtitle: 'Đảo hoang', items: [
+      'Dừng ở đây hoặc đổ đôi {maxDoubles} lần liên tiếp thì bị kẹt tối đa {islandTurns} lượt.',
+      'Mỗi lượt trên đảo chọn: đổ xúc xắc (ra đôi thì thoát và đi luôn), trả <b>{islandFee}</b> để rời đảo ngay, hoặc dùng thẻ Thoát đảo.',
+      'Hết {islandTurns} lượt thì tự rời đảo. Trong lúc kẹt vẫn thu tiền thuê bình thường.',
+    ] },
+    festival: { color: '#f5a20a', subtitle: 'Lễ hội', items: [
+      'Dừng ở đây được tăng hệ số ô đang tổ chức thêm 1, hoặc trả <b>{champMoveFee}</b> để chuyển Championships sang ô của mình.',
+      'Hệ số tăng dần tới tối đa x{maxRentMult}. Lần tổ chức tới sẽ là x{nextFestivalMult}.',
+      'Cả bàn chỉ có một lễ hội; tổ chức ở ô mới thì lễ hội chuyển sang ô đó. Thẻ Cúp điện làm mất lễ hội.',
+      '{currentFestival}',
+    ] },
+    tour: { color: '#2c8ff0', subtitle: 'Du lịch thế giới', items: [
+      `Dừng ở đây thì lượt sau trả <b>{tourFee}</b> để bay tới ${RULE_TEXT.TOUR_DESTINATION}.`,
+      'Bay qua Start vẫn nhận lương. Tới ô nào thì xử lý như dừng ở ô đó: mua đất, nâng cấp, trả tiền thuê, mua lại…',
+    ] },
+    tax: { color: '#6b7685', subtitle: 'Thuế', items: [
+      'Dừng ở đây nộp <b>{taxRate}%</b> tổng tài sản (tiền mặt + giá trị đất và nhà).',
+      '{taxPreview}',
+    ] },
+    chance: { color: '#f2a33c', subtitle: 'Cơ hội', items: [
+      'Dừng ở đây rút một thẻ ngẫu nhiên:',
+      '{chanceCards}',
+    ] },
+  };
+
   const GROUPS = {
     // color: màu nhóm (dải tiêu đề, thẻ thông tin); ground: màu nền pastel của ô đất; pattern: hoa văn lát nền (Kenney Pattern Pack, CC0)
     // nhóm liền kề trên bàn xen kẽ tông nóng / lạnh để không lẫn vào nhau
@@ -237,7 +275,7 @@
       'Tax: nộp 10% tổng tài sản. Không đủ tiền thì phải bán tài sản.',
       'Bãi biển: giá 200.000, không thể mua lại; tiền thuê tăng theo tổng số bãi cùng chủ.',
       'Championships: tăng hệ số ô đang tổ chức thêm 1, hoặc trả 50.000 để chuyển giải sang ô của mình; có thể bỏ qua.',
-      'World Tour: trả 50.000 để bay tới một thành phố chưa có chủ; nếu không còn thành phố trống thì được bay tới ô của mình.',
+      `World Tour: trả 50.000 để bay tới ${RULE_TEXT.TOUR_DESTINATION}.`,
     ] },
     { title: 'Thẻ Chance', items: [
       'Bàn có 3 ô Chance. Tám loại thẻ trong phiên bản gia đình có tỷ lệ bằng nhau (mỗi loại 12,5%).',
@@ -246,7 +284,7 @@
     ] },
   ];
 
-  const RULES = { VERSION, CONFIG, LEVEL_NAMES, GROUPS, TILES, CARDS, PETS, MAPS, STATES, FLOW, DECISIONS, RULEBOOK };
+  const RULES = { VERSION, CONFIG, LEVEL_NAMES, RULE_TEXT, TILE_INFO, GROUPS, TILES, CARDS, PETS, MAPS, STATES, FLOW, DECISIONS, RULEBOOK };
   if (typeof module !== 'undefined' && module.exports) module.exports = RULES;
   else root.RULES = RULES;
 })(typeof self !== 'undefined' ? self : this);

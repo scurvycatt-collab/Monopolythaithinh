@@ -52,6 +52,10 @@ assert.match(app, /soundPrefs\.turnVolume \/ 100 \* 0\.23/, 'countdown warning g
 assert.match(app, /const GRAPHICS_KEY = 'tt-monopoly-graphics-v1'/);
 assert.match(app, /function showRulebook\(\)/, 'settings must open the Vietnamese rulebook');
 assert.match(app, /G\.RULES\.RULEBOOK/, 'rulebook UI must read the single-source rules data');
+assert.match(app, /G\.RULES\.TILE_INFO\[t\.type\]/, 'special-tile info cards must read their descriptions from rules.js');
+assert.match(app, /G\.RULES\.RULE_TEXT\.TOUR_DESTINATION/, 'World Tour notices must share the centralized destination rule');
+assert.doesNotMatch(app, /bay tới bất kỳ ô nào/, 'World Tour UI must not retain the obsolete unrestricted-destination note');
+assert.doesNotMatch(specials, /x1\.5|×1,5/, 'festival visuals must not retain the obsolete multiplier note');
 assert.match(app, /G\.tourTargets\(S, p\)/, 'World Tour UI must expose only legal destinations');
 assert.match(app, /G\.festivalTargets\(S, p\)/, 'Championships UI must expose only legal destinations');
 assert.match(app, /function setGraphicsLevel\(level\)/);

@@ -1133,7 +1133,7 @@ function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.ad
 const NOTICE = {
   cantPay: (mine, n) => (mine ? 'Bạn không có đủ tiền thanh toán' : `${n} không có đủ tiền thanh toán`),
   noTakeover: (mine, n) => (mine ? 'Bạn không có đủ tiền mua tài sản này' : `${n} không có đủ tiền mua tài sản này`),
-  tour: (mine, n) => (mine ? 'World Tour! Lượt sau bạn được bay tới bất kỳ ô nào' : `${n} tới World Tour — lượt sau được bay`),
+  tour: (mine, n) => (mine ? `World Tour! Lượt sau bạn được bay tới ${G.RULES.RULE_TEXT.TOUR_DESTINATION}` : `${n} tới World Tour — lượt sau được bay tới ${G.RULES.RULE_TEXT.TOUR_DESTINATION}`),
   festival: (mine, n, x) => `Lễ hội ở ${TILES[x.tile].name}! Tiền thuê x${x.mult}`,
   vipUsed: (mine, n, x) => `${mine ? 'Bạn đã' : `${n} đã`} sử dụng thẻ miễn tiền thuê tại ${TILES[x.tile].name} — miễn ${money(x.amount)}`,
   escapeUsed: (mine, n) => `${mine ? 'Bạn đã' : `${n} đã`} sử dụng thẻ Thoát đảo`,
@@ -1260,31 +1260,20 @@ function showInfo(i) {
     const fest = S.festival !== null && S.festival !== undefined ? `Hiện đang có lễ hội x${G.festMult(S)} ở ${esc(TILES[S.festival].name)}.` : 'Hiện chưa có lễ hội nào.';
     const nextMult = CFG.FEST_MULT[Math.min(CFG.FEST_MULT.length - 1, (S.festLevel || 0) + 1)];
     const taxNow = p ? Math.max(CFG.TAX_MIN, Math.round(G.taxBase(S, p) * CFG.TAX_RATE / 10) * 10) : 0;
-    const R = {
-      start: ['#e2557f', 'Điểm xuất phát', [
-        `Mỗi lần đi qua hoặc dừng ở Start nhận lương <b>${money(CFG.SALARY)}</b>, kể cả khi bay World Tour qua Start.`,
-        'Vòng đầu xây tối đa Nhà 2. Qua Start lần đầu mở khoá Nhà 3.',
-        'Khách sạn xây được khi quay lại ô đã có Nhà 3.']],
-      island: ['#3aa0f0', 'Đảo hoang', [
-        `Dừng ở đây hoặc đổ đôi ${CFG.MAX_DOUBLES} lần liên tiếp thì bị kẹt tối đa ${CFG.ISLAND_TURNS} lượt.`,
-        `Mỗi lượt trên đảo chọn: đổ xúc xắc (ra đôi thì thoát và đi luôn), trả <b>${money(CFG.ISLAND_FEE)}</b> để rời đảo ngay, hoặc dùng thẻ Thoát đảo.`,
-        `Hết ${CFG.ISLAND_TURNS} lượt thì tự rời đảo. Trong lúc kẹt vẫn thu tiền thuê bình thường.`]],
-      festival: ['#f5a20a', 'Lễ hội', [
-        `Dừng ở đây được tăng hệ số ô đang tổ chức thêm 1, hoặc trả <b>${money(CFG.CHAMP_MOVE_FEE)}</b> để chuyển Championships sang ô của mình.`,
-        `Hệ số tăng dần tới tối đa x${CFG.MAX_RENT_MULT}. Lần tổ chức tới sẽ là x${nextMult}.`,
-        'Cả bàn chỉ có một lễ hội; tổ chức ở ô mới thì lễ hội chuyển sang ô đó. Thẻ Cúp điện làm mất lễ hội.', fest]],
-      tour: ['#2c8ff0', 'Du lịch thế giới', [
-        `Dừng ở đây thì lượt sau trả <b>${money(CFG.TOUR_FEE)}</b> để bay tới thành phố chưa có chủ. Nếu không còn thành phố trống, được chọn một ô của mình.`,
-        'Bay qua Start vẫn nhận lương. Tới ô nào thì xử lý như dừng ở ô đó: mua đất, nâng cấp, trả tiền thuê, mua lại…']],
-      tax: ['#6b7685', 'Thuế', [
-        `Dừng ở đây nộp <b>${Math.round(CFG.TAX_RATE * 100)}%</b> tổng tài sản (tiền mặt + giá trị đất và nhà).`,
-        p ? `Nếu ${esc(p.name)} dừng ở đây lúc này sẽ nộp <b>${money(taxNow)}</b>.` : '']],
-      chance: ['#f2a33c', 'Cơ hội', [
-        'Dừng ở đây rút một thẻ ngẫu nhiên:',
-        ...G.CARDS.map((c) => `<b>${esc(c.title)}</b>: ${esc(c.text)}`)]],
-    }[t.type];
-    color = R[0]; sub = R[1];
-    body = `<ul class="rules">${R[2].filter(Boolean).map((x) => `<li>${x}</li>`).join('')}</ul>`;
+    const info = G.RULES.TILE_INFO[t.type];
+    const vars = {
+      salary: money(CFG.SALARY), maxDoubles: CFG.MAX_DOUBLES, islandTurns: CFG.ISLAND_TURNS,
+      islandFee: money(CFG.ISLAND_FEE), champMoveFee: money(CFG.CHAMP_MOVE_FEE),
+      maxRentMult: CFG.MAX_RENT_MULT, nextFestivalMult: nextMult, currentFestival: fest,
+      tourFee: money(CFG.TOUR_FEE), taxRate: Math.round(CFG.TAX_RATE * 100),
+      taxPreview: p ? `Nếu ${esc(p.name)} dừng ở đây lúc này sẽ nộp <b>${money(taxNow)}</b>.` : '',
+    };
+    const fill = (line) => line.replace(/\{(\w+)\}/g, (_, key) => vars[key] ?? '');
+    const lines = info.items.flatMap((line) => line === '{chanceCards}'
+      ? G.CARDS.map((c) => `<b>${esc(c.title)}</b>: ${esc(c.text)}`)
+      : [fill(line)]).filter(Boolean);
+    color = info.color; sub = info.subtitle;
+    body = `<ul class="rules">${lines.map((x) => `<li>${x}</li>`).join('')}</ul>`;
   }
   const el = $('#info');
   el.innerHTML = `<div class="sheet" style="--rc:${color}"><div class="ribbon">${esc(t.type === 'chance' ? 'CHANCE' : t.name.toUpperCase())}<small>${sub}</small></div>${xBtn}

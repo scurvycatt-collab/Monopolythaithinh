@@ -15,9 +15,9 @@ Bộ luật có ba lớp: **thông số** (con số), **sơ đồ trạng thái*
 | Lost Island | kẹt 3 lượt, phí rời đảo 200K |
 | Lễ hội (Championships) | ×2 → ×3 → ×4 → ×5 → ×6 → ×7 → ×8 → ×9 → ×10 theo số lần tổ chức |
 | Vé World Tour | 50K |
-| Thuế | 10% tổng tài sản, tối thiểu 0K |
-| Bảng giá công trình | Mỗi thành phố dùng bảng giá tuyệt đối theo cấp; ô chưa đối chiếu tạm dùng Ô đất ×1, Nhà 1 ×1.5, Nhà 2 ×2.5, Nhà 3 ×4, Khách sạn ×6 |
-| Tiền thuê theo cấp | Ô đất ×0.25, Nhà 1 ×0.6, Nhà 2 ×1.5, Nhà 3 ×3.2, Khách sạn ×5.5 (× giá đất) |
+| Thuế | 10% tổng tài sản |
+| Bảng giá công trình | Mỗi thành phố dùng bảng giá tuyệt đối theo 5 cấp trong bảng bên dưới |
+| Tiền thuê theo cấp | Mỗi thành phố dùng bảng giá thuê tuyệt đối theo 5 cấp trong bảng bên dưới |
 | Giới hạn xây | vòng đầu tối đa Nhà 2; đã qua Start: Nhà 3; Khách sạn khi quay lại ô đã có Nhà 3 |
 | Mua lại | 2× giá trị cộng dồn; Khách sạn và bãi biển không bị mua lại; người mua nhận nguyên cấp nhà |
 | Bán cho ngân hàng | 50% giá trị cộng dồn |

@@ -144,6 +144,15 @@ function build(setup) {
 }
 
 {
+  const s = build({ props: { 1: ['op', 0], 2: ['op', 0], 3: ['op', 0] } });
+  const original = R.CONFIG.MONOPOLY_MULT;
+  try {
+    R.CONFIG.MONOPOLY_MULT = 3;
+    assert.equal(G.rentMultiplier(s, 3), 3, 'engine phải đọc hệ số monopoly từ rules.js, không cộng cứng +1');
+  } finally { R.CONFIG.MONOPOLY_MULT = original; }
+}
+
+{
   const s = build({ step: 'tour' }), p = G.byId(s, 'me');
   assert.ok(G.tourTargets(s, p).every((i) => R.TILES[i].type === 'city' && !s.props[i]), 'World Tour phải ưu tiên thành phố trống');
   for (const tile of R.TILES.filter((t) => t.type === 'city')) s.props[tile.i] = { owner: tile.i === 3 ? 'me' : 'op', level: 0 };

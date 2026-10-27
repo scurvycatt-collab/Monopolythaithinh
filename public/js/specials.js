@@ -676,9 +676,9 @@ export function startGate() {
   return out;
 }
 
-/* ===================== BĂNG RÔN LỄ HỘI (ô thuê x1.5) ===================== */
+/* ===================== BĂNG RÔN CỜ LỄ HỘI ===================== */
 // Một băng rôn đậm màu căng giữa hai cọc, đặt dọc cạnh sau của ô để không bị công trình che khuất.
-export function festivalFlag(mult = 1.5) {
+export function festivalFlag(mult) {
   const g = new THREE.Group();
   const postX = 0.54, postH = 1.02;
   for (const x of [-postX, postX]) {
@@ -718,8 +718,8 @@ export function festivalFlag(mult = 1.5) {
   return g;
 }
 
-/* ===================== BẢNG LỄ HỘI (ô đang tổ chức Championships) ===================== */
-// tấm bảng xanh có cúp vàng và hệ số thuê, gắn phẳng lên mặt đất nâu phía dưới dải giá của ô.
+/* ===================== BIỂU TƯỢNG CHAMPIONSHIPS ===================== */
+// Huy hiệu cúp vàng, gắn phẳng lên mặt đất phía dưới dải giá của ô.
 // w, h: kích thước mặt nâu còn trống (đơn vị bàn cờ); mặt bảng nhìn về +z, đáy ở y = 0.
 export function festivalPlaque(w, h) {
   const PXU = 480, cw = Math.round(w * PXU), ch = Math.round(h * PXU);

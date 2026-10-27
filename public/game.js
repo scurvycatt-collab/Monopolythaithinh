@@ -40,7 +40,7 @@
     const t = TILES[i], pr = s.props[i];
     if (!pr) return 1;
     let mult = 1;
-    if (t.type === 'city' && ownsGroup(s, pr.owner, t.group)) mult++;
+    if (t.type === 'city' && ownsGroup(s, pr.owner, t.group)) mult += CFG.MONOPOLY_MULT - 1;
     if (s.festival === i) mult += festMult(s) - 1;
     if (s.bonus && s.bonus.includes(i)) mult += CFG.BONUS_MULT - 1;
     return Math.min(CFG.MAX_RENT_MULT, mult);
@@ -419,7 +419,7 @@
       case 'tour':
         p.tourPending = true; s.again = false;
         s.notice = { seq: nextSeq(s), pid: p.id, kind: 'tour' };          // giao diện: popup lượt sau được bay
-        log(s, `${p.name} tới World Tour — lượt sau được bay tới bất kỳ ô nào (phí ${k(CFG.TOUR_FEE)})`);
+        log(s, `${p.name} tới World Tour — lượt sau được bay tới ${R.RULE_TEXT.TOUR_DESTINATION} (phí ${k(CFG.TOUR_FEE)})`);
         return finish(s);
       case 'tax': {
         const base = taxBase(s, p);
