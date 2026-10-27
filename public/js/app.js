@@ -755,8 +755,9 @@ function startFrame() {
 
 /* ---------------- giao diện ---------------- */
 let busy = false;
-// thời lượng một nhịp tiền chạy = thời lượng hoạt ảnh xây nhà (đồng bộ hai hoạt ảnh)
+// Tiền bị trừ chạy nhanh để không làm chậm nhịp chơi; tiền nhận vẫn đồng bộ với hoạt ảnh xây nhà.
 const MONEY_MS = REDUCED ? 1 : BUILD_MS;
+const MONEY_DEBIT_MS = REDUCED ? 1 : 700;
 const target = {}, shown = {};      // số tiền đích / số đang hiển thị của mỗi người
 const fmtDelta = (d) => { const a = Math.abs(d), v = a >= 1000 ? (a / 1000).toFixed(2).replace(/\.?0+$/, '') + 'M' : (Math.round(a * 10) / 10) + 'K'; return (d > 0 ? '+$' : '-$') + v; };
 function moneyEl(pid) { return $(`#cards [data-p="${pid}"] .num`); }
@@ -764,15 +765,17 @@ function floatDelta(pid, d) {
   const el = moneyEl(pid); if (!el || !d) return;
   const r = el.getBoundingClientRect(), f = document.createElement('div');
   f.className = 'delta ' + (d > 0 ? 'up' : 'down'); f.textContent = fmtDelta(d);
-  f.style.left = r.left + r.width / 2 + 'px'; f.style.top = r.top - 4 + 'px'; f.style.animationDuration = Math.max(1600, MONEY_MS) + 'ms';
-  document.body.appendChild(f); setTimeout(() => f.remove(), Math.max(1600, MONEY_MS) + 100);
+  const duration = d < 0 ? 900 : Math.max(1600, MONEY_MS);
+  f.style.left = r.left + r.width / 2 + 'px'; f.style.top = r.top - 4 + 'px'; f.style.animationDuration = duration + 'ms';
+  document.body.appendChild(f); setTimeout(() => f.remove(), duration + 100);
 }
 const tweens = {};
 function tweenMoney(pid, to, delay = 0) {
   const from = shown[pid] ?? to; cancelAnimationFrame(tweens[pid]);
+  const duration = to < from ? MONEY_DEBIT_MS : MONEY_MS;
   const t0 = performance.now() + delay;
   const step = (now) => {
-    const k = Math.max(0, Math.min(1, (now - t0) / MONEY_MS)), e = 1 - Math.pow(1 - k, 3);
+    const k = Math.max(0, Math.min(1, (now - t0) / duration)), e = 1 - Math.pow(1 - k, 3);
     shown[pid] = from + (to - from) * e;
     const el = moneyEl(pid); if (el) { el.textContent = money(Math.max(0, shown[pid])); el.classList.toggle('neg', to < from && k < 1); el.classList.toggle('pos', to > from && k < 1); }
     if (k < 1) tweens[pid] = requestAnimationFrame(step); else shown[pid] = to;

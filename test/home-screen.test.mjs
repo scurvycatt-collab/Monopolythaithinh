@@ -19,5 +19,7 @@ assert.match(app, /const TOKEN_HEIGHT = 1\.08;/, 'all characters must share the 
 assert.match(app, /place\(seatOf\[p\.id\]\.pet, TOKEN_HEIGHT, \{ byHeight: true \}\)/, 'tokens must be normalized by height');
 assert.match(app, /Đến lượt bạn!/);
 assert.match(app, /`Đến lượt \$\{p\.name\}!`/);
+assert.match(app, /const MONEY_DEBIT_MS = REDUCED \? 1 : 700;/, 'debit animation must use the shorter duration');
+assert.match(app, /const duration = to < from \? MONEY_DEBIT_MS : MONEY_MS;/, 'only money deductions should use the faster animation');
 
 console.log('Home screen lazy-map tests passed.');
