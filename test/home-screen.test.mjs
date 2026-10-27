@@ -10,6 +10,7 @@ assert.match(html, /class="gate-layout"/);
 assert.match(html, /class="gate-brand"/);
 assert.match(html, /class="gate-card"/);
 assert.match(css, /body\[data-screen="gate"\][^{]*:is\([^)]*#stage/);
+assert.match(css, /#gate\{[^}]*box-sizing:border-box/);
 
 const gateFirst = app.indexOf("if (MODE === 'net' && ROOM_GATE) { showRoomGate(); return; }");
 const prepareAfterGate = app.indexOf('await prepareBoard();', gateFirst);

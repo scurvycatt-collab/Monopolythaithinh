@@ -170,7 +170,7 @@ table.lvl tr.cur .ck{color:#fff}
 @media (prefers-reduced-motion: reduce){ *{animation:none!important;transition:none!important} }
 
 /* phòng chờ */
-#gate{position:fixed;inset:0;z-index:26;display:none;place-items:center;padding:clamp(18px,4vw,56px);overflow:auto;background:linear-gradient(145deg,#75c4d8 0%,#56adca 48%,#8bd2df 100%)}
+#gate{position:fixed;inset:0;z-index:26;display:none;place-items:center;box-sizing:border-box;padding:clamp(18px,4vw,56px);overflow:auto;background:linear-gradient(145deg,#75c4d8 0%,#56adca 48%,#8bd2df 100%)}
 #gate.show{display:grid}
 .gate-pattern{position:absolute;inset:-25%;opacity:.14;transform:rotate(-18deg);background-image:radial-gradient(circle at center,#fff 0 7px,transparent 8px),linear-gradient(45deg,transparent 46%,#fff 47% 53%,transparent 54%);background-size:90px 90px;animation:gateDrift 30s linear infinite;pointer-events:none}
 @keyframes gateDrift{to{transform:rotate(-18deg) translate3d(90px,90px,0)}}
