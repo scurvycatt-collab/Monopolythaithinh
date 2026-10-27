@@ -96,17 +96,30 @@ function coaster() {
   const pts = spec.map(([a, r, y]) => new THREE.Vector3(Math.cos(a) * r * 1.25, y * 0.72 + 0.2, Math.sin(a) * r));
   const curve = new THREE.CatmullRomCurve3(pts, true, 'centripetal');
   const L = 340, up = new THREE.Vector3(0, 1, 0);
-  const frame = (u) => { const p = curve.getPointAt(u), t = curve.getTangentAt(u), s = new THREE.Vector3().crossVectors(t, up).normalize(), n = new THREE.Vector3().crossVectors(s, t).normalize(); return { p, t, s, n }; };
+  const makeFrame = () => ({ p: new THREE.Vector3(), t: new THREE.Vector3(), s: new THREE.Vector3(), n: new THREE.Vector3() });
+  const frame = (u, out = makeFrame()) => { curve.getPointAt(u, out.p); curve.getTangentAt(u, out.t); out.s.crossVectors(out.t, up).normalize(); out.n.crossVectors(out.s, out.t).normalize(); return out; };
   const railPts = [[], []];
   for (let i = 0; i < L; i++) { const { p, s } = frame(i / L); railPts[0].push(p.clone().addScaledVector(s, 0.07)); railPts[1].push(p.clone().addScaledVector(s, -0.07)); }
   railPts.forEach((rp) => { const tube = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(rp, true), 400, 0.022, 6, true), mat(C.rail)); tube.castShadow = true; g.add(tube); });
   const spine = new THREE.Mesh(new THREE.TubeGeometry(curve, 400, 0.03, 6, true), mat('#e8406f')); spine.position.y = -0.05; g.add(spine);
-  // tà vẹt và cột chống
+  // Tà vẹt và cột chống lặp lại dùng InstancedMesh: 3 draw calls thay cho hơn 100 mesh riêng.
+  const ties = new THREE.InstancedMesh(new THREE.BoxGeometry(0.2, 0.014, 0.03), mat(C.white), Math.ceil(L / 4));
+  const posts = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.018, 0.018, 1, 6), mat(C.white), Math.ceil(L / 16));
+  const feet = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.05, 0.05, 0.03, 8), mat('#d9dde3'), Math.ceil(L / 16));
+  const dummy = new THREE.Object3D(), look = new THREE.Vector3(); let tieCount = 0, postCount = 0;
   for (let i = 0; i < L; i += 4) {
-    const { p, t, n } = frame(i / L); const tie = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.014, 0.03), mat(C.white));
-    tie.position.copy(p).addScaledVector(n, -0.02); tie.lookAt(p.clone().add(t)); tie.rotateY(Math.PI / 2); tie.rotation.y += 0; g.add(tie);
-    if (i % 16 === 0 && p.y > 0.25) { const h = p.y - 0.06; const post = cyl(0.018, h, C.white, p.x, 0, p.z, 6); g.add(post); g.add(cyl(0.05, 0.03, '#d9dde3', p.x, 0, p.z, 8)); }
+    const { p, t, n } = frame(i / L);
+    dummy.position.copy(p).addScaledVector(n, -0.02); dummy.scale.set(1, 1, 1); dummy.rotation.set(0, 0, 0); dummy.lookAt(look.copy(p).add(t)); dummy.rotateY(Math.PI / 2); dummy.updateMatrix(); ties.setMatrixAt(tieCount++, dummy.matrix);
+    if (i % 16 === 0 && p.y > 0.25) {
+      const h = p.y - 0.06;
+      dummy.position.set(p.x, h / 2, p.z); dummy.rotation.set(0, 0, 0); dummy.scale.set(1, h, 1); dummy.updateMatrix(); posts.setMatrixAt(postCount, dummy.matrix);
+      dummy.position.set(p.x, 0.015, p.z); dummy.scale.set(1, 1, 1); dummy.updateMatrix(); feet.setMatrixAt(postCount++, dummy.matrix);
+    }
   }
+  ties.count = tieCount; posts.count = feet.count = postCount;
+  ties.instanceMatrix.needsUpdate = posts.instanceMatrix.needsUpdate = feet.instanceMatrix.needsUpdate = true;
+  posts.castShadow = feet.castShadow = true; posts.receiveShadow = feet.receiveShadow = ties.receiveShadow = true;
+  g.add(ties, posts, feet);
   // ga xuất phát
   const st = frame(0.03); g.add(at(box(0.7, 0.18, 0.42, '#fff1d8'), st.p.x, 0, st.p.z + 0.02, -Math.atan2(st.t.z, st.t.x)));
   const roof = box(0.82, 0.05, 0.5, C.rail, 0, 0.55, 0); const sp = new THREE.Group(); sp.add(roof); for (const [x, z] of [[-0.35, -0.2], [0.35, -0.2], [-0.35, 0.2], [0.35, 0.2]]) sp.add(cyl(0.015, 0.55, C.white, x, 0, z, 6));
@@ -136,16 +149,17 @@ function coaster() {
   shadowAll(wheel); g.add(wheel); wheel.position.set(1.95, 0, 1.25); wheel.rotation.y = -Math.PI / 4;
   // chuyển động: tốc độ theo năng lượng (cao chậm, thấp nhanh), đoạn kéo lên chạy đều
   const hMax = Math.max(...pts.map((p) => p.y));
+  const heightPoint = new THREE.Vector3(), zero = new THREE.Vector3(), carMatrix = new THREE.Matrix4(), carFrames = cars.map(() => makeFrame());
   let u = 0;
   g.userData.update = (t, dt) => {
-    const y = curve.getPointAt(u).y;
+    const y = curve.getPointAt(u, heightPoint).y;
     const lift = u > 0.12 && u < 0.3;
     const v = lift ? 0.035 : Math.sqrt(0.0025 + 0.012 * Math.max(0, hMax - y)) * 1.2;
     u = (u + v * dt) % 1;
     cars.forEach((car, i) => {
-      const uu = (u - i * 0.022 + 1) % 1; const { p, t: tg, n } = frame(uu);
+      const uu = (u - i * 0.022 + 1) % 1; const { p, t: tg, n } = frame(uu, carFrames[i]);
       car.position.copy(p).addScaledVector(n, 0.05);
-      const m = new THREE.Matrix4().lookAt(new THREE.Vector3(), tg, n); car.quaternion.setFromRotationMatrix(m); car.rotateY(Math.PI / 2);
+      carMatrix.lookAt(zero, tg, n); car.quaternion.setFromRotationMatrix(carMatrix); car.rotateY(Math.PI / 2);
     });
     rot.rotation.z = t * 0.35; gondolas.forEach((gd) => (gd.rotation.z = -t * 0.35));
   };
@@ -222,7 +236,8 @@ function flyer(key, from, to, peak, period, offset, scale) {
 
 /* ================= LẮP RÁP ================= */
 export function centerWorld() {
-  const W = new THREE.Group(), updates = [];
+  const W = new THREE.Group(), updates = [], qualityObjects = [];
+  const detail = (obj, minRank = 1) => { qualityObjects.push({ obj, minRank }); return obj; };
   W.add(ground());
   // --- núi + rừng + thác ---
   const mts = [[-4.05, -4.05, 1.4, 1.55, 1, 0.58], [-2.45, -4.6, 0.95, 1.0, 2], [-4.6, -2.45, 0.9, 0.95, 3], [-3.0, -3.1, 0.55, 0.75, 4, 0.9], [-1.4, -4.95, 0.45, 0.6, 5, 0.9]];
@@ -244,46 +259,52 @@ export function centerWorld() {
     const x = -5.6 + rr() * 5.2, z = -5.6 + rr() * 5.2; if (x + z > -3.2) continue;
     if (mts.some(([mx, mz, , r]) => Math.hypot(x - mx, z - mz) < r * 0.95)) continue;
     if (riverPts.some((p) => Math.hypot(x - p.x, z - p.z) < 0.55)) continue;
-    W.add(at(get('nature/' + (n % 3 ? 'tree_pineDefaultA' : 'tree_pineTallA')), x, 0, z, rr() * 6, 0.45 + rr() * 0.3)); n++;
+    const tree = at(get('nature/' + (n % 3 ? 'tree_pineDefaultA' : 'tree_pineTallA')), x, 0, z, rr() * 6, 0.45 + rr() * 0.3);
+    W.add(detail(tree)); n++;
   }
   // thác nước từ sườn núi
   const ftex = waterTex(true);
   const fall = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.72), new THREE.MeshStandardMaterial({ map: ftex, roughness: .3, transparent: true, opacity: 0.95, side: THREE.DoubleSide }));
   fall.position.set(-3.15, 0.36, -2.95); fall.rotation.y = Math.PI / 4; fall.rotation.x = -0.25; W.add(fall);
-  const mist = []; for (let i = 0; i < 10; i++) { const m = new THREE.Mesh(new THREE.IcosahedronGeometry(0.06, 1), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: .7, depthWrite: false })); W.add(m); mist.push(m); }
+  const mist = []; for (let i = 0; i < 10; i++) { const m = new THREE.Mesh(new THREE.IcosahedronGeometry(0.06, 1), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: .7, depthWrite: false })); W.add(detail(m)); mist.push(m); }
   // cầu gỗ qua sông
-  [[0.25, 0.6], [0.62, 0.55]].forEach(([u]) => { const p = river.getPointAt(u), tg = river.getTangentAt(u); const br = get('nature/bridge_woodRound'); br.scale.setScalar(0.62); br.position.set(p.x, 0, p.z); br.rotation.y = Math.atan2(tg.x, tg.z) + Math.PI / 2; W.add(br); });
+  [[0.25, 0.6], [0.62, 0.55]].forEach(([u]) => { const p = river.getPointAt(u), tg = river.getTangentAt(u); const br = get('nature/bridge_woodRound'); br.scale.setScalar(0.62); br.position.set(p.x, 0, p.z); br.rotation.y = Math.atan2(tg.x, tg.z) + Math.PI / 2; W.add(detail(br)); });
   // --- thuyền ---
-  const sail = get('watercraft/boat-sail-a'); sail.scale.setScalar(0.14); W.add(sail);
-  const speed = get('watercraft/boat-speed-c'); speed.scale.setScalar(0.11); W.add(speed);
-  const tug = get('watercraft/boat-tug-a'); tug.scale.setScalar(0.1); W.add(tug);
-  const fish = get('watercraft/boat-fishing-small'); fish.scale.setScalar(0.11); fish.position.set(4.6, 0.01, -4.3); fish.rotation.y = 0.8; W.add(fish);
-  const speedWake = []; for (let i = 0; i < 12; i++) { const m = new THREE.Mesh(new THREE.CircleGeometry(0.05, 6), new THREE.MeshBasicMaterial({ color: '#fff', transparent: true, opacity: .7, depthWrite: false })); m.rotation.x = -Math.PI / 2; W.add(m); speedWake.push(m); }
+  const sail = get('watercraft/boat-sail-a'); sail.scale.setScalar(0.14); W.add(detail(sail));
+  const speed = get('watercraft/boat-speed-c'); speed.scale.setScalar(0.11); W.add(detail(speed));
+  const tug = get('watercraft/boat-tug-a'); tug.scale.setScalar(0.1); W.add(detail(tug));
+  const fish = get('watercraft/boat-fishing-small'); fish.scale.setScalar(0.11); fish.position.set(4.6, 0.01, -4.3); fish.rotation.y = 0.8; W.add(detail(fish));
+  const speedWake = []; for (let i = 0; i < 12; i++) { const m = new THREE.Mesh(new THREE.CircleGeometry(0.05, 6), new THREE.MeshBasicMaterial({ color: '#fff', transparent: true, opacity: .7, depthWrite: false })); m.rotation.x = -Math.PI / 2; W.add(detail(m)); speedWake.push(m); }
   const sHist = Array.from({ length: 36 }, () => new THREE.Vector3());
   const speedPrev = new THREE.Vector3(), speedLook = new THREE.Vector3();
   let sHistHead = 0, sHistCount = 0;
   // --- công viên giải trí ---
-  const park = coaster(); park.position.set(-3.05, 0, 2.95); park.rotation.y = -Math.PI / 4; W.add(park); updates.push(park.userData.update);
+  const park = coaster(); park.position.set(-3.05, 0, 2.95); park.rotation.y = -Math.PI / 4; W.add(detail(park)); updates.push(park.userData.update);
   // --- làng & ruộng & cối xay gió ---
-  [[2.0, 5.0, 1, '#ef5a3c', 0.6], [1.2, 4.6, 2, '#2c8ff0', 3.6], [5.0, 2.0, 1, '#8a63e8', 0.9], [4.6, 1.15, 2, '#f7a21b', 2.2], [2.75, 4.05, 1, '#2fb5a3', 1.6]].forEach(([x, z, lv, hex, ry]) => {
-    const b = building('suburb', lv, hex); b.scale.multiplyScalar(0.55); b.position.set(x, 0, z); b.rotation.y = ry; W.add(b);
+  [[2.0, 5.0, 1, '#ef5a3c', 0.6], [1.2, 4.6, 2, '#2c8ff0', 3.6], [5.0, 2.0, 1, '#8a63e8', 0.9], [4.6, 1.15, 2, '#f7a21b', 2.2], [2.75, 4.05, 1, '#2fb5a3', 1.6]].forEach(([x, z, lv, hex, ry], i) => {
+    const b = building('suburb', lv, hex); b.scale.multiplyScalar(0.55); b.position.set(x, 0, z); b.rotation.y = ry; W.add(detail(b));
   });
-  const mill = get('industrial/windmill'); mill.scale.setScalar(0.62); mill.position.set(5.05, 0, 4.75); mill.rotation.y = -Math.PI * 0.75; W.add(mill);
+  const mill = get('industrial/windmill'); mill.scale.setScalar(0.62); mill.position.set(5.05, 0, 4.75); mill.rotation.y = -Math.PI * 0.75; W.add(detail(mill));
   const blades = mill.getObjectByName('blades');
-  for (const [x, z] of [[3.0, 2.0], [1.95, 3.15]]) W.add(at(get('nature/tree_oak'), x, 0, z, 0, 0.5));
+  for (const [x, z] of [[3.0, 2.0], [1.95, 3.15]]) W.add(detail(at(get('nature/tree_oak'), x, 0, z, 0, 0.5)));
   // --- bãi phóng ---
-  const rk = rocket(); rk.position.set(4.4, 0, -0.35); W.add(rk); updates.push(rk.userData.update);
-  W.add(at(get('space/satelliteDish_large'), 5.05, 0, 0.9, -2.2, 0.75));
-  W.add(at(get('space/satelliteDish_large'), 3.55, 0, -1.35, -1.5, 0.55));
+  const rk = rocket(); rk.position.set(4.4, 0, -0.35); W.add(detail(rk)); updates.push(rk.userData.update);
+  W.add(detail(at(get('space/satelliteDish_large'), 5.05, 0, 0.9, -2.2, 0.75)));
+  W.add(detail(at(get('space/satelliteDish_large'), 3.55, 0, -1.35, -1.5, 0.55)));
   // --- cây rải rác, đồng cỏ giữa để trống cho xúc xắc ---
   const spots = [[-1.2, -0.6, 'tree_oak'], [1.6, -0.6, 'tree_default'], [-0.6, 0.6, 'tree_fat'], [2.2, 0.4, 'tree_oak'], [-5.2, 1.0, 'tree_default'], [-5.0, -0.6, 'tree_oak'], [0.5, -4.6, 'tree_pineDefaultA'], [1.8, -4.9, 'tree_pineTallA'], [5.2, -2.0, 'tree_palmTall'], [2.6, -5.1, 'tree_palmShort'], [-2.3, 5.3, 'tree_default'], [-0.4, 5.4, 'tree_oak']];
-  spots.forEach(([x, z, k], i) => { const sc = k.startsWith('tree_palm') ? 0.55 : 0.5 + (i % 3) * 0.08; W.add(at(get('nature/' + k), x, 0, z, i, sc)); });
+  spots.forEach(([x, z, k], i) => { const sc = k.startsWith('tree_palm') ? 0.55 : 0.5 + (i % 3) * 0.08, tree = at(get('nature/' + k), x, 0, z, i, sc); W.add(detail(tree)); });
   // --- trên trời ---
   const balloons = [balloon('#ef5a3c', '#ffd23a'), balloon('#2c8ff0', '#ffffff'), balloon('#8a63e8', '#7fe3d2')];
-  balloons.forEach((b) => W.add(b));
+  balloons.forEach((b) => W.add(detail(b)));
   const ship1 = flyer('craft_speederA', [-9, 3.2, 7], [8, 4.4, -8], 5.4, 16, 0, 0.35);
   const ship2 = flyer('craft_cargoA', [9, 4.6, 4], [-8, 3.8, -7], 5.8, 22, 9, 0.3);
-  [ship1, ship2].forEach((s) => { W.add(s); s.userData.trail.forEach((m) => W.add(m)); updates.push(s.userData.update); });
+  [ship1, ship2].forEach((s) => { W.add(detail(s)); s.userData.trail.forEach((m) => W.add(detail(m))); updates.push(s.userData.update); });
+
+  W.userData.setQuality = (level) => {
+    const rank = level === 'high' ? 2 : level === 'medium' ? 1 : 0;
+    qualityObjects.forEach(({ obj, minRank }) => { obj.visible = rank >= minRank; });
+  };
 
   W.userData.update = (t, dt = 1 / 60) => {
     updates.forEach((f) => f(t, dt));

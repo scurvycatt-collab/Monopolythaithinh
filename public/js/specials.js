@@ -714,6 +714,10 @@ export function festivalFlag(mult) {
     }
     pos.needsUpdate = true; geo.computeVertexNormals();
   };
+  g.userData.dispose = () => {
+    g.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
+    tex.dispose(); banner.material.dispose();
+  };
   g.userData.update(0);
   return g;
 }
@@ -740,5 +744,7 @@ export function festivalPlaque(w, h) {
   const face = new THREE.MeshBasicMaterial({ map: tex }), edge = mat('#c68f08');
   const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.04), [edge, edge, edge, edge, face, edge]);
   m.position.y = h / 2; m.castShadow = true;
-  const g = new THREE.Group(); g.add(m); return g;
+  const g = new THREE.Group(); g.add(m);
+  g.userData.dispose = () => { m.geometry.dispose(); tex.dispose(); face.dispose(); };
+  return g;
 }

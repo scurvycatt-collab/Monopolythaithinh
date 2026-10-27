@@ -16,12 +16,19 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const GRAPHICS_KEY = 'tt-monopoly-graphics-v1';
 const GRAPHICS = {
-  low: { ratio: 1, shadows: false, shadowSize: 512, fps: 30, worldMotion: false, confetti: 30 },
-  medium: { ratio: 1.5, shadows: true, shadowSize: 1024, fps: 40, worldMotion: true, confetti: 50 },
-  high: { ratio: 2, shadows: true, shadowSize: 2048, fps: 60, worldMotion: true, confetti: 70 },
+  low: { ratio: 1, shadows: false, shadowSize: 512, fps: 30, idleFps: 4, worldMotion: false, confetti: 30 },
+  medium: { ratio: 1.5, shadows: true, shadowSize: 1024, fps: 40, idleFps: 12, worldMotion: true, confetti: 50 },
+  high: { ratio: 2, shadows: true, shadowSize: 2048, fps: 60, idleFps: 15, worldMotion: true, confetti: 70 },
 };
 let graphicsLevel = 'high';
-try { const saved = localStorage.getItem(GRAPHICS_KEY); if (GRAPHICS[saved]) graphicsLevel = saved; } catch (e) { /* dùng mặc định */ }
+try {
+  const saved = localStorage.getItem(GRAPHICS_KEY);
+  if (GRAPHICS[saved]) graphicsLevel = saved;
+  else {
+    const memory = Number(navigator.deviceMemory || 8), cores = Number(navigator.hardwareConcurrency || 8), mobile = matchMedia('(pointer:coarse)').matches;
+    graphicsLevel = memory <= 2 || cores <= 2 ? 'low' : (memory <= 4 || cores <= 4 || mobile ? 'medium' : 'high');
+  }
+} catch (e) { /* dùng mặc định */ }
 if (/[?&]low\b/.test(location.search)) graphicsLevel = 'low'; // tương thích link ?low cũ
 const money = (n) => Math.round(n * 1000).toLocaleString('vi-VN');
 const shortK = (n) => (n >= 1000 ? (n / 1000).toFixed(n % 1000 ? 1 : 0).replace('.', ',') + 'M' : n + 'K');
@@ -134,13 +141,17 @@ const online = (pid) => MODE === 'local' || !presence[pid] || presence[pid].on;
 
 /* ---------------- three.js: cảnh ---------------- */
 const stage = $('#stage');
-const renderer = new THREE.WebGLRenderer({ antialias: graphicsLevel !== 'low', alpha: true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, GRAPHICS[graphicsLevel].ratio));
-renderer.shadowMap.enabled = GRAPHICS[graphicsLevel].shadows;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.shadowMap.autoUpdate = false;
-renderer.outputColorSpace = THREE.SRGBColorSpace;
-stage.appendChild(renderer.domElement);
+function createMainRenderer(antialias) {
+  const next = new THREE.WebGLRenderer({ antialias, alpha: true });
+  next.setPixelRatio(Math.min(devicePixelRatio, GRAPHICS[graphicsLevel].ratio));
+  next.shadowMap.enabled = GRAPHICS[graphicsLevel].shadows;
+  next.shadowMap.type = THREE.PCFSoftShadowMap;
+  next.shadowMap.autoUpdate = false;
+  next.outputColorSpace = THREE.SRGBColorSpace;
+  return next;
+}
+let renderer = createMainRenderer(graphicsLevel !== 'low'), cvs = renderer.domElement;
+stage.appendChild(cvs);
 const scene = new THREE.Scene();
 const camera = new THREE.OrthographicCamera(-10, 10, 10, -10, 0.1, 200);
 camera.position.set(20, 16.5, 20);
@@ -155,12 +166,22 @@ sun.shadow.bias = -0.0008;
 sun.shadow.normalBias = 0.02;
 scene.add(sun);
 let shadowDirty = true;
-function requestShadowUpdate() { shadowDirty = true; }
+function requestShadowUpdate() { shadowDirty = true; if (frameRunning) requestActiveRender(250); }
+function replaceMainRenderer(antialias) {
+  const old = renderer, oldCanvas = cvs, next = createMainRenderer(antialias);
+  oldCanvas.replaceWith(next.domElement); renderer = next; cvs = next.domElement;
+  bindCanvas(cvs);
+  if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; }
+  old.dispose(); old.forceContextLoss();
+  requestShadowUpdate();
+}
 function setGraphicsLevel(level) {
   if (!GRAPHICS[level]) return;
   graphicsLevel = level;
   try { localStorage.setItem(GRAPHICS_KEY, level); } catch (e) { /* trình duyệt chặn lưu */ }
   const profile = GRAPHICS[level];
+  const wantsAntialias = level !== 'low', hasAntialias = !!renderer.getContext().getContextAttributes().antialias;
+  if (wantsAntialias !== hasAntialias) replaceMainRenderer(wantsAntialias);
   renderer.setPixelRatio(Math.min(devicePixelRatio, profile.ratio));
   renderer.shadowMap.enabled = profile.shadows;
   if (sun.shadow.mapSize.x !== profile.shadowSize) {
@@ -168,6 +189,9 @@ function setGraphicsLevel(level) {
     if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; }
   }
   requestShadowUpdate();
+  requestActiveRender(1200);
+  applySceneQuality(level);
+  if (boardReady) syncBuildings(true);
   resize();
   renderSoundSettings();
 }
@@ -399,7 +423,8 @@ function buildTiles() {
     const f = tileFrame(i), t = TILES[i];
     const g = new THREE.Group(); g.position.set(f.x, 0, f.z); g.rotation.y = f.rot;
     const side = (t.type === 'island' || t.type === 'tour') ? waterSide : dirtMat;
-    const body = new THREE.Mesh(new THREE.BoxGeometry(f.w - 0.06, TOPY, f.d - 0.06), [side, side, dirtMat, dirtDark, side, side]);
+    // Mặt trên đã có plane texture riêng, đáy không nhìn thấy: một material đủ và giảm 5 draw calls mỗi ô.
+    const body = new THREE.Mesh(new THREE.BoxGeometry(f.w - 0.06, TOPY, f.d - 0.06), side);
     body.position.y = TOPY / 2; body.receiveShadow = true; body.castShadow = true; g.add(body);
     const tex = new THREE.CanvasTexture(drawTile(i));
     tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
@@ -427,13 +452,17 @@ const MODEL_LIST = {
   'animal-dog': 'pets/animal-dog', 'animal-cat': 'pets/animal-cat', 'animal-fox': 'pets/animal-fox', 'animal-panda': 'pets/animal-panda',
 };
 const MODELS = {};
-async function loadModels() {
+function decodeBase64(encoded) {
+  const raw = atob(encoded), bytes = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+  return bytes.buffer;
+}
+async function loadModels(bundle) {
   const loader = new GLTFLoader();
   const keys = Object.keys(MODEL_LIST);
   let done = 0;
-  const bundle = await (await fetch('models/bundle.json')).json();
   const parse = (path) => {
-    const bin = Uint8Array.from(atob(bundle[path]), (ch) => ch.charCodeAt(0)).buffer;
+    const bin = decodeBase64(bundle[path]);
     return new Promise((res, rej) => loader.parse(bin, `models/${path.split('/')[0]}/`, res, rej));
   };
   await Promise.all(keys.map((k) => parse(MODEL_LIST[k]).then((g) => {
@@ -458,8 +487,13 @@ function place(key, fit, opts = {}) {
 }
 /* vật thể trên ô góc / ô đặc biệt + thế giới giữa bàn; mỗi vật có userData.update(t, dt) */
 const specials = [];
+let centerWorldObj = null;
+function applySceneQuality(level) {
+  specials.forEach((obj) => { if (obj.userData.hideOnLow) obj.visible = level !== 'low'; });
+  if (centerWorldObj && centerWorldObj.userData.setQuality) centerWorldObj.userData.setQuality(level);
+}
 function decorate() {
-  const atCorner = (obj, i, ox = 0, oz = 0) => { const f = tileFrame(i); obj.position.set(f.x + ox, TOPY, f.z + oz); board.add(obj); specials.push(obj); return obj; };
+  const atCorner = (obj, i, ox = 0, oz = 0) => { const f = tileFrame(i); obj.position.set(f.x + ox, TOPY, f.z + oz); obj.userData.hideOnLow = true; board.add(obj); specials.push(obj); return obj; };
   atCorner(HK.startGate(), 0);
   atCorner(HK.lostIsland(), 8);
   atCorner(HK.colosseum(), 16);
@@ -469,10 +503,12 @@ function decorate() {
     if (t.type !== 'chance') return;
     const cb = HK.chanceBox(), p = local(i, 0, lay(i).grassZ), f = tileFrame(i), off = specials.length * 1.3;
     cb.position.set(p.x, TOPY, p.z); cb.rotation.y = f.rot + (FAR(f.side) ? Math.PI : 0);
+    cb.userData.hideOnLow = true;
     const up = cb.userData.update; cb.userData.update = (tt, dt) => up(tt + off, dt);
     board.add(cb); specials.push(cb);
   });
-  const w = centerWorld(); w.position.y = TOPY - WORLD_DROP; board.add(w); specials.push(w);
+  const w = centerWorld(); w.position.y = TOPY - WORLD_DROP; w.userData.setQuality && w.userData.setQuality(graphicsLevel); board.add(w); specials.push(w); centerWorldObj = w;
+  applySceneQuality(graphicsLevel);
 }
 
 /* băng rôn lễ hội: mỗi ván 3 ô ngẫu nhiên (S.bonus), căng giữa hai cọc dọc cạnh sau của phần sân */
@@ -486,10 +522,11 @@ const CHAMPIONSHIP_PLAQUE_WIDTH = 1.56;
 const CHAMPIONSHIP_PLAQUE_HEIGHT = 0.44;
 const CHAMPIONSHIP_PLAQUE_FAR_HEIGHT = 0.28;
 let festBanner = null, festSig = '';
+function disposeOwnedObject(obj) { if (obj && obj.userData && obj.userData.dispose) obj.userData.dispose(); }
 function syncFestival() {
   const sig = S.festival === null || S.festival === undefined || !S.props[S.festival] ? '' : `${S.festival}:${G.festMult(S)}`;
   if (sig === festSig) return; festSig = sig;
-  if (festBanner) { board.remove(festBanner); festBanner = null; requestShadowUpdate(); }
+  if (festBanner) { board.remove(festBanner); disposeOwnedObject(festBanner); festBanner = null; requestShadowUpdate(); }
   if (!sig) return;
   const i = S.festival, f = tileFrame(i), far = FAR(f.side);
   // Cạnh xa có mặt giữa bàn cao hơn đáy ô: nâng bảng lên để toàn bộ cúp/chữ không bị che.
@@ -502,7 +539,7 @@ function syncFestival() {
   requestShadowUpdate();
 }
 function syncBonus() {
-  bonusFlags.splice(0).forEach((o) => board.remove(o));
+  bonusFlags.splice(0).forEach((o) => { board.remove(o); disposeOwnedObject(o); });
   for (const i of S.bonus || []) {
     const f = tileFrame(i), best = festivalBannerSpot(i);
     const flag = HK.festivalFlag(CFG.BONUS_MULT); flag.position.set(best.x, TOPY, best.z); flag.scale.setScalar(1.12); flag.rotation.y = f.rot + (FAR(f.side) ? Math.PI : 0);
@@ -518,15 +555,34 @@ const buildObjs = {}, tileSigs = {};
 const BUILD_SPREAD = 1650, BUILD_DUR = 760, BUILD_MS = BUILD_SPREAD + BUILD_DUR; // ≈ 2,4 s (trước đây ≈ 1,4 s)
 const anims = [];
 const beachLevel = (owner) => Math.min(4, G.ownedBy(S, owner).filter((j) => TILES[j].type === 'resort').length);
+const lowBuildingCache = new Map();
+function lowDetailBuilding(level, hex, resort = false) {
+  const key = `${resort ? 'r' : 'c'}:${level}:${hex}`;
+  if (!lowBuildingCache.has(key)) {
+    const root = new THREE.Group(), wall = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 }), accent = new THREE.MeshStandardMaterial({ color: hex, roughness: 0.72 });
+    const addBlock = (x, z, w, h, d) => { const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), wall); mesh.position.set(x, h / 2, z); mesh.castShadow = true; mesh.receiveShadow = true; root.add(mesh); const roof = new THREE.Mesh(new THREE.ConeGeometry(Math.max(w, d) * 0.62, Math.min(0.24, h * 0.32), 4), accent); roof.position.set(x, h + Math.min(0.12, h * 0.16), z); roof.rotation.y = Math.PI / 4; roof.castShadow = true; root.add(roof); };
+    if (level <= 0) {
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.58, 6), accent); pole.position.y = 0.29; root.add(pole);
+      const flag = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.18), accent); flag.position.set(0.18, 0.48, 0); flag.rotation.y = Math.PI / 2; root.add(flag);
+    } else if (resort) addBlock(0, 0, 0.62 + level * 0.08, 0.36 + level * 0.12, 0.56 + level * 0.06);
+    else if (level === CFG.LANDMARK) addBlock(0, 0, 0.72, 1.25, 0.66);
+    else {
+      const count = Math.min(3, level);
+      for (let n = 0; n < count; n++) addBlock((n - (count - 1) / 2) * 0.5, (n % 2 ? 0.15 : -0.1), 0.42, 0.38 + n * 0.08, 0.4);
+    }
+    lowBuildingCache.set(key, root);
+  }
+  return lowBuildingCache.get(key).clone(true);
+}
 function makeBuilding(i) {
   const pr = S.props[i], t = TILES[i], hex = seatOf[pr.owner].color, far = FAR(tileFrame(i).side);
   const grp = new THREE.Group();
   let p;
   if (t.type === 'resort') {
     // nhà biển lùi về phía nước để chừa chỗ cho tên bãi biển ở giữa bãi cát
-    const h = HK.beachHouse(Math.max(1, beachLevel(pr.owner)), hex); h.scale.multiplyScalar(0.94); grp.add(h);
+    const beachLv = Math.max(1, beachLevel(pr.owner)), h = graphicsLevel === 'low' ? lowDetailBuilding(beachLv, hex, true) : HK.beachHouse(beachLv, hex); h.scale.multiplyScalar(0.94); grp.add(h);
     p = local(i, 0, far ? 0.81 : -0.81);
-  } else { grp.add(HK.building('suburb', pr.level, hex)); p = local(i, 0, lay(i).grassZ); }
+  } else { grp.add(graphicsLevel === 'low' ? lowDetailBuilding(pr.level, hex) : HK.building('suburb', pr.level, hex)); p = local(i, 0, lay(i).grassZ); }
   // mặt tiền luôn hướng về dải xám (phía người nhìn)
   grp.position.set(p.x, TOPY, p.z); grp.rotation.y = tileFrame(i).rot + (far ? Math.PI : 0);
   return grp;
@@ -556,6 +612,7 @@ function animate(obj, mode, delay, onDone) {
   parts.forEach((p, k) => { p.at = n > 1 ? Math.pow(k / (n - 1), 0.85) * spread : 0; });
   const an = { obj, mode, parts, t0: performance.now() + (delay || 0), dur, total: spread + dur, onDone };
   stepAnim(an, performance.now()); anims.push(an);
+  requestActiveRender(an.total + (delay || 0) + 250);
   return an.total + (delay || 0);
 }
 function stepAnim(an, now) {
@@ -600,7 +657,7 @@ function syncBuildings(instant) {
     const pr = S.props[i], t = TILES[i];
     const tsig = pr ? `${pr.owner}:${pr.level}:${S.festival === i}:${S.festLevel}:${outageRounds(i)}:${G.rentOf(S, i)}` : '';
     if (tileSigs[i] !== tsig) { tileSigs[i] = tsig; refreshTile(i); }
-    const msig = pr ? `${pr.owner}:${t.type === 'resort' ? 'b' + beachLevel(pr.owner) : pr.level}` : '';
+    const msig = pr ? `${graphicsLevel}:${pr.owner}:${t.type === 'resort' ? 'b' + beachLevel(pr.owner) : pr.level}` : '';
     if ((buildObjs[i] ? buildObjs[i].sig : '') === msig) continue;
     let wait = 0;
     if (buildObjs[i] && instant) { board.remove(buildObjs[i].obj); delete buildObjs[i]; }
@@ -670,6 +727,7 @@ function syncTokens(snap) {
 }
 async function hop(pid, path, onTile) {
   const t = tokens[pid];
+  requestActiveRender(path.length * 220 + 500);
   t.userData.to = null;
   for (const pos of path) {
     const from = t.position.clone(); dispPos[pid] = pos;
@@ -715,6 +773,7 @@ async function rollDice(a, b) {
   const finalQ = [a, b].map((v, k) => new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), (k ? 0.5 : -0.3) + Math.random() * 0.6).multiply(new THREE.Quaternion().setFromEuler(FACE_UP[v])));
   const axes = [0, 1].map(() => new THREE.Vector3(Math.random() - .5, Math.random() - .5, Math.random() - .5).normalize());
   const dur = REDUCED ? 650 : 1150, t0 = performance.now();
+  requestActiveRender(dur + 300);
   await new Promise((res) => {
     const step = () => {
       const k = Math.min(1, (performance.now() - t0) / dur);
@@ -742,8 +801,19 @@ function showDiceSum(n, dbl) {
 }
 
 /* ảnh chụp mô hình cho avatar & hộp thoại */
-const snapR = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
-snapR.setSize(220, 220); snapR.outputColorSpace = THREE.SRGBColorSpace;
+let snapR = null, snapDisposeTimer = 0;
+function getSnapshotRenderer() {
+  if (!snapR) {
+    snapR = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+    snapR.setSize(220, 220); snapR.outputColorSpace = THREE.SRGBColorSpace;
+  }
+  clearTimeout(snapDisposeTimer);
+  return snapR;
+}
+function releaseSnapshotRenderer() {
+  if (!snapR) return;
+  snapR.dispose(); snapR.forceContextLoss(); snapR = null;
+}
 const snapScene = new THREE.Scene();
 snapScene.add(new THREE.HemisphereLight(0xffffff, 0xb0c0d0, 1.5));
 const sl = new THREE.DirectionalLight(0xffffff, 1.4); sl.position.set(3, 5, 4); snapScene.add(sl);
@@ -751,14 +821,16 @@ const snapCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 50);
 const snapCache = {};
 function snapshot(key, obj) {
   if (snapCache[key]) return snapCache[key];
+  const snapshotRenderer = getSnapshotRenderer();
   snapScene.add(obj);
   const box = new THREE.Box3().setFromObject(obj), size = box.getSize(new THREE.Vector3()), ctr = box.getCenter(new THREE.Vector3());
   const r = Math.max(size.x, size.y, size.z) * 0.78;
   Object.assign(snapCam, { left: -r, right: r, top: r, bottom: -r });
   snapCam.position.set(ctr.x + 6, ctr.y + 4.5, ctr.z + 6); snapCam.lookAt(ctr); snapCam.updateProjectionMatrix();
-  snapR.render(snapScene, snapCam);
-  const url = snapR.domElement.toDataURL('image/png');
+  snapshotRenderer.render(snapScene, snapCam);
+  const url = snapshotRenderer.domElement.toDataURL('image/png');
   snapScene.remove(obj);
+  snapDisposeTimer = setTimeout(releaseSnapshotRenderer, 2000);
   return (snapCache[key] = url);
 }
 
@@ -773,6 +845,7 @@ function applyView() {
   camera.position.set(view.tx + CAM_OFF.x, CAM_OFF.y, view.tz + CAM_OFF.z);
   camera.lookAt(view.tx, 0, view.tz);
   camera.zoom = view.zoom; camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+  requestActiveRender(500);
 }
 function resize() {
   const w = innerWidth, h = innerHeight; renderer.setSize(w, h);
@@ -790,9 +863,8 @@ $('#zfit').onclick = () => { view.zoom = 1; view.tx = 0; view.tz = 0; applyView(
 // kéo để di chuyển, cuộn / chụm hai ngón để zoom, chạm để chọn ô
 const ptrs = new Map();
 let drag = null, pinch0 = null;
-const cvs = renderer.domElement;
-cvs.addEventListener('pointerdown', (e) => { cvs.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); drag = { x: e.clientX, y: e.clientY, moved: 0 }; if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch0 = { d: Math.hypot(a.x - b.x, a.y - b.y), z: view.zoom }; } });
-cvs.addEventListener('pointermove', (e) => {
+function canvasPointerDown(e) { cvs.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); drag = { x: e.clientX, y: e.clientY, moved: 0 }; if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch0 = { d: Math.hypot(a.x - b.x, a.y - b.y), z: view.zoom }; } }
+function canvasPointerMove(e) {
   if (!ptrs.has(e.pointerId)) return;
   const prev = ptrs.get(e.pointerId); ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (ptrs.size === 2 && pinch0) { const [a, b] = [...ptrs.values()]; view.zoom = pinch0.z * Math.hypot(a.x - b.x, a.y - b.y) / pinch0.d; applyView(); drag.moved = 99; return; }
@@ -802,14 +874,21 @@ cvs.addEventListener('pointermove', (e) => {
   // màn hình phải = (1,0,-1)/√2 ; màn hình lên (trên mặt đất) = (-1,0,-1)/√2 / sinE
   const r = -dx * upp / Math.SQRT2, u = dy * upp / Math.SQRT2 / sinE;
   view.tx += r - u; view.tz += -r - u; applyView();
-});
+}
 const endPtr = (e) => {
   if (!ptrs.has(e.pointerId)) return;
   ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch0 = null;
   if (drag && drag.moved < 6 && ptrs.size === 0) pickAt(e.clientX, e.clientY);
 };
-cvs.addEventListener('pointerup', endPtr); cvs.addEventListener('pointercancel', endPtr);
-cvs.addEventListener('wheel', (e) => { e.preventDefault(); zoomBy(Math.exp(-e.deltaY * 0.0015)); }, { passive: false });
+function canvasWheel(e) { e.preventDefault(); zoomBy(Math.exp(-e.deltaY * 0.0015)); }
+function bindCanvas(canvas) {
+  ptrs.clear(); drag = null; pinch0 = null;
+  canvas.addEventListener('pointerdown', canvasPointerDown);
+  canvas.addEventListener('pointermove', canvasPointerMove);
+  canvas.addEventListener('pointerup', endPtr); canvas.addEventListener('pointercancel', endPtr);
+  canvas.addEventListener('wheel', canvasWheel, { passive: false });
+}
+bindCanvas(cvs);
 
 /* chọn ô bằng chạm */
 const ray = new THREE.Raycaster(), mouse = new THREE.Vector2();
@@ -844,6 +923,7 @@ function takeConfetti(n) {
 }
 function burstConfetti(i) {
   const f = tileFrame(i), count = GRAPHICS[graphicsLevel].confetti;
+  requestActiveRender(3100);
   for (let n = 0; n < count; n++) {
     const c = takeConfetti(n), { m } = c;
     m.material.color.set(CONFETTI_COLORS[n % CONFETTI_COLORS.length]);
@@ -886,16 +966,27 @@ function placeOverlays(nowMs, updateDom) {
 }
 
 /* vòng lặp vẽ */
-let clockT = 0, frameRequest = 0, lastRenderedAt = 0;
-function queueFrame() {
-  if (frameRunning && !document.hidden && !frameRequest) frameRequest = requestAnimationFrame(frame);
+let clockT = 0, frameRequest = 0, frameTimer = 0, lastRenderedAt = 0, renderActiveUntil = 0;
+function requestActiveRender(ms = 1000) {
+  renderActiveUntil = Math.max(renderActiveUntil, performance.now() + ms);
+  if (frameRunning && !document.hidden && frameTimer) { clearTimeout(frameTimer); frameTimer = 0; queueFrame(); }
+}
+function renderIsActive(nowMs) {
+  if (nowMs < renderActiveUntil || anims.length > 0 || confetti.length > 0) return true;
+  for (const pid in dispPos) return true;
+  return false;
+}
+function queueFrame(delay = 0) {
+  if (!frameRunning || document.hidden || frameRequest || frameTimer) return;
+  if (delay > 1) frameTimer = setTimeout(() => { frameTimer = 0; if (frameRunning && !document.hidden) frameRequest = requestAnimationFrame(frame); }, delay);
+  else frameRequest = requestAnimationFrame(frame);
 }
 function frame(now) {
   frameRequest = 0;
   if (!frameRunning || document.hidden) return;
-  queueFrame();
-  const frameInterval = 1000 / GRAPHICS[graphicsLevel].fps;
-  if (lastRenderedAt && now - lastRenderedAt < frameInterval - 1) return;
+  const profile = GRAPHICS[graphicsLevel], targetFps = renderIsActive(now) ? profile.fps : profile.idleFps;
+  const frameInterval = 1000 / targetFps;
+  if (lastRenderedAt && now - lastRenderedAt < frameInterval - 1) { queueFrame(frameInterval - (now - lastRenderedAt)); return; }
   clockT = now / 1000;
   const dt = Math.min(0.05, Math.max(0, clockT - (frame.last || clockT))); frame.last = clockT;
   lastRenderedAt = lastRenderedAt ? lastRenderedAt + frameInterval * Math.max(1, Math.floor((now - lastRenderedAt) / frameInterval)) : now;
@@ -917,14 +1008,16 @@ function frame(now) {
   glows.forEach((g) => { if (g.userData.on) g.material.opacity = 0.12 + Math.sin(clockT * 5) * 0.1; else g.material.opacity = 0; });
   if (renderer.shadowMap.enabled && shadowDirty) { renderer.shadowMap.needsUpdate = true; shadowDirty = false; }
   renderer.render(scene, camera);
+  const nextProfile = GRAPHICS[graphicsLevel], nextFps = renderIsActive(performance.now()) ? nextProfile.fps : nextProfile.idleFps;
+  queueFrame(1000 / nextFps);
 }
 function startFrame() {
   if (frameRunning) return;
   frameRunning = true;
-  frame.last = 0; lastRenderedAt = 0;
+  frame.last = 0; lastRenderedAt = 0; requestActiveRender(1500);
   queueFrame();
 }
-function stopFrame() { frameRunning = false; if (frameRequest) cancelAnimationFrame(frameRequest); frameRequest = 0; }
+function stopFrame() { frameRunning = false; if (frameRequest) cancelAnimationFrame(frameRequest); if (frameTimer) clearTimeout(frameTimer); frameRequest = 0; frameTimer = 0; }
 function syncRenderingVisibility() { if (!document.hidden && frameRunning) { frame.last = 0; lastRenderedAt = 0; queueFrame(); } }
 
 /* ---------------- giao diện ---------------- */
@@ -1686,7 +1779,11 @@ $('#gname').onkeydown = (e) => { if (e.key === 'Enter') enterRoom(false); };
 $('#groom').onkeydown = (e) => { if (e.key === 'Enter') enterRoom(false); };
 $('#newgame').onclick = newGameFlow;
 addEventListener('resize', resize);
-window.__TT = { get S() { return S; }, get mode() { return MODE; }, get me() { return me; }, get busy() { return busy; }, act, tokens, scr: (i) => { const f = tileFrame(i); return screenOf(new THREE.Vector3(f.x, TOPY, f.z)); }, sync() { resetView(); } }; // cho script kiểm thử
+window.__TT = {
+  get S() { return S; }, get mode() { return MODE; }, get me() { return me; }, get busy() { return busy; },
+  get perf() { const p = GRAPHICS[graphicsLevel], r = renderer.info.render; return { graphicsLevel, activeFps: p.fps, idleFps: p.idleFps, antialias: !!renderer.getContext().getContextAttributes().antialias, frame: r.frame, calls: r.calls, triangles: r.triangles, points: r.points }; },
+  act, tokens, scr: (i) => { const f = tileFrame(i); return screenOf(new THREE.Vector3(f.x, TOPY, f.z)); }, sync() { resetView(); },
+}; // cho script kiểm thử và đo hiệu năng runtime
 
 /* ---------------- khởi động ---------------- */
 async function detectServer() {
@@ -1697,8 +1794,9 @@ async function prepareBoard() {
   if (!boardReadyPromise) boardReadyPromise = (async () => {
     await Promise.all([document.fonts.load('800 40px "Baloo 2"'), document.fonts.load('800 40px "Be Vietnam Pro"'), document.fonts.load('900 40px Rubik'), document.fonts.load('700 40px Fredoka'), document.fonts.load('600 40px Fredoka')]).catch(() => {});
     seatSetup(); markSeen();
-    await loadModels();
-    await HK.loadKit('models', (d, n) => { $('#loadmsg').textContent = `Tải mô hình 3D ${d}/${n}`; });
+    const modelBundle = await (await fetch('models/bundle.json')).json();
+    await loadModels(modelBundle);
+    await HK.loadKit('models', (d, n) => { $('#loadmsg').textContent = `Tải mô hình 3D ${d}/${n}`; }, modelBundle);
     await loadGroundPatterns();
     buildTiles(); decorate();
     resize();

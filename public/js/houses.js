@@ -19,15 +19,20 @@ const FILES = {
   industrial: ['windmill'],
 };
 const RAW = {};
-export async function loadKit(base = 'models', onProgress) {
+function decodeBase64(encoded) {
+  const raw = atob(encoded), bytes = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+  return bytes.buffer;
+}
+export async function loadKit(base = 'models', onProgress, suppliedBundle = null) {
   const loader = new GLTFLoader();
   const jobs = [];
   for (const [kit, list] of Object.entries(FILES)) for (const n of list) jobs.push([kit, n]);
   let done = 0;
   // các .glb gói base64 trong bundle.json; bảng màu png đọc từ models/<kit>/Textures/
-  const bundle = await (await fetch(`${base}/bundle.json`)).json();
+  const bundle = suppliedBundle || await (await fetch(`${base}/bundle.json`)).json();
   const parse = (kit, n) => new Promise((res, rej) => {
-    const bin = Uint8Array.from(atob(bundle[kit + '/' + n]), (ch) => ch.charCodeAt(0)).buffer;
+    const bin = decodeBase64(bundle[kit + '/' + n]);
     loader.parse(bin, `${base}/${kit}/`, res, rej);
   });
   await Promise.all(jobs.map(([kit, n]) => parse(kit, n).then((g) => {
