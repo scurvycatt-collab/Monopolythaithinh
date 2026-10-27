@@ -25,7 +25,7 @@ const outageRounds = (i) => Math.max(0, Number(S.outage && S.outage[i] || 0) - N
 
 /* ---------------- âm thanh ---------------- */
 const SOUND_KEY = 'tt-monopoly-sound-v1';
-const soundPrefs = { music: true, musicVolume: 20, turn: true, turnVolume: 55 };
+const soundPrefs = { music: true, musicVolume: 20, turn: true, turnVolume: 75 };
 try { Object.assign(soundPrefs, JSON.parse(localStorage.getItem(SOUND_KEY) || '{}')); } catch (e) { /* dùng mặc định */ }
 let audioCtx = null, musicTimer = null, musicStep = 0;
 const musicNotes = [261.63, 329.63, 392, 329.63, 293.66, 349.23, 440, 349.23];
@@ -58,7 +58,7 @@ function unlockAudio() {
 }
 function playTurnSound() {
   if (!soundPrefs.turn || !audioCtx || audioCtx.state !== 'running') return;
-  const volume = soundPrefs.turnVolume / 100 * 0.16, at = audioCtx.currentTime;
+  const volume = soundPrefs.turnVolume / 100 * 0.30, at = audioCtx.currentTime;
   tone(523.25, 0.2, volume, 'sine', at); tone(659.25, 0.24, volume * 0.88, 'sine', at + 0.12); tone(783.99, 0.38, volume * 0.82, 'sine', at + 0.25);
 }
 let timeWarningKey = '';
@@ -69,7 +69,7 @@ function playTimeWarning() {
   const second = Math.ceil(left / 1000), key = `${S.stepAt}:${second}`;
   if (key === timeWarningKey) return;
   timeWarningKey = key;
-  const volume = soundPrefs.turnVolume / 100 * 0.12;
+  const volume = soundPrefs.turnVolume / 100 * 0.23;
   tone(second <= 2 ? 880 : 659.25, second <= 2 ? 0.18 : 0.11, volume, second <= 2 ? 'square' : 'sine');
 }
 function renderSoundSettings() {
@@ -363,8 +363,7 @@ function drawTile(i) {
     const own = S.props[i];
     text(t.name.toUpperCase(), cw / 2, nameY, 50, 700, 'Fredoka', '#111111', cw - 22, 0);
     const out = own && G.outaged(S, i);
-    if (own) text(out ? '⚡ 0K' : shortK(G.rentOf(S, i)), cw / 2, sY + sH / 2 + 4, 84, 600, 'Fredoka', out ? '#8a94a3' : '#000000', cw - 20); // chưa có chủ: để trống
-    if (out) text(`⚡ CÒN ${outageRounds(i)} VÒNG`, cw / 2, far ? ch - 44 : 44, 31, 900, 'Rubik', '#f2b632', cw - 20, 0, SH);
+    if (own) text(out ? `${outageRounds(i)} ⚡` : shortK(G.rentOf(S, i)), cw / 2, sY + sH / 2 + 4, 84, out ? 900 : 600, out ? 'Rubik' : 'Fredoka', out ? '#d18b00' : '#000000', cw - 20); // số lượt còn lại + sét trên dải giá luôn lộ
   } else {
     text(KIND[t.type].label, cw / 2, sY + sH / 2 + 4, 56, 600, 'Fredoka', '#000000', cw - 20);
   }
@@ -883,6 +882,14 @@ function floatDelta(pid, d) {
   f.style.left = r.left + r.width / 2 + 'px'; f.style.top = r.top - 4 + 'px'; f.style.animationDuration = duration + 'ms';
   document.body.appendChild(f); setTimeout(() => f.remove(), duration + 100);
 }
+const reactionTimers = {};
+function showHappyReaction(pid) {
+  const card = $(`#cards [data-p="${pid}"]`); if (!card) return;
+  const av = card.querySelector('.av'); let face = av.querySelector('.happy-face');
+  if (!face) { face = document.createElement('span'); face.className = 'happy-face'; face.textContent = '😄'; av.appendChild(face); }
+  clearTimeout(reactionTimers[pid]); card.classList.remove('reacting'); void card.offsetWidth; card.classList.add('reacting'); face.classList.add('show');
+  reactionTimers[pid] = setTimeout(() => { face.classList.remove('show'); card.classList.remove('reacting'); }, REDUCED ? 900 : 1700);
+}
 const tweens = {};
 function tweenMoney(pid, to, delay = 0) {
   const from = shown[pid] ?? to; cancelAnimationFrame(tweens[pid]);
@@ -1106,6 +1113,8 @@ const NOTICE = {
   noTakeover: (mine, n) => (mine ? 'Bạn không có đủ tiền mua tài sản này' : `${n} không có đủ tiền mua tài sản này`),
   tour: (mine, n) => (mine ? 'World Tour! Lượt sau bạn được bay tới bất kỳ ô nào' : `${n} tới World Tour — lượt sau được bay`),
   festival: (mine, n, x) => `Lễ hội ở ${TILES[x.tile].name}! Tiền thuê x${x.mult}`,
+  vipUsed: (mine, n, x) => `${mine ? 'Bạn đã' : `${n} đã`} sử dụng thẻ miễn tiền thuê tại ${TILES[x.tile].name} — miễn ${money(x.amount)}`,
+  escapeUsed: (mine, n) => `${mine ? 'Bạn đã' : `${n} đã`} sử dụng thẻ Thoát đảo`,
 };
 async function showStatus(text, ms = 1900) {
   const el = $('#status'); el.innerHTML = `<p>${esc(text)}</p>`;
@@ -1266,8 +1275,8 @@ $('#info').addEventListener('click', (e) => { if (e.target.id === 'info') hideIn
 addEventListener('keydown', (e) => { if (e.key === 'Escape') { hideInfo(); $('#soundpanel').classList.remove('show'); } });
 
 /* ---------------- hành động & hoạt ảnh ---------------- */
-const seen = { dice: null, move: -1, card: null, notice: null, achievement: -1 };
-function markSeen() { seen.dice = S.dice && S.dice.seq; seen.move = S.moves.reduce((a, m) => Math.max(a, m.seq), -1); seen.card = S.lastCard && S.lastCard.seq; seen.notice = S.notice && S.notice.seq; seen.achievement = (S.achievements || []).reduce((a, x) => Math.max(a, x.seq), -1); }
+const seen = { dice: null, move: -1, card: null, notice: null, reaction: null, achievement: -1 };
+function markSeen() { seen.dice = S.dice && S.dice.seq; seen.move = S.moves.reduce((a, m) => Math.max(a, m.seq), -1); seen.card = S.lastCard && S.lastCard.seq; seen.notice = S.notice && S.notice.seq; seen.reaction = S.reaction && S.reaction.seq; seen.achievement = (S.achievements || []).reduce((a, x) => Math.max(a, x.seq), -1); }
 let sending = false;
 async function act(type, data) {
   if (busy || sending) return;
@@ -1287,6 +1296,7 @@ async function playOut() {
   const moves = S.moves.filter((m) => m.seq > seen.move).sort((a, b) => a.seq - b.seq);
   const card = S.lastCard && S.lastCard.seq !== seen.card ? S.lastCard : null;
   const notice = S.notice && S.notice.seq !== seen.notice ? S.notice : null;
+  const reaction = S.reaction && S.reaction.seq !== seen.reaction ? S.reaction : null;
   // Khi ván đã có người thắng, ưu tiên duy nhất màn kết quả; không phát lại các mốc "sắp thắng" vừa sinh cùng hành động cuối.
   const achievements = S.phase === 'over' ? [] : (S.achievements || []).filter((x) => x.seq > seen.achievement).sort((a, b) => a.seq - b.seq);
   markSeen();
@@ -1305,6 +1315,7 @@ async function playOut() {
   // Người rút Vé máy bay xác nhận bằng modal trạng thái `flight`; sau OK server mới tạo bước di chuyển.
   if (card && !(card.id === 'FLIGHT_TICKET' && isMe(card.pid))) await showCard(card);
   const wait = syncBuildings(); syncTokens(false); renderCards(wait);
+  if (reaction && reaction.kind === 'happyRent') showHappyReaction(reaction.pid);
   for (const achievement of achievements) await showAchievement(achievement);
   if (notice && S.phase === 'play') {
     const who = G.byId(S, notice.pid);
@@ -1445,7 +1456,11 @@ function renderWatchBadge() {
 const petGrid = (sel, taken, attr) => `<div class="pets">${G.PETS.map((x) => `<button type="button" class="pet${x.id === sel ? ' on' : ''}" ${attr}="${x.id}" ${taken.has(x.id) && x.id !== sel ? 'disabled' : ''} style="--c:${x.c}"><img alt="" src="${petImg(x.id)}"><span>${x.n}</span></button>`).join('')}</div>`;
 const timeRow = (cur, attr) => `<div class="times">${CFG.TIME_OPTIONS.map((m) => `<button type="button" class="pill ${m === cur ? '' : 'ghost'}" ${attr}="${m}">${timeLabel(m)}</button>`).join('')}</div>`;
 const turnRow = (cur, attr) => `<div class="times">${CFG.TURN_OPTIONS.map((v) => `<button type="button" class="pill ${v === cur ? '' : 'ghost'}" ${attr}="${v}">${v} giây</button>`).join('')}</div>`;
-const mapRow = (cur) => `<div class="map-options">${MAPS.map((map, index) => `<button type="button" class="map-option${map.id === cur ? ' on' : ''}" data-map="${map.id}"><span class="map-thumb"><i>${index + 1}</i></span><span><b>${esc(map.name)}</b><small>${esc(map.description)}${map.default ? ' · Mặc định' : ''}</small></span></button>`).join('')}</div>`;
+const mapRow = (cur) => `<div class="map-options">${MAPS.map((map) => `<button type="button" class="map-option${map.id === cur ? ' on' : ''}" data-map="${map.id}"><span class="map-thumb"><img alt="Xem trước ${esc(map.name)}" src="${esc(map.preview)}"></span><span><b>${esc(map.name)}</b><small>${esc(map.description)}${map.default ? ' · Mặc định' : ''}</small></span></button>`).join('')}</div>`;
+function renderGateMapPreview() {
+  const map = MAPS.find((item) => item.id === $('#gmap').value) || MAPS[0];
+  $('#gmap-preview').innerHTML = `<img src="${esc(map.preview)}" alt="Ảnh xem trước ${esc(map.name)}"><span><b>${esc(map.name)}${map.default ? ' (Mặc định)' : ''}</b><small>${esc(map.description)}</small></span>`;
+}
 function lobbyNet(el) {
   const mine = me && G.byId(S, me.id), amHost = !!mine && S.hostId === mine.id, taken = new Set(S.players.map((p) => p.pet));
   const currentMap = MAPS.find((map) => map.id === S.settings.mapId) || MAPS[0];
@@ -1554,6 +1569,7 @@ function showRoomGate() {
   const selectedMap = MAPS.some((map) => map.id === $('#gmap').value) ? $('#gmap').value : MAPS[0].id;
   $('#gmap').innerHTML = MAPS.map((map) => `<option value="${esc(map.id)}">${esc(map.name)}${map.default ? ' (Mặc định)' : ''}</option>`).join('');
   $('#gmap').value = selectedMap;
+  renderGateMapPreview();
   document.body.dataset.screen = 'gate';
   syncMusic();
   $('#loading').classList.add('hidden');
@@ -1609,6 +1625,7 @@ function exitRoom() {
 $('#gcreate').onclick = () => enterRoom(true);
 $('#gjoin').onclick = () => enterRoom(false);
 $('#gwatch').onclick = () => enterRoom(false, true);
+$('#gmap').onchange = renderGateMapPreview;
 $('#gname').onkeydown = (e) => { if (e.key === 'Enter') enterRoom(false); };
 $('#groom').onkeydown = (e) => { if (e.key === 'Enter') enterRoom(false); };
 $('#newgame').onclick = newGameFlow;

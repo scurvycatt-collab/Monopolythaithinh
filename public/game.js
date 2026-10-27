@@ -78,7 +78,7 @@
     return {
       version: 0, phase: 'lobby', hostId: null, players: [], props: {}, festival: null, festLevel: 0, outage: {}, bonus: [], turn: 0, step: null,
       dice: null, moves: [], lastCard: null, log: [], round: 1, seq: 0, again: false,
-      pending: null, winner: null, winReason: null, achievements: [], milestones: {}, startedAt: null, endsAt: null, stepAt: null,
+      pending: null, winner: null, winReason: null, achievements: [], milestones: {}, reaction: null, startedAt: null, endsAt: null, stepAt: null,
       settings: { mapId: MAPS[0].id, roundLimit: 0, timeLimitMin: CFG.TIME_OPTIONS[0], turnSec: CFG.TURN_SEC, autoSec: CFG.AUTO_OFFLINE_SEC },
     };
   }
@@ -173,7 +173,7 @@
     now = now || Date.now();
     Object.assign(s, {
       phase: 'play', props: {}, festival: null, festLevel: 0, outage: {}, turn: 0, step: null, dice: null, moves: [], lastCard: null,
-      log: [], round: 1, again: false, pending: null, winner: null, winReason: null, achievements: [], milestones: {},
+      log: [], round: 1, again: false, pending: null, winner: null, winReason: null, achievements: [], milestones: {}, reaction: null,
       startedAt: now, stepAt: now, endsAt: s.settings.timeLimitMin ? now + s.settings.timeLimitMin * 60000 : null,
       bonus: shuffle(TILES.filter(isBuyable).map((t) => t.i)).slice(0, CFG.BONUS_TILES).sort((a, b) => a - b),
     });
@@ -182,7 +182,7 @@
   }
   function resetGame(s) {
     s.players.forEach(resetPlayer);
-    Object.assign(s, { phase: 'lobby', props: {}, festival: null, festLevel: 0, outage: {}, bonus: [], turn: 0, step: null, dice: null, moves: [], lastCard: null, log: [], again: false, pending: null, winner: null, winReason: null, achievements: [], milestones: {}, round: 1, startedAt: null, endsAt: null, stepAt: null });
+    Object.assign(s, { phase: 'lobby', props: {}, festival: null, festLevel: 0, outage: {}, bonus: [], turn: 0, step: null, dice: null, moves: [], lastCard: null, log: [], again: false, pending: null, winner: null, winReason: null, achievements: [], milestones: {}, reaction: null, round: 1, startedAt: null, endsAt: null, stepAt: null });
     log(s, 'Quay về phòng chờ');
   }
 
@@ -293,6 +293,7 @@
     const d = s.pending, from = byId(s, d.from), to = d.to ? byId(s, d.to) : null;
     if (from.money < d.amount) return false;
     transfer(from, to, d.amount);
+    if (to && /^tiền thuê /.test(d.why || '')) s.reaction = { seq: nextSeq(s), pid: to.id, kind: 'happyRent' };
     log(s, `${from.name} đã trả ${k(d.amount)}${to ? ' cho ' + to.name : ''}`);
     s.pending = null;
     return true;
@@ -375,17 +376,21 @@
         }
         const owner = byId(s, pr.owner);
         const rent = rentOf(s, i);
+        let usedVip = false;
         if (outaged(s, i)) log(s, `${t.name} đang mất điện — ${p.name} không phải trả tiền thuê`);
         else if (p.shields > 0 && rent > 0) {
           p.shields--;
+          usedVip = true;
+          s.notice = { seq: nextSeq(s), pid: p.id, kind: 'vipUsed', tile: i, amount: rent };
           log(s, `🛡️ ${p.name} dùng thẻ VIP, miễn ${k(rent)} tiền thuê ở ${t.name}`);
         } else {
           if (!pay(s, p, owner, rent, `tiền thuê ${t.name} cho ${owner.name}`)) return finish(s);
+          if (rent > 0) s.reaction = { seq: nextSeq(s), pid: owner.id, kind: 'happyRent' };
           log(s, `${p.name} trả ${owner.name} ${k(rent)} tiền thuê ở ${t.name}${s.festival === i ? ` (lễ hội x${festMult(s)})` : ''}`);
         }
         if (canTakeover(s, i)) {
           if (p.money >= takeoverPrice(s, i)) { s.step = { kind: 'takeover', tile: i, price: takeoverPrice(s, i) }; return; }
-          s.notice = { seq: nextSeq(s), pid: p.id, kind: 'noTakeover' };   // giao diện: "Bạn không có đủ tiền mua tài sản này"
+          if (!usedVip) s.notice = { seq: nextSeq(s), pid: p.id, kind: 'noTakeover' };   // ưu tiên thông báo thẻ VIP nếu vừa tự kích hoạt
         }
         return finish(s);
       }
@@ -513,6 +518,7 @@
         need('island');
         if (!p.escapeCards) fail('Bạn không có thẻ thoát đảo');
         p.escapeCards--; p.island = 0;
+        s.notice = { seq: nextSeq(s), pid: p.id, kind: 'escapeUsed' };
         log(s, `${p.name} dùng thẻ thoát đảo`);
         s.step = { kind: 'roll' };
         return;

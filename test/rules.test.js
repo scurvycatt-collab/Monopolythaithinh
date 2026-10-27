@@ -47,12 +47,14 @@ function check(row) {
   if ('laps' in e) eq('số vòng', me.laps, e.laps);
   if ('island' in e) eq('lượt kẹt đảo', me.island, e.island);
   if ('shields' in e) eq('thẻ VIP', me.shields, e.shields);
+  if ('escapeCards' in e) eq('thẻ Thoát đảo', me.escapeCards, e.escapeCards);
   if ('tourPending' in e && me.tourPending !== e.tourPending) bad.push('vé World Tour sai');
   if ('festival' in e) eq('ô lễ hội', s.festival, e.festival);
   if ('festLevel' in e) eq('bậc lễ hội', s.festLevel, e.festLevel);
   if ('outage' in e && !(s.outage && s.outage[e.outage])) bad.push('ô chưa bị mất điện');
   if ('pending' in e) eq('khoản treo', s.pending ? s.pending.amount : 0, e.pending);
   if ('notice' in e && !(s.notice && s.notice.kind === e.notice && s.notice.pid === 'me')) bad.push(`thiếu thông báo ${e.notice}`);
+  if ('reaction' in e) { const [pid, kind] = e.reaction; if (!(s.reaction && s.reaction.pid === pid && s.reaction.kind === kind)) bad.push(`thiếu phản ứng ${kind} của ${pid}`); }
   if ('owner' in e) { const [i, who] = e.owner; const got = s.props[i] ? s.props[i].owner : null; if (got !== who) bad.push(`chủ ô ${i}: ${got}, cần ${who}`); }
   if ('level' in e) { const [i, lv] = e.level; eq(`cấp ô ${i}`, s.props[i] && s.props[i].level, lv); }
   if ('phase' in e && s.phase !== e.phase) bad.push(`phase ${s.phase}, cần ${e.phase}`);

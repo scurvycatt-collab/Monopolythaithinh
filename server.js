@@ -25,6 +25,7 @@ const PUB = path.join(__dirname, 'public');
 const DATA_DIR = process.env.DATA_DIR || path.join(PACKED ? path.dirname(process.execPath) : __dirname, 'data');
 const SAVE = path.join(DATA_DIR, 'game.json');
 const MANUAL_PROXY_SEC = G.RULES.CONFIG.PROXY_SEC; // người chơi mất kết nối bao lâu thì người khác được bấm "Đi hộ" (bộ luật)
+const EMPTY_ROOM_TTL_MS = 2 * 60 * 1000;
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
 
@@ -56,6 +57,7 @@ const offlineSince = new Map(); // id người chơi -> thời điểm mất k�
 state.players.forEach((p) => offlineSince.set(p.id, Date.now()));
 
 const isOnline = (id) => (conns.get(id) || 0) > 0;
+const hasOnlinePlayers = () => state.players.some((p) => isOnline(p.id));
 const offlineSec = (id) => (isOnline(id) ? 0 : (Date.now() - (offlineSince.get(id) || Date.now())) / 1000);
 function presence() {
   const o = {};
@@ -65,13 +67,25 @@ function presence() {
 const viewers = () => [...new Set([...clients].filter((c) => !c.pid && c.viewer).map((c) => c.viewer))];
 const payload = () => `data: ${JSON.stringify({ state: G.publicView(state), presence: presence(), viewers: viewers(), now: Date.now(), proxySec: MANUAL_PROXY_SEC })}\n\n`;
 function broadcast() { const msg = payload(); for (const c of clients) c.res.write(msg); }
-function commit() { state.version++; save(); broadcast(); }
+let emptyTimer = null;
+function deleteEmptyRoom() {
+  if (hasOnlinePlayers()) return;
+  state = G.createState(); offlineSince.clear(); conns.clear(); save(); broadcast();
+}
+function scheduleEmptyCleanup() {
+  clearTimeout(emptyTimer); emptyTimer = null;
+  if (!state.players.length) return;
+  if (!hasOnlinePlayers()) emptyTimer = setTimeout(deleteEmptyRoom, EMPTY_ROOM_TTL_MS);
+}
+function commit() { state.version++; save(); broadcast(); scheduleEmptyCleanup(); }
+scheduleEmptyCleanup();
 
 setInterval(() => { const msg = `event: ping\ndata: ${Date.now()}\n\n`; for (const c of clients) c.res.write(msg); }, 15000);
 
 // mỗi giây: hết thời lượng ván → dừng, xếp hạng theo tổng tài sản; hết thời gian một bước → tự đi một bước an toàn
 setInterval(() => {
   try {
+    if (!hasOnlinePlayers()) return;
     if (G.checkTime(state, Date.now())) return commit();
     if (G.checkTurn(state, Date.now())) commit();
   } catch (e) { console.error('Lỗi kiểm tra giờ:', e); }
@@ -90,7 +104,7 @@ function runAuto(reason) {
 }
 setInterval(() => {
   const sec = state.settings.autoSec;
-  if (state.phase !== 'play' || !sec) return;
+  if (state.phase !== 'play' || !sec || !hasOnlinePlayers()) return;
   const p = G.cur(state);
   if (p && offlineSec(p.id) >= sec) { try { runAuto('Tự động đi hộ'); } catch (e) { console.error('Lỗi đi hộ:', e); } }
 }, 3000);
@@ -121,7 +135,7 @@ function handleEvents(req, res, url) {
   req.socket.setKeepAlive(true, 10000); req.socket.setNoDelay(true);
   const c = { res, pid: p ? p.id : null, viewer };
   clients.add(c);
-  if (p) conns.set(p.id, (conns.get(p.id) || 0) + 1);
+  if (p) { conns.set(p.id, (conns.get(p.id) || 0) + 1); clearTimeout(emptyTimer); emptyTimer = null; }
   broadcast();
   req.on('close', () => {
     clients.delete(c);
@@ -130,6 +144,7 @@ function handleEvents(req, res, url) {
     conns.set(c.pid, n);
     if (n === 0) offlineSince.set(c.pid, Date.now());
     broadcast();
+    scheduleEmptyCleanup();
   });
 }
 
@@ -142,6 +157,7 @@ async function handleApi(req, res, url) {
       if (existing) {
         if (isOnline(existing.id)) return sendJSON(res, 409, { error: `${existing.name} đang online trên một thiết bị khác` });
         offlineSince.set(existing.id, Date.now());
+        scheduleEmptyCleanup();
         return sendJSON(res, 200, { id: existing.id, token: existing.token, rejoined: true });
       }
       const wasEmpty = state.players.length === 0;
@@ -157,6 +173,7 @@ async function handleApi(req, res, url) {
       const p = G.byId(state, body.id);
       if (!p) return sendJSON(res, 404, { error: 'Không tìm thấy người chơi' });
       if (isOnline(p.id)) return sendJSON(res, 409, { error: `${p.name} đang online trên một thiết bị khác` });
+      scheduleEmptyCleanup();
       return sendJSON(res, 200, { id: p.id, token: p.token });
     }
     if (url.pathname === '/api/act') {

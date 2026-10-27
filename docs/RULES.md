@@ -166,7 +166,7 @@ stateDiagram-v2
 
 | Mã | Tình huống | Kết quả |
 |---|---|---|
-| C9 | Đủ thuê, đủ mua lại | Trả thuê → bước takeover |
+| C9 | Đủ thuê, đủ mua lại | Trả thuê, chủ nhà hiện mặt vui → bước takeover |
 | C10 | Mua lại ô cấp 1 | Trả 2× giá trị cho chủ, nhận nguyên Nhà 1 |
 | C11 | Đủ thuê, không đủ mua lại | Trả thuê, thông báo "không đủ tiền mua tài sản này" |
 | C12 | Khách sạn của người khác | Trả thuê, không được mua lại |
@@ -178,6 +178,8 @@ stateDiagram-v2
 | C18 | Ô cắm cờ lễ hội | Thuê × 1,5 |
 | C19 | Ô đang tổ chức lễ hội lần 2 | Thuê × 3 |
 | C20 | Ô đang mất điện | Không trả thuê |
+| C21 | Có thẻ VIP, dừng ở ô đối thủ | Tự dùng 1 thẻ, miễn tiền thuê và hiện thông báo |
+| C22 | Có thẻ VIP nhưng không đủ tiền mua lại | Ưu tiên thông báo đã dùng thẻ miễn thuê |
 | C21 | Có thẻ VIP | Miễn thuê, mất 1 thẻ VIP |
 
 ### Bãi biển
@@ -194,7 +196,7 @@ stateDiagram-v2
 | S1 | Dừng ở Lost Island | Kẹt 3 lượt |
 | S2 | Đang kẹt, trả phí | Trả 200 → đổ bình thường |
 | S3 | Đang kẹt, đổ không ra đôi | Mất lượt, còn 2 |
-| S4 | Đang kẹt, dùng thẻ Thoát đảo | Rời đảo miễn phí |
+| S4 | Đang kẹt, dùng thẻ Thoát đảo | Rời đảo miễn phí và hiện thông báo |
 | S5 | Dừng ở World Tour | Lượt sau được bay |
 | S6 | Bay từ World Tour tới Madrid | Trả vé 50, qua Start +300, tính 1 vòng |
 | S7 | Bay tới ô của người khác | Trả vé, nhận lương nếu qua Start, rồi trả thuê |

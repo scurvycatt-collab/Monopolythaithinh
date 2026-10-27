@@ -9,6 +9,7 @@ import { resolveAppPath, validRoomKey } from './pathing.mjs';
 
 const G = Game;
 const C = G.RULES.CONFIG;
+const EMPTY_ROOM_TTL_MS = 2 * 60 * 1000;
 const enc = new TextEncoder();
 const json = (code, obj) => new Response(JSON.stringify(obj), { status: code, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' } });
 const hex = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, '0')).join('');
@@ -45,18 +46,25 @@ export class GameRoom extends DurableObject {
     this.clients = new Set();          // { writer, pid }
     this.conns = new Map();            // id người chơi -> số kết nối đang mở
     this.offlineSince = new Map();     // id người chơi -> thời điểm mất kết nối
+    this.emptySince = null;
     ctx.blockConcurrencyWhile(async () => {
-      const saved = await ctx.storage.get('state');
+      const [saved, emptySince] = await Promise.all([ctx.storage.get('state'), ctx.storage.get('emptySince')]);
       const base = G.createState();
       this.state = saved ? Object.assign(base, saved, { settings: Object.assign(base.settings, saved.settings || {}) }) : base;
       G.ensureHost(this.state); // nâng cấp room cũ chưa có hostId
       const now = Date.now();
       this.state.players.forEach((p) => this.offlineSince.set(p.id, now));
+      if (this.state.players.length) {
+        this.emptySince = Number(emptySince) || now;
+        if (!emptySince) await ctx.storage.put('emptySince', this.emptySince);
+        await this.schedule();
+      }
     });
   }
 
   /* ---------- trạng thái & phát sóng ---------- */
   isOnline(id) { return (this.conns.get(id) || 0) > 0; }
+  hasOnlinePlayers() { return this.state.players.some((p) => this.isOnline(p.id)); }
   offlineSec(id) { return this.isOnline(id) ? 0 : (Date.now() - (this.offlineSince.get(id) || Date.now())) / 1000; }
   presence() {
     const o = {};
@@ -73,11 +81,33 @@ export class GameRoom extends DurableObject {
     this.broadcast();
     await this.schedule();
   }
+  async startEmptyGrace() {
+    if (!this.state.players.length || this.hasOnlinePlayers()) return;
+    this.emptySince = Date.now();
+    await this.ctx.storage.put('emptySince', this.emptySince);
+    await this.schedule();
+  }
+  async markOccupied() {
+    if (this.emptySince === null) return;
+    this.emptySince = null;
+    await this.ctx.storage.delete('emptySince');
+  }
+  async deleteRoom() {
+    this.state = G.createState();
+    this.conns.clear(); this.offlineSince.clear(); this.emptySince = null;
+    await this.ctx.storage.deleteAll();
+    await this.ctx.storage.deleteAlarm();
+    this.broadcast();
+  }
   // đồng hồ của phòng: chỉ hẹn giờ đúng lúc có việc (hết ván, hết giờ bước, người mất kết nối tới hạn đi hộ,
   // hoặc ping 14 giây giữ kết nối) để tiết kiệm lượt gọi trên gói miễn phí của Cloudflare
   nextDeadline() {
     const s = this.state, now = Date.now(), t = [];
     if (this.clients.size) t.push((this.lastPing || now) + 14000);
+    if (s.players.length && !this.hasOnlinePlayers()) {
+      if (this.emptySince !== null) t.push(this.emptySince + EMPTY_ROOM_TTL_MS);
+      return t.length ? Math.max(now + 250, Math.min(...t)) : null;
+    }
     if (s.phase === 'play') {
       if (s.endsAt) t.push(s.endsAt);
       const left = G.stepLeft(s, now); if (left !== null) t.push(now + left);
@@ -94,7 +124,10 @@ export class GameRoom extends DurableObject {
   }
   async alarm() {
     const s = this.state;
-    if (s.phase === 'play') try {
+    if (s.players.length && !this.hasOnlinePlayers() && this.emptySince !== null && Date.now() >= this.emptySince + EMPTY_ROOM_TTL_MS) {
+      await this.deleteRoom(); return;
+    }
+    if (s.phase === 'play' && this.hasOnlinePlayers()) try {
       const now = Date.now();
       if (G.checkTime(s, now)) await this.commit();
       else if (G.checkTurn(s, now)) await this.commit();
@@ -129,28 +162,30 @@ export class GameRoom extends DurableObject {
     return json(404, { error: 'Không có API này' });
   }
 
-  events(url) {
+  async events(url) {
     const p = this.byToken(url.searchParams.get('token'));
     const viewer = p ? '' : String(url.searchParams.get('viewer') || '').replace(/\s+/g, ' ').trim().slice(0, 16);
     const { readable, writable } = new TransformStream();
     const c = { writer: writable.getWriter(), pid: p ? p.id : null, viewer };
     c.writer.closed.catch(() => this.drop(c)); // trình duyệt đóng kết nối → mất kết nối ngay
     this.clients.add(c);
-    if (p) this.conns.set(p.id, (this.conns.get(p.id) || 0) + 1);
+    if (p) { this.conns.set(p.id, (this.conns.get(p.id) || 0) + 1); await this.markOccupied(); }
     this.send(c, 'retry: 1500\n\n');
     this.broadcast();
     this.schedule();
     return new Response(readable, { headers: { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache, no-transform', Connection: 'keep-alive' } });
   }
-  drop(c) {
+  async drop(c) {
     if (!this.clients.delete(c)) return;
     try { c.writer.close(); } catch (e) { /* đã đóng */ }
-    if (!c.pid) return;
-    const n = Math.max(0, (this.conns.get(c.pid) || 1) - 1);
-    this.conns.set(c.pid, n);
-    if (n === 0) this.offlineSince.set(c.pid, Date.now());
+    if (c.pid) {
+      const n = Math.max(0, (this.conns.get(c.pid) || 1) - 1);
+      this.conns.set(c.pid, n);
+      if (n === 0) this.offlineSince.set(c.pid, Date.now());
+      if (!this.hasOnlinePlayers()) await this.startEmptyGrace();
+    }
     this.broadcast();
-    this.schedule(); // hẹn giờ đi hộ nếu người vừa rớt mạng đang tới lượt
+    await this.schedule();
   }
   byToken(t) { return t ? this.state.players.find((p) => p.token === t) : null; }
 
@@ -164,6 +199,7 @@ export class GameRoom extends DurableObject {
         if (existing) {
           if (this.isOnline(existing.id)) return json(409, { error: `${existing.name} đang online trên một thiết bị khác` });
           this.offlineSince.set(existing.id, Date.now());
+          await this.startEmptyGrace();
           return json(200, { id: existing.id, token: existing.token, rejoined: true });
         }
         const wasEmpty = s.players.length === 0;
@@ -171,6 +207,8 @@ export class GameRoom extends DurableObject {
         G.addPlayer(s, { id, token, name: body.name, pet: body.pet });
         if (wasEmpty && body.mapId) G.setSettings(s, { mapId: body.mapId });
         this.offlineSince.set(id, Date.now());
+        this.emptySince = Date.now();
+        await this.ctx.storage.put('emptySince', this.emptySince);
         await this.commit();
         return json(200, { id, token });
       }
@@ -178,6 +216,7 @@ export class GameRoom extends DurableObject {
         const p = G.byId(s, body.id);
         if (!p) return json(404, { error: 'Không tìm thấy người chơi' });
         if (this.isOnline(p.id)) return json(409, { error: `${p.name} đang online trên một thiết bị khác` });
+        await this.startEmptyGrace();
         return json(200, { id: p.id, token: p.token });
       }
       if (url.pathname === '/api/act') {

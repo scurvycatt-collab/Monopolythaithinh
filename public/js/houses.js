@@ -159,6 +159,8 @@ function pennant(hex, h = 0.62) {
   g.add(at(new THREE.Mesh(new THREE.SphereGeometry(0.035, 10, 8), mat('#ffc23a')), 0, h + 0.02, 0));
   const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.lineTo(0.3, -0.07); sh.lineTo(0, -0.18); sh.closePath();
   const cloth = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 0.012, bevelEnabled: false }), mat(hex));
+  // Phóng to riêng phần vải để màu chủ đất dễ nhận ra; giữ nguyên cột và chóp cờ.
+  cloth.scale.set(1.45, 1.45, 1);
   cloth.position.set(0.012, h - 0.02, -0.006); cloth.castShadow = true; g.add(cloth);
   return g;
 }

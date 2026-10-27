@@ -89,7 +89,7 @@
   // Danh sách map có thể chọn trong room. Map hiện tại là map mặc định;
   // thêm map mới vào đây trước khi nối renderer/asset tương ứng.
   const MAPS = [
-    { id: 'map-1', name: 'Map 1', description: 'Bản đồ Thái Thịnh mặc định', default: true },
+    { id: 'map-1', name: 'Map 1', description: 'Bản đồ Thái Thịnh mặc định', preview: 'maps/map-1-preview.svg', default: true },
   ];
 
   /* ===================== LỚP 2 — SƠ ĐỒ TRẠNG THÁI ===================== */
@@ -139,7 +139,7 @@
     D('Thành phố — của mình', 'C7', 'Ô của mình cấp 2, vòng đầu', 'Không nâng được nữa → kết thúc', { props: { 3: ['me', 2] }, dice: [1, 2] }, [['roll']], { step: 'next' }),
     D('Thành phố — của mình', 'C8', 'Ô của mình Nhà 3', 'Được xây Khách sạn', { props: { 3: ['me', 3] }, dice: [1, 2] }, [['roll'], ['upgrade', { level: 4 }]], { level: [3, 4] }),
     // ---- ô thành phố của người khác
-    D('Thành phố — của người khác', 'C9', 'Đủ thuê, đủ mua lại', 'Trả thuê → bước takeover', { props: { 3: ['op', 1] }, dice: [1, 2] }, [['roll']], { me: 2000 - 42, op: 2042, step: 'takeover' }),
+    D('Thành phố — của người khác', 'C9', 'Đủ thuê, đủ mua lại', 'Trả thuê, chủ nhà hiện mặt vui → bước takeover', { props: { 3: ['op', 1] }, dice: [1, 2] }, [['roll']], { me: 2000 - 42, op: 2042, reaction: ['op', 'happyRent'], step: 'takeover' }),
     D('Thành phố — của người khác', 'C10', 'Mua lại ô cấp 1', 'Trả 2× giá trị cho chủ, nhận nguyên Nhà 1', { props: { 3: ['op', 1] }, dice: [1, 2] }, [['roll'], ['takeover']], { owner: [3, 'me'], level: [3, 1], me: 2000 - 42 - 210, op: 2042 + 210 }),
     D('Thành phố — của người khác', 'C11', 'Đủ thuê, không đủ mua lại', 'Trả thuê, thông báo "không đủ tiền mua tài sản này"', { money: 100, props: { 3: ['op', 1] }, dice: [1, 2] }, [['roll']], { me: 58, notice: 'noTakeover', step: 'next' }),
     D('Thành phố — của người khác', 'C12', 'Khách sạn của người khác', 'Trả thuê, không được mua lại', { props: { 3: ['op', 4] }, dice: [1, 2] }, [['roll']], { me: 2000 - 385, step: 'next' }),
@@ -151,6 +151,8 @@
     D('Thành phố — của người khác', 'C18', 'Ô cắm cờ lễ hội', 'Thuê × 1,5', { bonus: [3], props: { 3: ['op', 1] }, dice: [1, 2] }, [['roll']], { me: 2000 - 63 }),
     D('Thành phố — của người khác', 'C19', 'Ô đang tổ chức lễ hội lần 2', 'Thuê × 3', { festival: 3, festLevel: 2, props: { 3: ['op', 1] }, dice: [1, 2] }, [['roll']], { me: 2000 - 126 }),
     D('Thành phố — của người khác', 'C20', 'Ô đang mất điện', 'Không trả thuê', { outage: { 3: 4 }, props: { 3: ['op', 1] }, dice: [1, 2] }, [['roll']], { me: 2000, op: 2000 }),
+    D('Thành phố — của người khác', 'C21', 'Có thẻ VIP, dừng ở ô đối thủ', 'Tự dùng 1 thẻ, miễn tiền thuê và hiện thông báo', { shields: 1, props: { 3: ['op', 1] }, dice: [1, 2] }, [['roll']], { me: 2000, op: 2000, shields: 0, notice: 'vipUsed', step: 'takeover' }),
+    D('Thành phố — của người khác', 'C22', 'Có thẻ VIP nhưng không đủ tiền mua lại', 'Ưu tiên thông báo đã dùng thẻ miễn thuê', { money: 10, shields: 1, props: { 3: ['op', 1] }, dice: [1, 2] }, [['roll']], { me: 10, op: 2000, shields: 0, notice: 'vipUsed', step: 'next' }),
     D('Thành phố — của người khác', 'C21', 'Có thẻ VIP', 'Miễn thuê, mất 1 thẻ VIP', { shields: 1, props: { 3: ['op', 1] }, dice: [1, 2] }, [['roll']], { me: 2000, shields: 0 }),
     // ---- bãi biển
     D('Bãi biển', 'R1', 'Bãi biển chưa chủ', 'Bước buy (chỉ mua đất)', { dice: [1, 3] }, [['roll'], ['buy', { level: 0 }]], { owner: [4, 'me'], me: 1800 }),
@@ -159,7 +161,7 @@
     D('Ô đặc biệt', 'S1', 'Dừng ở Lost Island', 'Kẹt 3 lượt', { pos: 5, dice: [1, 2] }, [['roll']], { pos: 8, island: 3, step: 'next' }),
     D('Ô đặc biệt', 'S2', 'Đang kẹt, trả phí', 'Trả 200 → đổ bình thường', { pos: 8, island: 3, step: 'island' }, [['payIsland']], { me: 1800, island: 0, step: 'roll' }),
     D('Ô đặc biệt', 'S3', 'Đang kẹt, đổ không ra đôi', 'Mất lượt, còn 2', { pos: 8, island: 3, step: 'island', dice: [1, 2] }, [['roll']], { island: 2, step: 'next', pos: 8 }),
-    D('Ô đặc biệt', 'S4', 'Đang kẹt, dùng thẻ Thoát đảo', 'Rời đảo miễn phí', { pos: 8, island: 3, escapeCards: 1, step: 'island' }, [['useCard']], { me: 2000, island: 0, step: 'roll' }),
+    D('Ô đặc biệt', 'S4', 'Đang kẹt, dùng thẻ Thoát đảo', 'Rời đảo miễn phí và hiện thông báo', { pos: 8, island: 3, escapeCards: 1, step: 'island' }, [['useCard']], { me: 2000, island: 0, escapeCards: 0, notice: 'escapeUsed', step: 'roll' }),
     D('Ô đặc biệt', 'S5', 'Dừng ở World Tour', 'Lượt sau được bay', { pos: 21, dice: [1, 2] }, [['roll']], { pos: 24, tourPending: true, step: 'next' }),
     D('Ô đặc biệt', 'S6', 'Bay từ World Tour tới Madrid', 'Trả vé 50, qua Start +300, tính 1 vòng', { pos: 24, tourPending: true, step: 'tour' }, [['tour', { tile: 3 }]], { pos: 3, me: 2250, laps: 1, step: 'buy' }),
     D('Ô đặc biệt', 'S7', 'Bay tới ô của người khác', 'Trả vé, nhận lương nếu qua Start, rồi trả thuê', { pos: 24, tourPending: true, step: 'tour', props: { 3: ['op', 1] } }, [['tour', { tile: 3 }]], { me: 2000 - 50 + 300 - 42, op: 2042 }),
