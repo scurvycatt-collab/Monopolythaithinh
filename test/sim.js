@@ -16,7 +16,7 @@ function randomAction(s) {
       if (p.money >= G.CFG.ISLAND_FEE) opts.push(['payIsland']);
       if (p.escapeCards) opts.push(['useCard']);
       break;
-    case 'tour': opts.push(['skip']); if (p.money >= G.CFG.TOUR_FEE) for (let i = 0; i < 32; i++) if (i !== p.pos) opts.push(['tour', { tile: i }]); break;
+    case 'tour': opts.push(['skip']); if (p.money >= G.CFG.TOUR_FEE) G.tourTargets(s, p).forEach((i) => opts.push(['tour', { tile: i }])); break;
     case 'flight': opts.push(['flight']); break;
     case 'buy': {
       opts.push(['skip']);
@@ -32,7 +32,7 @@ function randomAction(s) {
       break;
     }
     case 'takeover': opts.push(['skip'], ['takeover']); break;
-    case 'festival': opts.push(['skip']); G.ownedBy(s, p.id).forEach((i) => opts.push(['festival', { tile: i }])); break;
+    case 'festival': opts.push(['skip']); G.festivalTargets(s, p).forEach((i) => { if (s.festival === i || p.money >= G.CFG.CHAMP_MOVE_FEE) opts.push(['festival', { tile: i }]); }); break;
     case 'card': opts.push(['skip']); st.tiles.forEach((i) => opts.push(['card', { tile: i }], ['card', { tile: i }])); break;
     case 'debt': {
       const own = G.ownedBy(s, p.id);

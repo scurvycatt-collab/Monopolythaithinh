@@ -87,6 +87,18 @@ $('#music-volume').oninput = (e) => updateSoundPref('musicVolume', Number(e.targ
 $('#turn-enabled').onchange = (e) => { updateSoundPref('turn', e.target.checked); if (e.target.checked) playTurnSound(); };
 $('#turn-volume').oninput = (e) => { updateSoundPref('turnVolume', Number(e.target.value)); };
 $('#graphics-level').onchange = (e) => setGraphicsLevel(e.target.value);
+function showRulebook() {
+  const sections = G.RULES.RULEBOOK || [];
+  const el = $('#rulebook');
+  el.innerHTML = `<article class="rulebook-card"><header><h2 id="rulebook-title">LUẬT CHƠI</h2><button type="button" id="rulebook-close" aria-label="Đóng">×</button></header><div class="rulebook-scroll">${sections.map((section) => `<section><h3>${esc(section.title)}</h3><ol>${section.items.map((item) => `<li>${esc(item)}</li>`).join('')}</ol></section>`).join('')}</div></article>`;
+  el.classList.add('show');
+  $('#soundpanel').classList.remove('show');
+  $('#rulebook-close').onclick = hideRulebook;
+  $('#rulebook-close').focus();
+}
+function hideRulebook() { $('#rulebook').classList.remove('show'); }
+$('#settings-rules').onclick = showRulebook;
+$('#rulebook').addEventListener('click', (e) => { if (e.target.id === 'rulebook') hideRulebook(); });
 $('#settings-leave').onclick = async () => {
   if (MODE !== 'net' || !ROOM_GATE || !ROOM) return;
   const button = $('#settings-leave'); button.disabled = true;
@@ -1012,12 +1024,14 @@ function renderHub() {
   hub.querySelectorAll('[data-a]').forEach((b) => { b.onclick = () => act(b.dataset.a); });
   if (st.kind === 'tour') {
     const ok = p.money >= CFG.TOUR_FEE;
-    setPick('tour', new Set(ok ? TILES.map((t) => t.i).filter((i) => i !== p.pos) : []), (i) => { clearPick(); act('tour', { tile: i }); },
-      ok ? `${esc(p.name)}: chọn ô muốn bay tới (vé ${shortK(CFG.TOUR_FEE)})` : `${esc(p.name)} không đủ ${shortK(CFG.TOUR_FEE)} mua vé`, 'Không bay');
+    const targets = G.tourTargets(S, p), hasFreeCity = TILES.some((t) => t.type === 'city' && !S.props[t.i]);
+    setPick('tour', new Set(ok ? targets : []), (i) => { clearPick(); act('tour', { tile: i }); },
+      ok ? `${esc(p.name)}: ${hasFreeCity ? 'chọn thành phố chưa có chủ' : 'đã hết thành phố trống, chọn ô của bạn'} (vé ${shortK(CFG.TOUR_FEE)})` : `${esc(p.name)} không đủ ${shortK(CFG.TOUR_FEE)} mua vé`, 'Không bay');
   }
   if (st.kind === 'festival') {
     const next = CFG.FEST_MULT[Math.min(CFG.FEST_MULT.length - 1, (S.festLevel || 0) + 1)];
-    setPick('festival', new Set(G.ownedBy(S, p.id)), (i) => { clearPick(); act('festival', { tile: i }); }, `${esc(p.name)}: chọn ô tổ chức lễ hội (thuê x${next})`, 'Bỏ qua');
+    const targets = G.festivalTargets(S, p).filter((i) => S.festival === i || p.money >= CFG.CHAMP_MOVE_FEE);
+    setPick('festival', new Set(targets), (i) => { clearPick(); act('festival', { tile: i }); }, `${esc(p.name)}: chọn ô đang tổ chức để tăng hệ số, hoặc trả ${shortK(CFG.CHAMP_MOVE_FEE)} chuyển sang ô của bạn (x${next})`, 'Bỏ qua');
   }
   if (st.kind === 'debt') startSell(p);
   if (st.kind === 'card') {
@@ -1256,14 +1270,14 @@ function showInfo(i) {
         `Mỗi lượt trên đảo chọn: đổ xúc xắc (ra đôi thì thoát và đi luôn), trả <b>${money(CFG.ISLAND_FEE)}</b> để rời đảo ngay, hoặc dùng thẻ Thoát đảo.`,
         `Hết ${CFG.ISLAND_TURNS} lượt thì tự rời đảo. Trong lúc kẹt vẫn thu tiền thuê bình thường.`]],
       festival: ['#f5a20a', 'Lễ hội', [
-        'Dừng ở đây được chọn 1 ô đất hoặc bãi biển của mình để tổ chức lễ hội.',
-        `Mỗi lần tổ chức hệ số tăng dần: ${CFG.FEST_MULT.slice(1).map((m) => 'x' + m).join(' → ')}. Lần tổ chức tới sẽ là x${nextMult}.`,
+        `Dừng ở đây được tăng hệ số ô đang tổ chức thêm 1, hoặc trả <b>${money(CFG.CHAMP_MOVE_FEE)}</b> để chuyển Championships sang ô của mình.`,
+        `Hệ số tăng dần tới tối đa x${CFG.MAX_RENT_MULT}. Lần tổ chức tới sẽ là x${nextMult}.`,
         'Cả bàn chỉ có một lễ hội; tổ chức ở ô mới thì lễ hội chuyển sang ô đó. Thẻ Cúp điện làm mất lễ hội.', fest]],
       tour: ['#2c8ff0', 'Du lịch thế giới', [
-        `Dừng ở đây thì lượt sau được bay tới bất kỳ ô nào, vé <b>${money(CFG.TOUR_FEE)}</b>; có thể không bay để đổ xúc xắc như thường.`,
+        `Dừng ở đây thì lượt sau trả <b>${money(CFG.TOUR_FEE)}</b> để bay tới thành phố chưa có chủ. Nếu không còn thành phố trống, được chọn một ô của mình.`,
         'Bay qua Start vẫn nhận lương. Tới ô nào thì xử lý như dừng ở ô đó: mua đất, nâng cấp, trả tiền thuê, mua lại…']],
       tax: ['#6b7685', 'Thuế', [
-        `Dừng ở đây nộp <b>${Math.round(CFG.TAX_RATE * 100)}%</b> tổng tài sản (tiền mặt + giá trị đất và nhà), tối thiểu ${money(CFG.TAX_MIN)}.`,
+        `Dừng ở đây nộp <b>${Math.round(CFG.TAX_RATE * 100)}%</b> tổng tài sản (tiền mặt + giá trị đất và nhà).`,
         p ? `Nếu ${esc(p.name)} dừng ở đây lúc này sẽ nộp <b>${money(taxNow)}</b>.` : '']],
       chance: ['#f2a33c', 'Cơ hội', [
         'Dừng ở đây rút một thẻ ngẫu nhiên:',
@@ -1280,7 +1294,7 @@ function showInfo(i) {
 }
 function hideInfo() { $('#info').classList.remove('show'); }
 $('#info').addEventListener('click', (e) => { if (e.target.id === 'info') hideInfo(); });
-addEventListener('keydown', (e) => { if (e.key === 'Escape') { hideInfo(); $('#soundpanel').classList.remove('show'); } });
+addEventListener('keydown', (e) => { if (e.key === 'Escape') { hideInfo(); hideRulebook(); $('#soundpanel').classList.remove('show'); } });
 
 /* ---------------- hành động & hoạt ảnh ---------------- */
 const seen = { dice: null, move: -1, card: null, notice: null, reaction: null, achievement: -1 };

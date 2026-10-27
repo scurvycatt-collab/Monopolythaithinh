@@ -36,6 +36,15 @@
   }
   const outaged = (s, i) => !!(s.outage && s.outage[i] && s.outage[i] > s.round);
   const festMult = (s) => CFG.FEST_MULT[Math.min(s.festLevel || 0, CFG.FEST_MULT.length - 1)];
+  function rentMultiplier(s, i) {
+    const t = TILES[i], pr = s.props[i];
+    if (!pr) return 1;
+    let mult = 1;
+    if (t.type === 'city' && ownsGroup(s, pr.owner, t.group)) mult++;
+    if (s.festival === i) mult += festMult(s) - 1;
+    if (s.bonus && s.bonus.includes(i)) mult += CFG.BONUS_MULT - 1;
+    return Math.min(CFG.MAX_RENT_MULT, mult);
+  }
   function rentOf(s, i) {
     const pr = s.props[i];
     if (!pr || outaged(s, i)) return 0;
@@ -46,10 +55,8 @@
       r = CFG.RESORT_TOLL[n];
     } else {
       r = toll(i, pr.level);
-      if (ownsGroup(s, pr.owner, t.group)) r *= CFG.MONOPOLY_MULT;
     }
-    if (s.festival === i) r *= festMult(s);
-    if (s.bonus && s.bonus.includes(i)) r *= CFG.BONUS_MULT;
+    r *= rentMultiplier(s, i);
     return Math.round(r * 2) / 2;                       // làm tròn 0,5K
   }
   const canTakeover = (s, i) => TILES[i].type === 'city' && s.props[i] && s.props[i].level < CFG.LANDMARK;
@@ -57,6 +64,15 @@
   function sellValue(s, i) { return r2(value(i, s.props[i].level) * CFG.SELL_MULT); }
   function ownedBy(s, pid) {
     return Object.keys(s.props).map(Number).filter((i) => s.props[i].owner === pid).sort((a, b) => a - b);
+  }
+  function tourTargets(s, p) {
+    const freeCities = TILES.filter((t) => t.type === 'city' && !s.props[t.i]).map((t) => t.i);
+    return freeCities.length ? freeCities : ownedBy(s, p.id);
+  }
+  function festivalTargets(s, p) {
+    const targets = ownedBy(s, p.id);
+    if (s.festival !== null && s.festival !== undefined && !targets.includes(s.festival)) targets.push(s.festival);
+    return targets.sort((a, b) => a - b);
   }
   function networth(s, p) {
     return r2(p.money + ownedBy(s, p.id).reduce((a, i) => a + value(i, s.props[i].level), 0));
@@ -397,7 +413,7 @@
       case 'chance': return drawCard(s, p);
       case 'island': goIsland(s, p); return finish(s);
       case 'festival':
-        if (ownedBy(s, p.id).length) { s.step = { kind: 'festival' }; return; }
+        if (festivalTargets(s, p).length) { s.step = { kind: 'festival' }; return; }
         log(s, `${p.name} tới Championships nhưng chưa có đất để tổ chức lễ hội`);
         return finish(s);
       case 'tour':
@@ -571,11 +587,17 @@
       case 'festival': {
         need('festival');
         const i = tileArg();
-        if (!s.props[i] || s.props[i].owner !== p.id) fail('Hãy chọn ô của bạn');
+        const moving = s.festival !== i;
+        if (!festivalTargets(s, p).includes(i)) fail('Hãy chọn ô đang tổ chức hoặc một ô của bạn');
+        if (moving) {
+          if (!s.props[i] || s.props[i].owner !== p.id) fail('Chỉ được chuyển giải sang ô của bạn');
+          if (p.money < CFG.CHAMP_MOVE_FEE) fail('Không đủ tiền chuyển Championships');
+          transfer(p, null, CFG.CHAMP_MOVE_FEE);
+        }
         s.festival = i;
         s.festLevel = Math.min(CFG.FEST_MULT.length - 1, (s.festLevel || 0) + 1);
         delete s.outage[i];
-        log(s, `🎉 ${p.name} tổ chức lễ hội ở ${TILES[i].name} — tiền thuê x${festMult(s)}`);
+        log(s, `🎉 ${p.name} ${moving ? `trả ${k(CFG.CHAMP_MOVE_FEE)} chuyển Championships tới` : 'tăng hệ số Championships tại'} ${TILES[i].name} — tiền thuê x${festMult(s)}`);
         s.notice = { seq: nextSeq(s), pid: p.id, kind: 'festival', tile: i, mult: festMult(s) };
         s.step = null;
         return finish(s);
@@ -584,7 +606,7 @@
       case 'tour': {
         need('tour');
         const i = tileArg();
-        if (i === p.pos) fail('Hãy chọn ô khác');
+        if (!tourTargets(s, p).includes(i)) fail('Chỉ được bay tới thành phố trống; nếu không còn thành phố trống thì chọn ô của bạn');
         if (p.money < CFG.TOUR_FEE) fail('Không đủ tiền mua vé');
         p.tourPending = false;
         transfer(p, null, CFG.TOUR_FEE);
@@ -680,8 +702,8 @@
     RULES: R, STATES, stepLeft, checkTurn,
     GROUPS, TILES, CFG, COLORS, PETS, MAPS, CARDS, LEVEL_NAMES, RESORTS, SIDES, GameError,
     setRng, createState, publicView, ensureHost, isHost, byName, addPlayer, removePlayer, setPet, renamePlayer, setSettings, startGame, resetGame, checkWin,
-    act, autoAction, checkTime, cur, byId, value, invested, toll, upgradeCost, rentOf, takeoverPrice, canTakeover, sellValue, ownedBy, networth,
-    ownsGroup, canUpgrade, nextLevel, isBuyable, maxBuild, villaLocked, taxBase, outaged, festMult, cardTargets,
+    act, autoAction, checkTime, cur, byId, value, invested, toll, upgradeCost, rentOf, rentMultiplier, takeoverPrice, canTakeover, sellValue, ownedBy, networth,
+    ownsGroup, canUpgrade, nextLevel, isBuyable, maxBuild, villaLocked, taxBase, outaged, festMult, tourTargets, festivalTargets, cardTargets,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Game = api;

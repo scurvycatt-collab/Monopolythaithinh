@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Thái Thịnh Monopoly</title>
+<meta name="theme-color" content="#5bb9d0">
+<meta property="og:title" content="Thái Thịnh Monopoly">
+<meta property="og:description" content="Cờ tỷ phú gia đình trên bản đồ 3D.">
+<meta property="og:image" content="assets/avatar-map-style-v2.png">
+<link rel="icon" type="image/png" href="assets/avatar-map-style-v2.png">
+<link rel="apple-touch-icon" href="assets/avatar-map-style-v2.png">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,10 +39,12 @@
   <label class="sound-volume"><span>Âm lượng nhạc</span><input type="range" id="music-volume" min="0" max="100" step="5"></label>
   <label class="sound-toggle"><span><b>Âm thanh lượt &amp; cảnh báo</b><small>Báo đến lượt và 5 giây cuối</small></span><input type="checkbox" id="turn-enabled"></label>
   <label class="sound-volume"><span>Âm lượng hiệu ứng</span><input type="range" id="turn-volume" min="0" max="100" step="5"></label>
+  <button type="button" id="settings-rules">Luật chơi</button>
   <button type="button" id="settings-leave">Rời phòng</button>
 </section>
 <div id="banner"></div>
 <div id="modal" role="dialog" aria-modal="true"></div>
+<div id="rulebook" role="dialog" aria-modal="true" aria-labelledby="rulebook-title"></div>
 <div id="toast" role="status"></div>
 <div id="info" role="dialog" aria-modal="true" aria-label="Thông tin ô"></div>
 <div id="status" role="alert"></div>

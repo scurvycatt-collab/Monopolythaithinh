@@ -71,8 +71,43 @@ assert.deepEqual(tokyo.values, [400, 600, 800, 1000, 1500], 'bảng giá Tokyo p
 assert.deepEqual(tokyo.values.map((_, level) => G.value(tokyo.i, level)), tokyo.values, 'engine phải dùng bảng giá tuyệt đối của Tokyo');
 assert.equal(R.CONFIG.RESORT_PRICE, 200, 'giá đất resort phải là 200K');
 assert.deepEqual(R.CONFIG.RESORT_TOLL, [0, 25, 50, 100, 200], 'tiền thuê theo 1–4 resort phải khớp bảng Bali');
+assert.equal(R.CONFIG.BONUS_MULT, 2, 'ba ô lễ hội đầu ván phải nhân đôi tiền thuê');
+assert.equal(R.CONFIG.MAX_RENT_MULT, 10, 'hệ số thuê tổng phải bị chặn ở ×10');
+assert.equal(R.CONFIG.CHAMP_MOVE_FEE, 50, 'chuyển Championships sang ô khác phải tốn 50K');
 
 // giá trị rnd cho ra đúng mặt xúc xắc / đúng thẻ (theo trọng số trong rules.js)
+const expectedCityRents = {
+  Granada: [2, 25, 50, 75, 150],
+  Seville: [2, 28, 55, 83, 165],
+  Madrid: [4, 30, 60, 90, 180],
+  'Hong Kong': [6, 33, 65, 98, 195],
+  Beijing: [6, 35, 75, 105, 210],
+  Shanghai: [8, 38, 75, 113, 225],
+  Venice: [10, 70, 140, 210, 385],
+  Milan: [10, 75, 150, 225, 413],
+  Rome: [12, 80, 160, 240, 440],
+  Hamburg: [14, 85, 170, 255, 468],
+  Berlin: [16, 90, 180, 270, 495],
+  London: [18, 113, 225, 338, 619],
+  Sydney: [20, 120, 240, 360, 660],
+  Chicago: [22, 128, 255, 383, 701],
+  'Las Vegas': [22, 135, 270, 405, 743],
+  'New York': [24, 143, 285, 428, 784],
+  Lyon: [26, 170, 340, 510, 935],
+  Paris: [28, 180, 360, 540, 990],
+  Osaka: [35, 190, 380, 570, 1045],
+  Tokyo: [50, 200, 400, 600, 1100],
+};
+for (const [name, expectedRents] of Object.entries(expectedCityRents)) {
+  const tile = R.TILES.find((candidate) => candidate.name === name);
+  assert.deepEqual(tile.rents, expectedRents, `rent table for ${name} must match Business Tour`);
+  assert.deepEqual(
+    tile.rents.map((_, level) => G.toll(tile.i, level)),
+    expectedRents,
+    `engine must use the absolute rent table for ${name}`,
+  );
+}
+
 const dieR = (v) => (v - 0.5) / 6;
 function cardR(id) {
   const total = R.CARDS.reduce((a, c) => a + c.w, 0); let acc = 0;
@@ -100,6 +135,19 @@ function build(setup) {
   G.setRng(() => (q.length ? q.shift() : 0.99));
   if (setup.timeUp) { s.endsAt = Date.now() - 1000; s.settings.timeLimitMin = 60; }
   return s;
+}
+
+{
+  const s = build({ bonus: [3], festival: 3, festLevel: 9, props: { 1: ['op', 0], 2: ['op', 0], 3: ['op', 1] } });
+  assert.equal(G.rentMultiplier(s, 3), 10, 'lễ hội + monopoly + Championships không được vượt ×10');
+  assert.equal(G.rentOf(s, 3), G.toll(3, 1) * 10, 'engine phải áp dụng hệ số thuê đã chặn');
+}
+
+{
+  const s = build({ step: 'tour' }), p = G.byId(s, 'me');
+  assert.ok(G.tourTargets(s, p).every((i) => R.TILES[i].type === 'city' && !s.props[i]), 'World Tour phải ưu tiên thành phố trống');
+  for (const tile of R.TILES.filter((t) => t.type === 'city')) s.props[tile.i] = { owner: tile.i === 3 ? 'me' : 'op', level: 0 };
+  assert.deepEqual(G.tourTargets(s, p), [3], 'hết thành phố trống, World Tour chỉ được tới ô của mình');
 }
 
 function check(row) {
