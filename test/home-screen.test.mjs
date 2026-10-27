@@ -4,6 +4,7 @@ import fs from 'node:fs';
 const html = fs.readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
 const css = fs.readFileSync(new URL('../public/style.css', import.meta.url), 'utf8');
 const app = fs.readFileSync(new URL('../public/js/app.js', import.meta.url), 'utf8');
+const houses = fs.readFileSync(new URL('../public/js/houses.js', import.meta.url), 'utf8');
 
 assert.match(html, /<body data-screen="boot">/);
 assert.match(html, /class="gate-layout"/);
@@ -21,5 +22,7 @@ assert.match(app, /Đến lượt bạn!/);
 assert.match(app, /`Đến lượt \$\{p\.name\}!`/);
 assert.match(app, /const MONEY_DEBIT_MS = REDUCED \? 1 : 700;/, 'debit animation must use the shorter duration');
 assert.match(app, /const duration = to < from \? MONEY_DEBIT_MS : MONEY_MS;/, 'only money deductions should use the faster animation');
+assert.match(houses, /const orange = hsl\.s > 0\.35/);
+assert.match(houses, /green \|\| orange/, 'orange source roofs must follow the player ownership color');
 
 console.log('Home screen lazy-map tests passed.');

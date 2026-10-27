@@ -54,11 +54,14 @@ function recolor(baseMat, hex, rule) {
   for (let p = 0; p < px.length; p += 4) {
     col.setRGB(px[p] / 255, px[p + 1] / 255, px[p + 2] / 255); col.getHSL(hsl);
     const green = hsl.s > 0.25 && hsl.h > 0.3 && hsl.h < 0.55;
+    // Một số model dùng mái cam thay vì mái xanh trong cùng bảng màu nguồn.
+    // Cả hai dải đều là màu nhận diện chủ sở hữu và phải đi theo màu người chơi.
+    const orange = hsl.s > 0.35 && hsl.h > 0.02 && hsl.h < 0.14;
     const dark = rule === 'darkgreen' && hsl.l < 0.3 && hsl.s < 0.3;
     const red = rule === 'red' && hsl.s > 0.4 && (hsl.h < 0.035 || hsl.h > 0.95);
     // tường: các ô xám tím rất nhạt trong bảng màu → trắng tinh #FFFFFF (giữ nguyên mọi chi tiết khác)
     if (hsl.s < 0.3 && hsl.l > 0.78) { px[p] = px[p + 1] = px[p + 2] = 255; continue; }
-    if ((rule !== 'red' && green) || dark || red) {
+    if ((rule !== 'red' && (green || orange)) || dark || red) {
       const l = dark ? Math.min(0.6, th.l * 0.62 + hsl.l * 0.9) : Math.min(0.8, hsl.l * 0.5 + th.l * 0.55);
       col.setHSL(th.h, Math.min(1, th.s * 0.92), l);
       px[p] = col.r * 255; px[p + 1] = col.g * 255; px[p + 2] = col.b * 255;
