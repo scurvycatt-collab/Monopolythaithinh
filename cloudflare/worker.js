@@ -5,6 +5,7 @@
    - Luật chơi dùng chung đúng 2 file public/rules.js + public/game.js (nguồn sự thật duy nhất). */
 import { DurableObject } from 'cloudflare:workers';
 import Game from '../public/game.js'; // wrangler đóng gói cả rules.js mà game.js require
+import { resolveAppPath } from './pathing.mjs';
 
 const G = Game;
 const C = G.RULES.CONFIG;
@@ -15,12 +16,22 @@ const hex = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.t
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
+    const route = resolveAppPath(url.pathname);
+    if (route.redirectPath) {
+      url.pathname = route.redirectPath;
+      return Response.redirect(url.toString(), 308);
+    }
+
+    url.pathname = route.pathname;
+    const routedReq = new Request(url.toString(), req);
+    if (route.basePath) routedReq.headers.set('X-Thai-Thinh-Base-Path', route.basePath);
+
     if (url.pathname === '/events' || url.pathname === '/health' || url.pathname.startsWith('/api/')) {
       // một phòng duy nhất cho gia đình; ?room=… để mở thêm phòng nếu cần
       const room = (url.searchParams.get('room') || 'main').slice(0, 32);
-      return env.ROOM.get(env.ROOM.idFromName(room)).fetch(req);
+      return env.ROOM.get(env.ROOM.idFromName(room)).fetch(routedReq);
     }
-    return env.ASSETS.fetch(req);
+    return env.ASSETS.fetch(routedReq);
   },
 };
 
@@ -100,7 +111,10 @@ export class GameRoom extends DurableObject {
   async fetch(req) {
     const url = new URL(req.url);
     if (url.pathname === '/health') return json(200, { app: 'thai-thinh-monopoly', phase: this.state.phase, version: this.state.version, host: 'cloudflare' });
-    if (url.pathname === '/api/info' && req.method === 'GET') return json(200, { links: [{ kind: 'Web', url: url.origin + '/' }] });
+    if (url.pathname === '/api/info' && req.method === 'GET') {
+      const basePath = req.headers.get('X-Thai-Thinh-Base-Path') || '';
+      return json(200, { links: [{ kind: 'Web', url: `${url.origin}${basePath}/` }] });
+    }
     if (url.pathname === '/events' && req.method === 'GET') return this.events(url);
     if (req.method === 'POST' && url.pathname.startsWith('/api/')) return this.api(url, req);
     return json(404, { error: 'Không có API này' });

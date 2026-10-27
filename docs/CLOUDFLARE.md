@@ -6,7 +6,7 @@ Bản Cloudflare dùng **Workers + Durable Objects**:
 - `cloudflare/worker.js`: chuyển `/events`, `/health`, `/api/*` vào Durable Object `GameRoom`. Phòng này giữ ván, chạy luật (`public/rules.js` + `public/game.js`, đúng bộ luật chính), lưu ván vào bộ nhớ của Durable Object, phát trạng thái qua SSE, tự đi hộ và kiểm tra hết giờ bằng alarm.
 - API giống hệt `server.js`, nên trình duyệt không cần sửa gì. Mã QR "Mời cả nhà" tự dùng địa chỉ web của Worker.
 
-Cấu hình nằm ở `wrangler.toml` (tên Worker `thai-thinh-monopoly`, binding `ROOM`, migration `v1` dùng SQLite).
+Cấu hình nằm ở `wrangler.toml` (tên Worker `thai-thinh-monopoly`, binding `ROOM`, migration `v1` dùng SQLite). Bản production chạy tại `https://game.nauagency.asia/monopolyThaithinh/`; Worker chuẩn hóa base path này trước khi chuyển API hoặc static asset, và không xuất bản `workers.dev`/preview URL.
 
 ## Deploy lần đầu (từ máy bạn)
 
@@ -16,7 +16,7 @@ npx wrangler login        # mở trình duyệt, đăng nhập tài khoản Clou
 npm run cf:deploy         # chạy npm run verify rồi wrangler deploy
 ```
 
-Xong sẽ có link dạng `https://thai-thinh-monopoly.<tài-khoản>.workers.dev`. Muốn dùng tên miền riêng: Cloudflare dashboard → Workers & Pages → thai-thinh-monopoly → Settings → Domains & Routes → Add custom domain.
+Lệnh deploy gắn Worker vào hai route `game.nauagency.asia/monopolyThaithinh` và `game.nauagency.asia/monopolyThaithinh/*`. Bản không tạo URL `workers.dev`; bản ghi DNS `game.nauagency.asia` phải ở trạng thái proxied trong zone `nauagency.asia`.
 
 ## Tự deploy mỗi khi push lên GitHub (Workers Builds)
 

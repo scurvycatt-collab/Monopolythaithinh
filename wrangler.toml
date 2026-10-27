@@ -3,6 +3,13 @@
 name = "thai-thinh-monopoly"
 main = "cloudflare/worker.js"
 compatibility_date = "2025-09-01"
+workers_dev = false
+preview_urls = false
+
+routes = [
+  { pattern = "game.nauagency.asia/monopolyThaithinh", zone_name = "nauagency.asia" },
+  { pattern = "game.nauagency.asia/monopolyThaithinh/*", zone_name = "nauagency.asia" }
+]
 
 [assets]
 directory = "./public"
