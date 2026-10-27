@@ -68,6 +68,7 @@ public/
   js/specials.js   ô đặc biệt: Start, Lost Island, Championships, World Tour, Chance, bãi biển, cờ, băng rôn
   js/world.js      thế giới giữa bàn
   models/          mô hình Kenney (bundle.json) + bảng màu
+  patterns/        hoa văn lát nền ô đất (Kenney Pattern Pack, CC0)
   vendor/three/    three.js 0.160 (MIT), chạy được khi không có internet
 test/rules.test.js chạy từng dòng bảng quyết định
 test/sim.js        giả lập hàng trăm ván ngẫu nhiên để bắt lỗi luật
@@ -89,4 +90,4 @@ Thử bản đóng gói: `TTM_BIN=dist/ThaiThinhMonopoly-linux node test/e2e.js`
 
 ## Bản quyền
 
-Mô hình 3D: Kenney.nl (CC0). three.js: MIT. qrcode-generator: MIT. Bun (runtime trong file chạy): MIT. Phần còn lại dựng bằng code cho dự án này. Không dùng asset gốc của Business Tour.
+Mô hình 3D và hoa văn ô đất (Pattern Pack): Kenney.nl (CC0). three.js: MIT. qrcode-generator: MIT. Bun (runtime trong file chạy): MIT. Phần còn lại dựng bằng code cho dự án này. Không dùng asset gốc của Business Tour.

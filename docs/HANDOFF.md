@@ -1,4 +1,4 @@
-# Thái Thịnh Monopoly: ghi chú bàn giao (27/10/2026, v1.3)
+# Thái Thịnh Monopoly: ghi chú bàn giao (27/10/2026, v1.4)
 
 Đính kèm zip này khi mở conversation mới, nhắn: "Đọc docs/HANDOFF.md, làm tiếp từ mục *Việc tiếp theo*."
 
@@ -25,7 +25,7 @@
   - Token của mình lưu ở `localStorage['tt-monopoly-me']`.
   - Chỉ người tới lượt thấy nút và bảng (`myTurn()`); người khác thấy "Đang chờ…" và nút "Đi hộ lượt này" khi người kia offline đủ 15 s.
 - Giao diện:
-  - Thẻ người chơi 4 góc, người tới lượt sáng (`.cur`, có thanh thời gian bước `.tbar`), người khác tối (`.dim`), offline mờ ảnh. Mũi tên vàng trên đầu quân đang tới lượt; ô đất tô theo nhóm (`GROUPS[g].ground` trong rules.js, hoa văn `GROUND_PATTERN`), dải giá trắng, không còn vạch màu nhóm; tổng xúc xắc `#dicesum` bật giữa màn hình ~1 s; lễ hội: bảng xanh có cúp + hệ số (`festivalPlaque` trong specials.js) gắn phẳng lên mặt đất nâu dưới dải giá, cạnh gần cao 0,28, cạnh xa 0,19 (phần lộ trên mặt giữa bàn); đồng hồ ván `#bigclock` giữa mép trên; tổng xúc xắc `#dicesum`; ô chưa có chủ không hiện giá; thế giới giữa bàn hạ `WORLD_DROP = 0.24` cho hàng ô nổi lên; tổ chức lễ hội: pháo giấy + băng rôn mọc lên; popup thẻ của người khác tự tắt (`#modal.peek`).
+  - Thẻ người chơi 4 góc, người tới lượt sáng (`.cur`, có thanh thời gian bước `.tbar`), người khác tối (`.dim`), offline mờ ảnh. Mũi tên vàng trên đầu quân đang tới lượt; ô đất tô theo nhóm: màu pastel `GROUPS[g].ground` + hoa văn `GROUPS[g].pattern` (ảnh `public/patterns/pattern_NN.png` từ Kenney Pattern Pack CC0, pha hai sắc của màu nền, phủ với độ đậm `GROUND_PATTERN_ALPHA = 0.45`); nhóm liền kề xen kẽ tông nóng/lạnh, dải giá trắng, không còn vạch màu nhóm; tổng xúc xắc `#dicesum` bật giữa màn hình ~1 s; lễ hội: bảng xanh có cúp + hệ số (`festivalPlaque` trong specials.js) gắn phẳng lên mặt đất nâu dưới dải giá, cạnh gần cao 0,28, cạnh xa 0,19 (phần lộ trên mặt giữa bàn); đồng hồ ván `#bigclock` giữa mép trên; tổng xúc xắc `#dicesum`; ô chưa có chủ không hiện giá; thế giới giữa bàn hạ `WORLD_DROP = 0.24` cho hàng ô nổi lên; tổ chức lễ hội: pháo giấy + băng rôn mọc lên; popup thẻ của người khác tự tắt (`#modal.peek`).
   - Phòng chờ `#lobby`: mạng có `lobbyNet` / `lobbyClaim`; một máy có `lobbyLocal`.
   - Bán đất khi nợ: `startSell`. Thông báo toàn màn hình: `showStatus`. Thẻ thông tin ô: `showInfo`.
 - Đồ hoạ: three.js 0.160 đóng kèm ở `public/vendor/three`. Mô hình Kenney gói trong `public/models/bundle.json` (base64) + `Textures/colormap.png`. `?low`: giảm bóng đổ và độ phân giải.

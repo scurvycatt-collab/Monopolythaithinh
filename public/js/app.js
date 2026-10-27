@@ -154,6 +154,7 @@ function tintHex(hex, k) {
 // nền ô đất theo nhóm (kiểu Business Tour): màu nhóm pha nhạt + hoa văn lát gạch / lát ô
 // hoa văn lát nền theo nhóm (Kenney Pattern Pack, CC0): ảnh đen trắng → pha hai sắc của màu nền nhóm.
 // Phần chiếm diện tích lớn luôn lấy màu sáng, đường ron lấy màu đậm hơn ~14% để chữ trên ô vẫn dễ đọc.
+const GROUND_PATTERN_ALPHA = 0.45; // độ đậm của hoa văn phủ lên màu nền
 const groundImg = {}, groundCv = {};
 function loadGroundPatterns() {
   return Promise.all(Object.entries(GROUPS).map(([g, x]) => new Promise((res) => {
@@ -175,7 +176,7 @@ function paintGround(ctx, x, y, w, h, group) {
   const tile = groundTile(group);
   if (tile) {
     const pat = ctx.createPattern(tile, 'repeat'); pat.setTransform(new DOMMatrix().translate(x, y).scale(0.5));
-    ctx.fillStyle = pat; ctx.fillRect(x, y, w, h);
+    ctx.save(); ctx.globalAlpha = GROUND_PATTERN_ALPHA; ctx.fillStyle = pat; ctx.fillRect(x, y, w, h); ctx.restore();
   }
   ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 4; ctx.strokeRect(x + 2, y + 2, w - 4, h - 4);
 }
