@@ -1,6 +1,6 @@
 {
   "name": "thai-thinh-monopoly",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Cờ tỷ phú 3D kiểu Business Tour cho gia đình, chơi qua mạng, chống rớt mạng",
   "private": true,
   "main": "server.js",
@@ -10,10 +10,15 @@
     "test": "npm run verify",
     "rules:doc": "node scripts/rules-doc.mjs",
     "setup": "git config core.hooksPath .githooks",
-    "build:exe": "npm run verify && node scripts/build-exe.mjs"
+    "build:exe": "npm run verify && node scripts/build-exe.mjs",
+    "cf:dev": "wrangler dev",
+    "cf:deploy": "npm run verify && wrangler deploy"
   },
   "engines": {
     "node": ">=18"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^4.153.0"
+  }
 }

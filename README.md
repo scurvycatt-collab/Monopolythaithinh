@@ -57,6 +57,8 @@ Quy trình đổi luật: sửa `rules.js` (thông số + dòng bảng quyết �
 ## Cấu trúc
 
 ```
+cloudflare/worker.js  bản server cho Cloudflare (Durable Object GameRoom), cùng API với server.js
+wrangler.toml      cấu hình Cloudflare Workers
 server.js          server Node: file tĩnh, SSE /events, API /api/*, lưu ván, đi hộ, hết giờ
 public/
   index.html       khung trang
@@ -77,6 +79,7 @@ scripts/build-exe.mjs  đóng gói thành một file chạy (Bun), nhúng toàn 
 assets/icon.ico    biểu tượng file chạy
 scripts/rules-doc.mjs  sinh docs/RULES.md từ rules.js
 docs/RULES.md      luật chơi (tự sinh)
+docs/CLOUDFLARE.md hướng dẫn deploy Cloudflare
 docs/HANDOFF.md    ghi chú kỹ thuật cho lần phát triển sau
 ```
 

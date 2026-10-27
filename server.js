@@ -156,6 +156,9 @@ async function handleApi(req, res, url) {
         case 'start': G.startGame(state); break;
         case 'reset': if (state.phase === 'lobby') throw new G.GameError('Đang ở phòng chờ rồi'); G.resetGame(state); break;
         case 'leave': G.removePlayer(state, p.id); break;
+        case 'kick': // phòng chờ: mời ra người đã mất kết nối (ghế bỏ trống)
+          if (isOnline(d.id)) throw new G.GameError('Người này đang online');
+          G.removePlayer(state, d.id); break;
         case 'pet': G.setPet(state, p.id, d.pet); break;
         case 'rename': G.renamePlayer(state, p.id, d.name); break;
         case 'settings': G.setSettings(state, d); break;

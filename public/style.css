@@ -234,3 +234,4 @@ body[data-mode="net"] #newgame{display:none}
 #modal.peek{background:transparent;pointer-events:none}
 
 @media (max-width:760px){ #bigclock{top:auto;bottom:calc(56px + env(safe-area-inset-bottom,0px));font-size:22px;padding:4px 12px} }
+.who .kick{border:0;background:#ffe3e8;color:#d6304a;width:26px;height:26px;border-radius:50%;font:800 16px/1 var(--display);margin-left:6px}

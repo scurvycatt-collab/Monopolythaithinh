@@ -1,4 +1,4 @@
-# Thái Thịnh Monopoly: ghi chú bàn giao (27/10/2026, v1.4)
+# Thái Thịnh Monopoly: ghi chú bàn giao (27/10/2026, v1.5)
 
 Đính kèm zip này khi mở conversation mới, nhắn: "Đọc docs/HANDOFF.md, làm tiếp từ mục *Việc tiếp theo*."
 
@@ -35,6 +35,12 @@
 - `server.js` khi có `__TTM_ASSETS` (`PACKED`): đọc file tĩnh bằng `Bun.file`, lưu ván ở `data/` cạnh file `.exe`, tự mở trình duyệt (`OPEN=0` để tắt), trùng cổng thì chỉ mở trình duyệt rồi thoát.
 - `GET /api/info` trả link Tailscale (MagicDNS nếu `tailscale status` chạy được) và LAN; phòng chờ hiện link đầu tiên kèm mã QR (`public/vendor/qrcode.mjs`).
 - File `.exe` khoảng 120 MB vì chứa runtime Bun; chưa ký số nên SmartScreen cảnh báo lần đầu. Chưa thử trực tiếp trên Windows (chỉ thử bản Linux cùng mã bằng `TTM_BIN=… node test/e2e.js` và trình duyệt).
+
+## Bản Cloudflare (v1.5)
+- `cloudflare/worker.js` + `wrangler.toml`: Worker phục vụ `public/` làm static assets; `/events`, `/health`, `/api/*` vào Durable Object `GameRoom` (một phòng `main`, `?room=` để tách). Durable Object giữ `state` trong storage, SSE bằng TransformStream, alarm hẹn đúng lúc có việc (hết ván, hết giờ bước, tới hạn đi hộ, ping 14 s).
+- Đã thử bằng `wrangler dev`: `TTM_URL=http://127.0.0.1:8787/ node test/e2e.js` qua; alarm tự đi khi hết giờ bước đã thử. **Chưa deploy thật** (người dùng chưa yêu cầu).
+- Phòng chờ thêm hành động `kick` (mời ra ghế đang mất kết nối) ở cả server.js và worker.js.
+- Hướng dẫn: `docs/CLOUDFLARE.md`.
 
 ## Ràng buộc bản quyền (giữ nguyên)
 Không dùng asset gốc của Business Tour (bundle unity3d, PNG trích xuất, bản AI vẽ lại). Chỉ dùng Kenney CC0 và mô hình dựng bằng code. Ghi credit "Mô hình 3D: Kenney.nl (CC0)".

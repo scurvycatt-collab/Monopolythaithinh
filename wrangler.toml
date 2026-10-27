@@ -1,0 +1,21 @@
+# Cloudflare Workers: giao diện (public/) là static assets, ván chơi nằm trong Durable Object GameRoom.
+# Deploy: npm run deploy   (hoặc nối repo GitHub trong Cloudflare → Workers Builds, xem docs/CLOUDFLARE.md)
+name = "thai-thinh-monopoly"
+main = "cloudflare/worker.js"
+compatibility_date = "2025-09-01"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+not_found_handling = "none"
+
+[[durable_objects.bindings]]
+name = "ROOM"
+class_name = "GameRoom"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["GameRoom"]
+
+[observability]
+enabled = true

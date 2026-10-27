@@ -1225,7 +1225,7 @@ const timeRow = (cur, attr) => `<div class="times">${CFG.TIME_OPTIONS.map((m) =>
 const turnRow = (cur, attr) => `<div class="times">${CFG.TURN_OPTIONS.map((v) => `<button type="button" class="pill ${v === cur ? '' : 'ghost'}" ${attr}="${v}">${v} giây</button>`).join('')}</div>`;
 function lobbyNet(el) {
   const mine = me && G.byId(S, me.id), taken = new Set(S.players.map((p) => p.pet));
-  const list = S.players.map((p) => `<li style="--c:${p.color}"><img alt="" src="${petImg(p.pet)}"><b>${esc(p.name)}</b>${isMe(p.id) ? '<em>bạn</em>' : ''}<i class="dot${presence[p.id] && presence[p.id].on ? ' on' : ''}" title="${presence[p.id] && presence[p.id].on ? 'Đang online' : 'Mất kết nối'}"></i></li>`).join('');
+  const list = S.players.map((p) => `<li style="--c:${p.color}"><img alt="" src="${petImg(p.pet)}"><b>${esc(p.name)}</b>${isMe(p.id) ? '<em>bạn</em>' : ''}<i class="dot${presence[p.id] && presence[p.id].on ? ' on' : ''}" title="${presence[p.id] && presence[p.id].on ? 'Đang online' : 'Mất kết nối'}"></i>${mine && !isMe(p.id) && !(presence[p.id] && presence[p.id].on) ? `<button type="button" class="kick" data-kick="${p.id}" aria-label="Mời ${esc(p.name)} ra khỏi phòng">×</button>` : ''}</li>`).join('');
   if (!mine) {
     const pet = (S.players.length < CFG.MAX_PLAYERS) && (lobbyNet.pick && !taken.has(lobbyNet.pick) ? lobbyNet.pick : (G.PETS.find((x) => !taken.has(x.id)) || {}).id);
     lobbyNet.pick = pet;
@@ -1250,6 +1250,7 @@ function lobbyNet(el) {
     `<button class="pill ghost" type="button" id="lleave">Rời phòng</button><button class="pill big" type="button" id="lstart" ${S.players.length < 2 ? 'disabled' : ''}>Bắt đầu</button>`);
   const send = (type, data) => api('api/act', { token: me.token, type, data }).catch((e) => toast(e.message));
   el.querySelectorAll('[data-pet]').forEach((b) => { b.onclick = () => send('pet', { pet: b.dataset.pet }); });
+  el.querySelectorAll('[data-kick]').forEach((b) => { b.onclick = () => send('kick', { id: b.dataset.kick }); });
   el.querySelectorAll('[data-t]').forEach((b) => { b.onclick = () => send('settings', { timeLimitMin: Number(b.dataset.t) }); });
   el.querySelectorAll('[data-ts]').forEach((b) => { b.onclick = () => send('settings', { turnSec: Number(b.dataset.ts) }); });
   $('#lleave').onclick = () => send('leave').then(() => setMe(null));
