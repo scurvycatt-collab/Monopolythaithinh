@@ -15,7 +15,11 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const GRAPHICS_KEY = 'tt-monopoly-graphics-v1';
-const GRAPHICS = { low: { ratio: 1, shadows: false, shadowSize: 512 }, medium: { ratio: 1.5, shadows: true, shadowSize: 1024 }, high: { ratio: 2, shadows: true, shadowSize: 4096 } };
+const GRAPHICS = {
+  low: { ratio: 1, shadows: false, shadowSize: 512, fps: 30, worldMotion: false, confetti: 30 },
+  medium: { ratio: 1.5, shadows: true, shadowSize: 1024, fps: 40, worldMotion: true, confetti: 50 },
+  high: { ratio: 2, shadows: true, shadowSize: 2048, fps: 60, worldMotion: true, confetti: 70 },
+};
 let graphicsLevel = 'high';
 try { const saved = localStorage.getItem(GRAPHICS_KEY); if (GRAPHICS[saved]) graphicsLevel = saved; } catch (e) { /* dùng mặc định */ }
 if (/[?&]low\b/.test(location.search)) graphicsLevel = 'low'; // tương thích link ?low cũ
@@ -108,7 +112,7 @@ $('#settings-leave').onclick = async () => {
   } catch (e) { toast(e.message); button.disabled = false; }
 };
 addEventListener('pointerdown', unlockAudio, { once: true, capture: true });
-document.addEventListener('visibilitychange', syncMusic);
+document.addEventListener('visibilitychange', () => { syncMusic(); syncRenderingVisibility(); });
 
 /* ---------------- chế độ chơi ----------------
    'net'  : có server (máy nhà qua Tailscale/LAN, hoặc cloud). Server giữ ván và luật; trình duyệt hiển thị và gửi hành động.
@@ -130,10 +134,11 @@ const online = (pid) => MODE === 'local' || !presence[pid] || presence[pid].on;
 
 /* ---------------- three.js: cảnh ---------------- */
 const stage = $('#stage');
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+const renderer = new THREE.WebGLRenderer({ antialias: graphicsLevel !== 'low', alpha: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, GRAPHICS[graphicsLevel].ratio));
 renderer.shadowMap.enabled = GRAPHICS[graphicsLevel].shadows;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.autoUpdate = false;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 stage.appendChild(renderer.domElement);
 const scene = new THREE.Scene();
@@ -149,6 +154,8 @@ Object.assign(sun.shadow.camera, { left: -14, right: 14, top: 14, bottom: -14, n
 sun.shadow.bias = -0.0008;
 sun.shadow.normalBias = 0.02;
 scene.add(sun);
+let shadowDirty = true;
+function requestShadowUpdate() { shadowDirty = true; }
 function setGraphicsLevel(level) {
   if (!GRAPHICS[level]) return;
   graphicsLevel = level;
@@ -160,7 +167,7 @@ function setGraphicsLevel(level) {
     sun.shadow.mapSize.set(profile.shadowSize, profile.shadowSize);
     if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; }
   }
-  renderer.shadowMap.needsUpdate = true;
+  requestShadowUpdate();
   resize();
   renderSoundSettings();
 }
@@ -482,7 +489,7 @@ let festBanner = null, festSig = '';
 function syncFestival() {
   const sig = S.festival === null || S.festival === undefined || !S.props[S.festival] ? '' : `${S.festival}:${G.festMult(S)}`;
   if (sig === festSig) return; festSig = sig;
-  if (festBanner) { board.remove(festBanner); festBanner = null; }
+  if (festBanner) { board.remove(festBanner); festBanner = null; requestShadowUpdate(); }
   if (!sig) return;
   const i = S.festival, f = tileFrame(i), far = FAR(f.side);
   // Cạnh xa có mặt giữa bàn cao hơn đáy ô: nâng bảng lên để toàn bộ cúp/chữ không bị che.
@@ -492,6 +499,7 @@ function syncFestival() {
   const p = local(i, 0, (far ? -1 : 1) * ((f.d - 0.06) / 2 + 0.014));
   festBanner.position.set(p.x, bottom, p.z); festBanner.rotation.y = f.rot + (far ? Math.PI : 0); board.add(festBanner);
   festBanner.userData.t0 = syncFestival.first ? -1 : performance.now(); // dựng ván lần đầu thì không chạy hoạt ảnh
+  requestShadowUpdate();
 }
 function syncBonus() {
   bonusFlags.splice(0).forEach((o) => board.remove(o));
@@ -500,6 +508,7 @@ function syncBonus() {
     const flag = HK.festivalFlag(CFG.BONUS_MULT); flag.position.set(best.x, TOPY, best.z); flag.scale.setScalar(1.12); flag.rotation.y = f.rot + (FAR(f.side) ? Math.PI : 0);
     board.add(flag); bonusFlags.push(flag);
   }
+  requestShadowUpdate();
 }
 
 /* công trình theo chủ sở hữu (ô cờ giữ nguyên màu gốc)
@@ -573,7 +582,7 @@ function stepAnim(an, now) {
 function stepAnims(now) {
   for (let k = anims.length - 1; k >= 0; k--) {
     const an = anims[k];
-    if (stepAnim(an, now)) { anims.splice(k, 1); an.onDone && an.onDone(); }
+    if (stepAnim(an, now)) { anims.splice(k, 1); an.onDone && an.onDone(); requestShadowUpdate(); }
   }
 }
 function clearBuildings() {
@@ -581,6 +590,7 @@ function clearBuildings() {
   Object.values(buildObjs).forEach((b) => board.remove(b.obj)); for (const k in buildObjs) delete buildObjs[k];
   for (const o of dyingObjs) board.remove(o); dyingObjs.clear();
   for (const k in tileSigs) delete tileSigs[k];
+  requestShadowUpdate();
 }
 const dyingObjs = new Set();
 // trả về thời điểm (ms) nhà mới bắt đầu xây, để tiền chạy cùng lúc
@@ -607,6 +617,7 @@ function syncBuildings(instant) {
     buildObjs[i] = { obj: grp, sig: msig };
   }
   syncFestival();
+  requestShadowUpdate();
   return startAt;
 }
 
@@ -642,6 +653,7 @@ function buildTokens() {
     scene.add(t); tokens[p.id] = t;
   }
   syncTokens(true);
+  requestShadowUpdate();
 }
 function syncTokens(snap) {
   for (const p of S.players) {
@@ -669,6 +681,7 @@ async function hop(pid, path, onTile) {
       const step = () => {
         const k = Math.min(1, (performance.now() - t0) / dur);
         t.position.lerpVectors(from, to, k); t.position.y = TOPY + Math.sin(k * Math.PI) * 0.6;
+        requestShadowUpdate();
         if (k < 1) requestAnimationFrame(step); else res();
       };
       step();
@@ -678,6 +691,7 @@ async function hop(pid, path, onTile) {
   t.userData.to = tokenSpot(pid, path[path.length - 1]);
   delete dispPos[pid];
   t.rotation.y = FACE_CAM;
+  requestShadowUpdate();
 }
 
 /* xúc xắc 3D */
@@ -711,10 +725,12 @@ async function rollDice(a, b) {
         const spin = new THREE.Quaternion().setFromAxisAngle(axes[n], Math.pow(1 - k, 2) * Math.PI * 7);
         d.quaternion.copy(finalQ[n]).multiply(spin);
       });
+      requestShadowUpdate();
       if (k < 1) requestAnimationFrame(step); else res();
     };
     step();
   });
+  requestShadowUpdate();
   showDiceSum(a + b, a === b);
 }
 // tổng xúc xắc: bật ở chính giữa màn hình rồi tắt nhanh (~1 giây)
@@ -816,14 +832,25 @@ const turnArrow = (() => {
   g.userData.material = m; g.userData.playerColor = '';
   g.scale.setScalar(1.7); g.visible = false; scene.add(g); return g;
 })();
-// pháo giấy rơi quanh một ô (tổ chức lễ hội)
-const confetti = [];
+// Pháo giấy dùng pool + geometry dùng chung để không tạo/rò tài nguyên GPU sau mỗi lễ hội.
+const confetti = [], confettiPool = [];
+const confettiGeometry = new THREE.PlaneGeometry(0.09, 0.05);
+const CONFETTI_COLORS = ['#ff6fa0', '#ffc23a', '#5cc6e8', '#7fd6a0', '#a98af0', '#ffffff'];
+function takeConfetti(n) {
+  const c = confettiPool.pop();
+  if (c) { c.m.material.opacity = 1; return c; }
+  const m = new THREE.Mesh(confettiGeometry, new THREE.MeshBasicMaterial({ color: CONFETTI_COLORS[n % CONFETTI_COLORS.length], side: THREE.DoubleSide, transparent: true, depthWrite: false }));
+  return { m, v: new THREE.Vector3(), spin: 0, t0: 0 };
+}
 function burstConfetti(i) {
-  const f = tileFrame(i), cols = ['#ff6fa0', '#ffc23a', '#5cc6e8', '#7fd6a0', '#a98af0', '#ffffff'];
-  for (let n = 0; n < 70; n++) {
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(0.09, 0.05), new THREE.MeshBasicMaterial({ color: cols[n % cols.length], side: THREE.DoubleSide, transparent: true }));
-    m.position.set(f.x + (Math.random() - 0.5) * 0.6, TOPY + 1.4, f.z + (Math.random() - 0.5) * 0.6); scene.add(m);
-    confetti.push({ m, v: new THREE.Vector3((Math.random() - 0.5) * 2.4, 2 + Math.random() * 2.2, (Math.random() - 0.5) * 2.4), spin: Math.random() * 10, t0: performance.now() });
+  const f = tileFrame(i), count = GRAPHICS[graphicsLevel].confetti;
+  for (let n = 0; n < count; n++) {
+    const c = takeConfetti(n), { m } = c;
+    m.material.color.set(CONFETTI_COLORS[n % CONFETTI_COLORS.length]);
+    m.position.set(f.x + (Math.random() - 0.5) * 0.6, TOPY + 1.4, f.z + (Math.random() - 0.5) * 0.6);
+    m.rotation.set(0, 0, 0); m.scale.setScalar(1); scene.add(m);
+    c.v.set((Math.random() - 0.5) * 2.4, 2 + Math.random() * 2.2, (Math.random() - 0.5) * 2.4);
+    c.spin = Math.random() * 10; c.t0 = performance.now(); confetti.push(c);
   }
 }
 function stepConfetti(now, dt) {
@@ -832,10 +859,12 @@ function stepConfetti(now, dt) {
     c.v.y -= 4.5 * dt; c.v.multiplyScalar(Math.pow(0.985, dt * 60)); c.m.position.addScaledVector(c.v, dt); c.m.rotation.set(age * c.spin, age * c.spin * 0.7, 0);
     if (c.m.position.y < TOPY) c.m.position.y = TOPY, c.v.set(0, 0, 0);
     c.m.material.opacity = Math.max(0, 1 - Math.max(0, age - 2) / 0.8);
-    if (age > 2.8) { scene.remove(c.m); confetti.splice(k, 1); }
+    if (age > 2.8) { scene.remove(c.m); confetti.splice(k, 1); confettiPool.push(c); }
   }
 }
-function placeOverlays() {
+const followTarget = new THREE.Vector3();
+let overlayUpdatedAt = 0;
+function placeOverlays(nowMs, updateDom) {
   const p = curP(), arrowOn = !!p && !!tokens[p.id] && !p.bankrupt;
   turnArrow.visible = arrowOn;
   if (arrowOn) {
@@ -847,24 +876,38 @@ function placeOverlays() {
     }
     const t = tokens[p.id].position; turnArrow.position.set(t.x, t.y + 1.45 + Math.sin(clockT * 4) * 0.14, t.z); turnArrow.rotation.y = clockT * 1.5;
   }
-  const bc = $('#bigclock');
-  bc.classList.toggle('show', S.phase === 'play' && !!S.endsAt);
-  const bar = document.querySelector('.pcard.cur .tbar i'), left = G.stepLeft(S, now());
-  if (bar) { const tot = S.settings.turnSec * 1000, v = left === null ? 1 : Math.max(0, Math.min(1, left / tot)); bar.style.transform = `scaleX(${v})`; bar.parentNode.classList.toggle('low', v < 0.3); bar.parentNode.style.visibility = left === null ? 'hidden' : ''; }
+  if (updateDom) {
+    const bc = $('#bigclock');
+    bc.classList.toggle('show', S.phase === 'play' && !!S.endsAt);
+    const bar = document.querySelector('.pcard.cur .tbar i'), left = G.stepLeft(S, now());
+    if (bar) { const tot = S.settings.turnSec * 1000, v = left === null ? 1 : Math.max(0, Math.min(1, left / tot)); bar.style.transform = `scaleX(${v})`; bar.parentNode.classList.toggle('low', v < 0.3); bar.parentNode.style.visibility = left === null ? 'hidden' : ''; }
+    overlayUpdatedAt = nowMs;
+  }
 }
 
 /* vòng lặp vẽ */
-let clockT = 0;
+let clockT = 0, frameRequest = 0, lastRenderedAt = 0;
+function queueFrame() {
+  if (frameRunning && !document.hidden && !frameRequest) frameRequest = requestAnimationFrame(frame);
+}
 function frame(now) {
-  if (!frameRunning) return;
+  frameRequest = 0;
+  if (!frameRunning || document.hidden) return;
+  queueFrame();
+  const frameInterval = 1000 / GRAPHICS[graphicsLevel].fps;
+  if (lastRenderedAt && now - lastRenderedAt < frameInterval - 1) return;
   clockT = now / 1000;
   const dt = Math.min(0.05, Math.max(0, clockT - (frame.last || clockT))); frame.last = clockT;
+  lastRenderedAt = lastRenderedAt ? lastRenderedAt + frameInterval * Math.max(1, Math.floor((now - lastRenderedAt) / frameInterval)) : now;
   stepAnims(now);
-  if (!REDUCED) { specials.forEach((o) => o.userData.update && o.userData.update(clockT, dt)); bonusFlags.forEach((o, k) => o.userData.update(clockT + k * 0.7));  if (tourTex) tourTex.offset.set((-clockT * 0.035) % 1, (-clockT * 0.035) % 1); }
+  if (anims.length) requestShadowUpdate();
+  if (!REDUCED && GRAPHICS[graphicsLevel].worldMotion) { specials.forEach((o) => o.userData.update && o.userData.update(clockT, dt)); bonusFlags.forEach((o, k) => o.userData.update(clockT + k * 0.7));  if (tourTex) tourTex.offset.set((-clockT * 0.035) % 1, (-clockT * 0.035) % 1); }
   const followAlpha = 1 - Math.pow(1 - 0.25, dt * 60);
-  for (const p of S ? S.players : []) { const t = tokens[p.id]; if (t && t.userData.to && dispPos[p.id] === undefined) { t.position.lerp(new THREE.Vector3(t.userData.to.x, TOPY, t.userData.to.z), followAlpha); } }
+  for (const p of S ? S.players : []) { const t = tokens[p.id]; if (t && t.userData.to && dispPos[p.id] === undefined) { followTarget.set(t.userData.to.x, TOPY, t.userData.to.z); t.position.lerp(followTarget, followAlpha); } }
   Object.values(tokens).forEach((t) => { const g = t.userData.controlGlow; if (g && g.visible) { const pulse = 1.075 + Math.sin(clockT * 4.5) * 0.012; g.scale.setScalar(pulse); t.userData.glowMaterial.opacity = 0.58 + Math.sin(clockT * 4.5) * 0.12; } });
-  placeSellTags(); placeOverlays(); stepConfetti(now, dt);
+  const updateDom = now - overlayUpdatedAt >= 100;
+  if (updateDom && sell) placeSellTags();
+  placeOverlays(now, updateDom); stepConfetti(now, dt);
   if (festBanner) { // bảng lễ hội bật ra rồi đứng yên
     const festDuration = REDUCED ? 300 : 650;
     const k = festBanner.userData.t0 < 0 ? 1 : Math.min(1, (now - festBanner.userData.t0) / festDuration);
@@ -872,15 +915,17 @@ function frame(now) {
     festBanner.scale.set(Math.max(0.001, e), Math.max(0.001, e), 1);
   }
   glows.forEach((g) => { if (g.userData.on) g.material.opacity = 0.12 + Math.sin(clockT * 5) * 0.1; else g.material.opacity = 0; });
+  if (renderer.shadowMap.enabled && shadowDirty) { renderer.shadowMap.needsUpdate = true; shadowDirty = false; }
   renderer.render(scene, camera);
-  if (frameRunning) requestAnimationFrame(frame);
 }
 function startFrame() {
   if (frameRunning) return;
   frameRunning = true;
-  frame.last = 0;
-  requestAnimationFrame(frame);
+  frame.last = 0; lastRenderedAt = 0;
+  queueFrame();
 }
+function stopFrame() { frameRunning = false; if (frameRequest) cancelAnimationFrame(frameRequest); frameRequest = 0; }
+function syncRenderingVisibility() { if (!document.hidden && frameRunning) { frame.last = 0; lastRenderedAt = 0; queueFrame(); } }
 
 /* ---------------- giao diện ---------------- */
 let busy = false;
@@ -1565,7 +1610,7 @@ function newGameFlow() {
 }
 function showRoomGate() {
   if (!ROOM_GATE) return;
-  frameRunning = false;
+  stopFrame();
   connectionEpoch++;
   if (es) es.close();
   es = null;

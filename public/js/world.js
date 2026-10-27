@@ -203,16 +203,19 @@ function flyer(key, from, to, peak, period, offset, scale) {
   const trail = []; for (let i = 0; i < 14; i++) { const m = new THREE.Mesh(new THREE.SphereGeometry(0.05, 6, 4), new THREE.MeshBasicMaterial({ color: '#bff3ff', transparent: true, opacity: 0, depthWrite: false })); m.frustumCulled = false; trail.push(m); }
   const a = new THREE.Vector3(...from), b = new THREE.Vector3(...to), mid = a.clone().add(b).multiplyScalar(0.5); mid.y = peak;
   const path = new THREE.QuadraticBezierCurve3(a, mid, b);
-  const hist = [];
+  const hist = Array.from({ length: 40 }, () => new THREE.Vector3());
+  const nextPoint = new THREE.Vector3();
+  let histHead = 0, histCount = 0;
   g.userData.trail = trail;
   g.userData.update = (t) => {
     const u = ((t + offset) % period) / period, on = u < 0.55, k = u / 0.55;
     g.visible = on; trail.forEach((m) => (m.visible = on));
-    if (!on) { hist.length = 0; return; }
-    const p = path.getPoint(k), q = path.getPoint(Math.min(1, k + 0.01));
-    g.position.copy(p); g.lookAt(q); g.rotateZ(Math.sin(k * Math.PI * 2) * 0.35);
-    hist.unshift(p.clone()); if (hist.length > 40) hist.pop();
-    trail.forEach((m, i) => { const h = hist[i * 3]; if (!h) { m.material.opacity = 0; return; } m.position.copy(h); m.scale.setScalar(1 - i / 16); m.material.opacity = 0.6 * (1 - i / 14); });
+    if (!on) { histCount = 0; return; }
+    histHead = (histHead + hist.length - 1) % hist.length;
+    const p = path.getPoint(k, hist[histHead]); path.getPoint(Math.min(1, k + 0.01), nextPoint);
+    histCount = Math.min(hist.length, histCount + 1);
+    g.position.copy(p); g.lookAt(nextPoint); g.rotateZ(Math.sin(k * Math.PI * 2) * 0.35);
+    trail.forEach((m, i) => { const age = i * 3; if (age >= histCount) { m.material.opacity = 0; return; } const h = hist[(histHead + age) % hist.length]; m.position.copy(h); m.scale.setScalar(1 - i / 16); m.material.opacity = 0.6 * (1 - i / 14); });
   };
   return g;
 }
@@ -256,7 +259,9 @@ export function centerWorld() {
   const tug = get('watercraft/boat-tug-a'); tug.scale.setScalar(0.1); W.add(tug);
   const fish = get('watercraft/boat-fishing-small'); fish.scale.setScalar(0.11); fish.position.set(4.6, 0.01, -4.3); fish.rotation.y = 0.8; W.add(fish);
   const speedWake = []; for (let i = 0; i < 12; i++) { const m = new THREE.Mesh(new THREE.CircleGeometry(0.05, 6), new THREE.MeshBasicMaterial({ color: '#fff', transparent: true, opacity: .7, depthWrite: false })); m.rotation.x = -Math.PI / 2; W.add(m); speedWake.push(m); }
-  const sHist = [];
+  const sHist = Array.from({ length: 36 }, () => new THREE.Vector3());
+  const speedPrev = new THREE.Vector3(), speedLook = new THREE.Vector3();
+  let sHistHead = 0, sHistCount = 0;
   // --- công viên giải trí ---
   const park = coaster(); park.position.set(-3.05, 0, 2.95); park.rotation.y = -Math.PI / 4; W.add(park); updates.push(park.userData.update);
   // --- làng & ruộng & cối xay gió ---
@@ -288,9 +293,9 @@ export function centerWorld() {
     // thuyền buồm vòng quanh hồ, ca nô lượn số 8, tàu kéo đi lại trên sông
     { const a = t * 0.22, x = 3.95 + Math.cos(a) * 0.95 * 0.71 - Math.sin(a) * 0.7 * 0.71, z = -3.95 - Math.cos(a) * 0.95 * 0.71 - Math.sin(a) * 0.7 * 0.71; sail.position.set(x, 0.012 + Math.sin(t * 2) * 0.006, z); sail.rotation.y = -a + Math.PI * 0.25; sail.rotation.z = Math.sin(t * 1.3) * 0.06; }
     { const a = t * 0.55, x = 3.95 + Math.sin(a) * 1.05 * 0.71 + Math.sin(2 * a) * 0.4 * 0.71, z = -3.95 - Math.sin(a) * 1.05 * 0.71 + Math.sin(2 * a) * 0.4 * 0.71;
-      const prev = speed.position.clone(); speed.position.set(x, 0.015, z); if (prev.distanceTo(speed.position) > 1e-4) speed.lookAt(prev.clone().multiplyScalar(-1).add(speed.position.clone().multiplyScalar(2)));
-      sHist.unshift(speed.position.clone()); if (sHist.length > 36) sHist.pop();
-      speedWake.forEach((m, i) => { const h = sHist[i * 3]; if (!h) return; m.position.set(h.x, 0.022, h.z); m.scale.setScalar(0.6 + i * 0.12); m.material.opacity = 0.7 * (1 - i / 12); }); }
+      speedPrev.copy(speed.position); speed.position.set(x, 0.015, z); if (speedPrev.distanceToSquared(speed.position) > 1e-8) { speedLook.copy(speed.position).multiplyScalar(2).sub(speedPrev); speed.lookAt(speedLook); }
+      sHistHead = (sHistHead + sHist.length - 1) % sHist.length; sHist[sHistHead].copy(speed.position); sHistCount = Math.min(sHist.length, sHistCount + 1);
+      speedWake.forEach((m, i) => { const age = i * 3; if (age >= sHistCount) { m.material.opacity = 0; return; } const h = sHist[(sHistHead + age) % sHist.length]; m.position.set(h.x, 0.022, h.z); m.scale.setScalar(0.6 + i * 0.12); m.material.opacity = 0.7 * (1 - i / 12); }); }
     { const ph = (t * 0.035) % 2, u = 0.15 + (ph < 1 ? ph : 2 - ph) * 0.72, p = river.getPointAt(u), tg = river.getTangentAt(u); tug.position.set(p.x, 0.016, p.z); tug.rotation.y = Math.atan2(tg.x, tg.z) + (ph < 1 ? 0 : Math.PI); }
     balloons.forEach((b, i) => { const a = t * 0.06 + i * 2.1; b.position.set(Math.cos(a) * (2.2 + i * 0.6) + 0.3, 2.6 + i * 0.45 + Math.sin(t * 0.7 + i) * 0.12, Math.sin(a) * (2.0 + i * 0.5) - 0.6); b.rotation.y = t * 0.1; });
   };
