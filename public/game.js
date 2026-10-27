@@ -76,7 +76,7 @@
   /* ---------- trạng thái ---------- */
   function createState() {
     return {
-      version: 0, phase: 'lobby', players: [], props: {}, festival: null, festLevel: 0, outage: {}, bonus: [], turn: 0, step: null,
+      version: 0, phase: 'lobby', hostId: null, players: [], props: {}, festival: null, festLevel: 0, outage: {}, bonus: [], turn: 0, step: null,
       dice: null, moves: [], lastCard: null, log: [], round: 1, seq: 0, again: false,
       pending: null, winner: null, winReason: null, startedAt: null, endsAt: null, stepAt: null,
       settings: { roundLimit: 0, timeLimitMin: CFG.TIME_OPTIONS[0], turnSec: CFG.TURN_SEC, autoSec: CFG.AUTO_OFFLINE_SEC },
@@ -90,6 +90,11 @@
   const cur = (s) => s.players[s.turn];
   const byId = (s, id) => s.players.find((p) => p.id === id);
   const alive = (s) => s.players.filter((p) => !p.bankrupt);
+  function ensureHost(s) {
+    if (!s.hostId || !byId(s, s.hostId)) s.hostId = s.players.length ? s.players[0].id : null;
+    return s.hostId;
+  }
+  const isHost = (s, id) => ensureHost(s) === id;
 
   function publicView(s) {
     const o = Object.assign({}, s);
@@ -118,6 +123,7 @@
     const p = { id, token, name, pet, color: PETS.find((x) => x.id === pet).c };
     resetPlayer(p);
     s.players.push(p);
+    ensureHost(s);
     log(s, `${name} đã vào phòng`);
     return p;
   }
@@ -128,6 +134,7 @@
     if (s.phase !== 'lobby') fail('Chỉ rời phòng được khi chưa bắt đầu');
     const p = byId(s, id);
     s.players = s.players.filter((x) => x.id !== id);
+    ensureHost(s);
     if (p) log(s, `${p.name} đã rời phòng`);
   }
   function setPet(s, id, pet) {
@@ -635,7 +642,7 @@
   const api = {
     RULES: R, STATES, stepLeft, checkTurn,
     GROUPS, TILES, CFG, COLORS, PETS, CARDS, LEVEL_NAMES, RESORTS, SIDES, GameError,
-    setRng, createState, publicView, addPlayer, removePlayer, setPet, renamePlayer, setSettings, startGame, resetGame,
+    setRng, createState, publicView, ensureHost, isHost, addPlayer, removePlayer, setPet, renamePlayer, setSettings, startGame, resetGame,
     act, autoAction, checkTime, cur, byId, value, invested, toll, upgradeCost, rentOf, takeoverPrice, canTakeover, sellValue, ownedBy, networth,
     ownsGroup, canUpgrade, nextLevel, isBuyable, maxBuild, villaLocked, taxBase, outaged, festMult, cardTargets,
   };

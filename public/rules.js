@@ -10,7 +10,7 @@
    ============================================================================ */
 (function (root) {
   'use strict';
-  const VERSION = '1.5.0';
+  const VERSION = '1.6.0';
 
   /* ===================== LỚP 1 — THÔNG SỐ ===================== */
   const CONFIG = {
@@ -101,6 +101,7 @@
   };
   // "Kết thúc ô": còn khoản treo → debt; đổ đôi và không kẹt đảo → roll (đổ thêm); còn lại → lượt người kế (bước đầu: tour / island / roll).
   const FLOW = [
+    'Phòng chờ: người vào đầu tiên là host; chỉ host được đổi cấu hình room, mời người chơi ra, bắt đầu hoặc reset ván. Host rời phòng thì quyền chuyển cho người vào kế tiếp.',
     'Bắt đầu lượt → tour (nếu đang có vé World Tour) / island (nếu đang kẹt đảo) / roll',
     'roll → di chuyển → GIẢI QUYẾT Ô (bảng quyết định) → buy | upgrade | takeover | festival | card | debt | KẾT THÚC Ô',
     'KẾT THÚC Ô → debt (còn khoản treo) | roll (đổ đôi) | lượt người kế',

@@ -1,4 +1,4 @@
-# Luật chơi Thái Thịnh Monopoly — v1.5.0
+# Luật chơi Thái Thịnh Monopoly — v1.6.0
 
 > Tự sinh từ `public/rules.js` bằng `npm run rules:doc`. Không sửa tay file này: sửa `rules.js`, chạy `npm run verify`.
 
@@ -124,6 +124,7 @@ stateDiagram-v2
 | `card` | Thẻ Chance cần chọn ô | **card**: Áp dụng thẻ lên ô chọn (Đổi đất: chọn 2 lần) → kết thúc ô.<br>**skip**: Bỏ thẻ → kết thúc ô. |
 | `debt` | Có khoản phải trả (thuê/thuế) lớn hơn tiền mặt; khoản này đang treo | **sell**: Bán 1 ô cho ngân hàng; đủ tiền thì trả khoản treo cho người nhận → kết thúc ô (đổ đôi thì đổ tiếp).<br>**bankrupt**: Phá sản: toàn bộ tiền mặt cho người nhận, đất trả về ngân hàng → lượt người kế. |
 
+- Phòng chờ: người vào đầu tiên là host; chỉ host được đổi cấu hình room, mời người chơi ra, bắt đầu hoặc reset ván. Host rời phòng thì quyền chuyển cho người vào kế tiếp.
 - Bắt đầu lượt → tour (nếu đang có vé World Tour) / island (nếu đang kẹt đảo) / roll
 - roll → di chuyển → GIẢI QUYẾT Ô (bảng quyết định) → buy | upgrade | takeover | festival | card | debt | KẾT THÚC Ô
 - KẾT THÚC Ô → debt (còn khoản treo) | roll (đổ đôi) | lượt người kế

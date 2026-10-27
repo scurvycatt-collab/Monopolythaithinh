@@ -49,6 +49,7 @@ export class GameRoom extends DurableObject {
       const saved = await ctx.storage.get('state');
       const base = G.createState();
       this.state = saved ? Object.assign(base, saved, { settings: Object.assign(base.settings, saved.settings || {}) }) : base;
+      G.ensureHost(this.state); // nâng cấp room cũ chưa có hostId
       const now = Date.now();
       this.state.players.forEach((p) => this.offlineSince.set(p.id, now));
     });
@@ -172,6 +173,9 @@ export class GameRoom extends DurableObject {
       if (url.pathname === '/api/act') {
         const p = this.byToken(body.token);
         if (!p) return json(401, { error: 'Bạn chưa vào phòng (hoặc phiên đã hết hạn)' });
+        if (['start', 'reset', 'kick', 'settings'].includes(body.type) && !G.isHost(s, p.id)) {
+          return json(403, { error: 'Chỉ host mới được thay đổi cấu hình phòng' });
+        }
         const d = body.data || {};
         switch (body.type) {
           case 'start': G.startGame(s); break;

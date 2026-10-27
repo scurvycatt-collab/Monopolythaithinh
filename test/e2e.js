@@ -49,9 +49,13 @@ async function snapshot(token) {
   const b = ok(await post('api/join', { name: 'Mẹ', pet: 'animal-cat' }));
   ok(await post('api/act', { token: b.token, type: 'pet', data: { pet: 'animal-fox' } }));
   const c0 = ok(await post('api/join', { name: 'Khách', pet: 'animal-panda' }));
+  assert.strictEqual((await post('api/act', { token: b.token, type: 'settings', data: { timeLimitMin: 120 } })).status, 403, 'khách không được đổi cấu hình');
+  assert.strictEqual((await post('api/act', { token: b.token, type: 'kick', data: { id: c0.id } })).status, 403, 'khách không được mời người khác ra');
+  assert.strictEqual((await post('api/act', { token: b.token, type: 'start' })).status, 403, 'khách không được bắt đầu');
   ok(await post('api/act', { token: a.token, type: 'kick', data: { id: c0.id } })); // mời ra ghế mất kết nối
   ok(await post('api/act', { token: a.token, type: 'settings', data: { timeLimitMin: 90 } }));
   let d = await snapshot();
+  assert.strictEqual(d.state.hostId, a.id, 'người đầu tiên phải là host');
   assert.deepStrictEqual(d.state.players.map((p) => p.pet), ['animal-dog', 'animal-fox']);
   assert.ok(d.state.players.every((p) => !p.token), 'token không được lộ ra ngoài');
   ok(await post('api/act', { token: a.token, type: 'start' }));

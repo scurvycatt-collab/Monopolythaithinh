@@ -42,6 +42,7 @@ function load() {
   }
 }
 let state = load();
+G.ensureHost(state); // nâng cấp file lưu cũ chưa có hostId
 function save() {
   const tmp = SAVE + '.tmp';
   fs.writeFileSync(tmp, JSON.stringify(state));
@@ -151,6 +152,9 @@ async function handleApi(req, res, url) {
     if (url.pathname === '/api/act') {
       const p = byToken(body.token);
       if (!p) return sendJSON(res, 401, { error: 'Bạn chưa vào phòng (hoặc phiên đã hết hạn)' });
+      if (['start', 'reset', 'kick', 'settings'].includes(body.type) && !G.isHost(state, p.id)) {
+        return sendJSON(res, 403, { error: 'Chỉ host mới được thay đổi cấu hình phòng' });
+      }
       const d = body.data || {};
       switch (body.type) {
         case 'start': G.startGame(state); break;

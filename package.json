@@ -1,12 +1,12 @@
 {
   "name": "thai-thinh-monopoly",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Cờ tỷ phú 3D kiểu Business Tour cho gia đình, chơi qua mạng, chống rớt mạng",
   "private": true,
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "verify": "node scripts/rules-doc.mjs --check && node test/rules.test.js && node test/sim.js 7 300 && node test/e2e.js && node test/cloudflare-paths.test.mjs && node test/room-session.test.mjs",
+    "verify": "node scripts/rules-doc.mjs --check && node test/rules.test.js && node test/sim.js 7 300 && node test/e2e.js && node test/host.test.js && node test/cloudflare-paths.test.mjs && node test/room-session.test.mjs && node test/home-screen.test.mjs",
     "test": "npm run verify",
     "rules:doc": "node scripts/rules-doc.mjs",
     "setup": "git config core.hooksPath .githooks",

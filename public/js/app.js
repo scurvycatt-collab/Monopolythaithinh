@@ -28,6 +28,7 @@ let seatOf = {};          // id -> { color, pet, corner }
 let me = null;            // chế độ mạng: { id, token } của mình
 let presence = {}, skew = 0, proxySec = 15;
 let ROOM = '', ROOM_GATE = false, pendingJoinName = '', joiningRoom = false;
+let boardReady = false, boardReadyPromise = null, frameRunning = false;
 const now = () => Date.now() + skew;   // giờ theo server
 function seatSetup() { seatOf = {}; S.players.forEach((p, k) => { seatOf[p.id] = { color: p.color, pet: p.pet || G.PETS[k % G.PETS.length].id, corner: CORNERS[k % 4] }; }); }
 const curP = () => (S.phase === 'play' ? S.players[S.turn] : null);
@@ -727,6 +728,7 @@ function placeOverlays() {
 /* vòng lặp vẽ */
 let clockT = 0;
 function frame(now) {
+  if (!frameRunning) return;
   clockT = now / 1000;
   const dt = Math.min(0.05, Math.max(0, clockT - (frame.last || clockT))); frame.last = clockT;
   stepAnims(now);
@@ -740,6 +742,12 @@ function frame(now) {
   }
   glows.forEach((g) => { if (g.userData.on) g.material.opacity = 0.12 + Math.sin(clockT * 5) * 0.1; else g.material.opacity = 0; });
   renderer.render(scene, camera);
+  if (frameRunning) requestAnimationFrame(frame);
+}
+function startFrame() {
+  if (frameRunning) return;
+  frameRunning = true;
+  frame.last = 0;
   requestAnimationFrame(frame);
 }
 
@@ -1248,8 +1256,8 @@ const petGrid = (sel, taken, attr) => `<div class="pets">${G.PETS.map((x) => `<b
 const timeRow = (cur, attr) => `<div class="times">${CFG.TIME_OPTIONS.map((m) => `<button type="button" class="pill ${m === cur ? '' : 'ghost'}" ${attr}="${m}">${timeLabel(m)}</button>`).join('')}</div>`;
 const turnRow = (cur, attr) => `<div class="times">${CFG.TURN_OPTIONS.map((v) => `<button type="button" class="pill ${v === cur ? '' : 'ghost'}" ${attr}="${v}">${v} giây</button>`).join('')}</div>`;
 function lobbyNet(el) {
-  const mine = me && G.byId(S, me.id), taken = new Set(S.players.map((p) => p.pet));
-  const list = S.players.map((p) => `<li style="--c:${p.color}"><img alt="" src="${petImg(p.pet)}"><b>${esc(p.name)}</b>${isMe(p.id) ? '<em>bạn</em>' : ''}<i class="dot${presence[p.id] && presence[p.id].on ? ' on' : ''}" title="${presence[p.id] && presence[p.id].on ? 'Đang online' : 'Mất kết nối'}"></i>${mine && !isMe(p.id) && !(presence[p.id] && presence[p.id].on) ? `<button type="button" class="kick" data-kick="${p.id}" aria-label="Mời ${esc(p.name)} ra khỏi phòng">×</button>` : ''}</li>`).join('');
+  const mine = me && G.byId(S, me.id), amHost = !!mine && S.hostId === mine.id, taken = new Set(S.players.map((p) => p.pet));
+  const list = S.players.map((p) => `<li style="--c:${p.color}"><img alt="" src="${petImg(p.pet)}"><b>${esc(p.name)}</b>${p.id === S.hostId ? '<em class="host">HOST</em>' : ''}${isMe(p.id) ? '<em>bạn</em>' : ''}<i class="dot${presence[p.id] && presence[p.id].on ? ' on' : ''}" title="${presence[p.id] && presence[p.id].on ? 'Đang online' : 'Mất kết nối'}"></i>${amHost && !isMe(p.id) && !(presence[p.id] && presence[p.id].on) ? `<button type="button" class="kick" data-kick="${p.id}" aria-label="Mời ${esc(p.name)} ra khỏi phòng">×</button>` : ''}</li>`).join('');
   if (!mine) {
     const pet = (S.players.length < CFG.MAX_PLAYERS) && (lobbyNet.pick && !taken.has(lobbyNet.pick) ? lobbyNet.pick : (G.PETS.find((x) => !taken.has(x.id)) || {}).id);
     lobbyNet.pick = pet;
@@ -1268,17 +1276,17 @@ function lobbyNet(el) {
   }
   el.innerHTML = sheet('#2c8ff0', 'Thái Thịnh Monopoly', 'Phòng chờ', `<ul class="who">${list}</ul>
     <div class="fld">Đổi nhân vật</div>${petGrid(mine.pet, taken, 'data-pet')}
-    <div class="fld">Thời lượng ván</div>${timeRow(S.settings.timeLimitMin, 'data-t')}
-    <div class="fld">Thời gian mỗi lượt</div>${turnRow(S.settings.turnSec || CFG.TURN_SEC, 'data-ts')}
+    ${amHost ? `<div class="fld">Thời lượng ván</div>${timeRow(S.settings.timeLimitMin, 'data-t')}
+    <div class="fld">Thời gian mỗi lượt</div>${turnRow(S.settings.turnSec || CFG.TURN_SEC, 'data-ts')}` : `<div class="room-readonly"><b>Host đang cài đặt phòng</b><span>${timeLabel(S.settings.timeLimitMin)} · ${S.settings.turnSec || CFG.TURN_SEC} giây/lượt</span></div>`}
     ${inviteBox()}`,
-    `<button class="pill ghost" type="button" id="lleave">Rời phòng</button><button class="pill big" type="button" id="lstart" ${S.players.length < 2 ? 'disabled' : ''}>Bắt đầu</button>`);
+    `<button class="pill ghost" type="button" id="lleave">Rời phòng</button>${amHost ? `<button class="pill big" type="button" id="lstart" ${S.players.length < 2 ? 'disabled' : ''}>Bắt đầu</button>` : '<span class="host-wait">Chờ host bắt đầu…</span>'}`);
   const send = (type, data) => api('api/act', { token: me.token, type, data }).catch((e) => toast(e.message));
   el.querySelectorAll('[data-pet]').forEach((b) => { b.onclick = () => send('pet', { pet: b.dataset.pet }); });
   el.querySelectorAll('[data-kick]').forEach((b) => { b.onclick = () => send('kick', { id: b.dataset.kick }); });
   el.querySelectorAll('[data-t]').forEach((b) => { b.onclick = () => send('settings', { timeLimitMin: Number(b.dataset.t) }); });
   el.querySelectorAll('[data-ts]').forEach((b) => { b.onclick = () => send('settings', { turnSec: Number(b.dataset.ts) }); });
   $('#lleave').onclick = () => send('leave').then(exitRoom);
-  $('#lstart').onclick = () => send('start');
+  if ($('#lstart')) $('#lstart').onclick = () => send('start');
 }
 // vào giữa ván từ thiết bị khác: nhận lại ghế đang mất kết nối, hoặc chỉ xem
 function lobbyClaim(el) {
@@ -1337,6 +1345,7 @@ function newGameFlow() {
 }
 function showRoomGate() {
   if (!ROOM_GATE) return;
+  frameRunning = false;
   if (es) es.close();
   es = null;
   $('#conn').classList.remove('show');
@@ -1346,10 +1355,13 @@ function showRoomGate() {
   try { savedName = localStorage.getItem(NAME_KEY) || ''; } catch (e) { /* bỏ qua */ }
   $('#gname').value = savedName || lobbyDraftName || '';
   $('#groom').value = normalizeRoom(params.get('room') || ROOM);
+  document.body.dataset.screen = 'gate';
+  $('#loading').classList.add('hidden');
   $('#gate').classList.add('show');
   setTimeout(() => ($('#groom').value ? $('#gname') : $('#groom')).focus(), 0);
 }
-function enterRoom(create) {
+async function enterRoom(create) {
+  if (enterRoom.busy) return;
   const name = $('#gname').value.replace(/\s+/g, ' ').trim().slice(0, 16);
   if (!name) { toast('Hãy nhập username'); return $('#gname').focus(); }
   const room = selectRoomCode($('#groom').value, create);
@@ -1360,10 +1372,24 @@ function enterRoom(create) {
   try { localStorage.setItem(NAME_KEY, name); } catch (e) { /* bỏ qua */ }
   const url = new URL(location.href); url.searchParams.set('room', ROOM); history.replaceState(null, '', url);
   $('#gate').classList.remove('show');
-  me = loadMe();
-  invite = [];
-  connect();
-  loadInvite();
+  document.body.dataset.screen = 'loading';
+  $('#loadmsg').textContent = 'Tải bàn cờ và mô hình 3D';
+  $('#loading').classList.remove('hidden');
+  enterRoom.busy = true;
+  $('#gcreate').disabled = true; $('#gjoin').disabled = true;
+  try {
+    await prepareBoard();
+    me = loadMe();
+    invite = [];
+    connect();
+    loadInvite();
+  } catch (e) {
+    $('#loadmsg').textContent = 'Không tải được bàn cờ: ' + e.message;
+    console.error(e);
+  } finally {
+    enterRoom.busy = false;
+    $('#gcreate').disabled = false; $('#gjoin').disabled = false;
+  }
 }
 function exitRoom() {
   setMe(null, false);
@@ -1385,25 +1411,33 @@ async function detectServer() {
   if (location.protocol === 'file:') return null;
   try { const r = await fetch('health', { cache: 'no-store' }); const info = await r.json(); return r.ok && info.app === 'thai-thinh-monopoly' ? info : null; } catch (e) { return null; }
 }
-(async () => {
-  try {
+async function prepareBoard() {
+  if (!boardReadyPromise) boardReadyPromise = (async () => {
     await Promise.all([document.fonts.load('800 40px "Baloo 2"'), document.fonts.load('800 40px "Be Vietnam Pro"'), document.fonts.load('900 40px Rubik'), document.fonts.load('700 40px Fredoka'), document.fonts.load('600 40px Fredoka')]).catch(() => {});
-    const server = await detectServer();
-    MODE = server ? 'net' : 'local';
-    ROOM_GATE = !!(server && server.rooms);
-    document.body.dataset.mode = MODE;
-    const saved = MODE === 'local' ? loadSaved() : null;
-    if (saved) S = saved;
     seatSetup(); markSeen();
     await loadModels();
     await HK.loadKit('models', (d, n) => { $('#loadmsg').textContent = `Tải mô hình 3D ${d}/${n}`; });
     await loadGroundPatterns();
     buildTiles(); decorate();
     resize();
-    $('#loading').remove();
-    requestAnimationFrame(frame);
-    if (MODE === 'net' && ROOM_GATE) showRoomGate();
-    else if (MODE === 'net') { me = loadMe(); connect(); loadInvite(); }
+    boardReady = true;
+  })();
+  await boardReadyPromise;
+  document.body.dataset.screen = 'game';
+  $('#loading').classList.add('hidden');
+  startFrame();
+}
+(async () => {
+  try {
+    const server = await detectServer();
+    MODE = server ? 'net' : 'local';
+    ROOM_GATE = !!(server && server.rooms);
+    document.body.dataset.mode = MODE;
+    const saved = MODE === 'local' ? loadSaved() : null;
+    if (saved) S = saved;
+    if (MODE === 'net' && ROOM_GATE) { showRoomGate(); return; }
+    await prepareBoard();
+    if (MODE === 'net') { me = loadMe(); connect(); loadInvite(); }
     else { lobbyOpen = !saved; resetView(); }
   } catch (e) {
     $('#loadmsg').textContent = 'Không tải được bàn cờ: ' + e.message;
