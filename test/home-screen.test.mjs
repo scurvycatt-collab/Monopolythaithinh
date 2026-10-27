@@ -69,6 +69,9 @@ assert.match(app, /⚡ Mất điện · \$\{powerCuts\.map/, 'land owner card mu
 assert.match(specials, /for \(const x of \[-postX, postX\]\)/, 'festival banner must use two posts');
 assert.match(specials, /LỄ HỘI ×\$\{mult\}/, 'festival banner must visibly label its multiplier');
 assert.match(app, /festivalBannerSpot\(i\)/, 'festival banner must be centered along the back of its tile');
+assert.match(app, /const CHAMPIONSHIP_PLAQUE_WIDTH = 1\.18;/, 'active Championships marker must be wide enough to read');
+assert.match(app, /const CHAMPIONSHIP_PLAQUE_HEIGHT = 0\.48;/, 'active Championships marker must not be compressed by the board edge');
+assert.match(specials, /new THREE\.MeshBasicMaterial\(\{ map: tex \}\)/, 'Championships marker must remain bright under every camera-side light');
 assert.match(app, /pendingRoomMap = create \? mapId : ''/, 'only room creation may send the selected map');
 assert.match(app, /function renderGateMapPreview\(\)/, 'map preview must update with the selected map');
 assert.match(app, /src="\$\{esc\(map\.preview\)\}"/, 'map cards must use their registered preview image');

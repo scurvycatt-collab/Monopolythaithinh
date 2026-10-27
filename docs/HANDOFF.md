@@ -65,6 +65,7 @@
 - Nếu state đã chuyển sang `phase === 'over'`, `playOut()` bỏ toàn bộ achievement mới trong lượt cuối (kể cả cảnh báo sắp Monopoly) và chỉ hiển thị màn kết quả chiến thắng.
 - Mất điện dùng `outageRounds(i) = state.outage[i] - state.round` để hiện dạng gọn `N ⚡` ngay trên dải giá trắng luôn nhìn thấy (không đặt ở phần sân có thể bị nhà che) và trong `.pcard .power` của chủ sở hữu. Chữ ký `tileSigs` chứa số vòng này để texture được vẽ lại sau mỗi vòng, không chỉ khi trạng thái bật/tắt.
 - Ba ô thưởng lễ hội `state.bonus` dùng `festivalFlag()` dưới dạng một băng rôn cam đậm căng giữa hai cọc ở chính giữa cạnh sau ô đất; không dùng lá cờ một cọc bán trong suốt. Băng rôn quay theo từng cạnh bàn và ghi rõ hệ số `CFG.BONUS_MULT`.
+- Ô đang tổ chức Championships dùng bảng vàng nổi `1.18 × 0.48` ngay dưới dải giá, với cúp và hệ số thuê cỡ lớn. Bảng dùng material không chịu ảnh hưởng ánh sáng để rõ như nhau ở cả bốn cạnh bàn.
 - Đã thử bằng `wrangler dev`: `TTM_URL=http://127.0.0.1:8787/ node test/e2e.js` qua; alarm tự đi khi hết giờ bước đã thử. Production dùng domain thương hiệu và base path ghi trong `docs/CLOUDFLARE.md`.
 - Phòng chờ thêm hành động `kick` (mời ra ghế đang mất kết nối) ở cả server.js và worker.js.
 - Hướng dẫn: `docs/CLOUDFLARE.md`.

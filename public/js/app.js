@@ -462,7 +462,9 @@ function festivalBannerSpot(i) {
   return local(i, 0, lz);
 }
 const bonusFlags = [];
-// bảng lễ hội gắn phẳng lên mặt đất nâu ngay dưới dải giá (mặt hướng về người nhìn), vừa khít khoảng nâu
+// Bảng Championships vàng nổi ngay dưới dải giá, đủ lớn để đọc ở mọi cạnh bàn.
+const CHAMPIONSHIP_PLAQUE_WIDTH = 1.18;
+const CHAMPIONSHIP_PLAQUE_HEIGHT = 0.48;
 let festBanner = null, festSig = '';
 function syncFestival() {
   const sig = S.festival === null || S.festival === undefined || !S.props[S.festival] ? '' : `${S.festival}:${G.festMult(S)}`;
@@ -470,9 +472,9 @@ function syncFestival() {
   if (festBanner) { board.remove(festBanner); festBanner = null; }
   if (!sig) return;
   const i = S.festival, f = tileFrame(i), far = FAR(f.side);
-  // hai cạnh gần: mặt ngoài lộ cả chiều cao ô; hai cạnh xa: mặt trong chỉ lộ phần trên mặt giữa bàn (đã hạ WORLD_DROP)
-  const top = TOPY - 0.03, bottom = far ? TOPY - WORLD_DROP + 0.02 : 0.03, w = f.w - 0.26;
-  festBanner = HK.festivalPlaque(G.festMult(S), w, top - bottom);
+  // Canh mép trên theo mặt ô; bảng có thể phủ xuống thành bàn để không bị ép thấp ở hai cạnh xa.
+  const top = TOPY - 0.025, bottom = top - CHAMPIONSHIP_PLAQUE_HEIGHT;
+  festBanner = HK.festivalPlaque(G.festMult(S), CHAMPIONSHIP_PLAQUE_WIDTH, CHAMPIONSHIP_PLAQUE_HEIGHT);
   const p = local(i, 0, (far ? -1 : 1) * ((f.d - 0.06) / 2 + 0.014));
   festBanner.position.set(p.x, bottom, p.z); festBanner.rotation.y = f.rot + (far ? Math.PI : 0); board.add(festBanner);
   festBanner.userData.t0 = syncFestival.first ? -1 : performance.now(); // dựng ván lần đầu thì không chạy hoạt ảnh
