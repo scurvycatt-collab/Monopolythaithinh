@@ -136,6 +136,12 @@ async function handleApi(req, res, url) {
   try { body = await readBody(req); } catch (e) { return sendJSON(res, 400, { error: e.message }); }
   try {
     if (url.pathname === '/api/join') {
+      const existing = G.byName(state, body.name);
+      if (existing) {
+        if (isOnline(existing.id)) return sendJSON(res, 409, { error: `${existing.name} đang online trên một thiết bị khác` });
+        offlineSince.set(existing.id, Date.now());
+        return sendJSON(res, 200, { id: existing.id, token: existing.token, rejoined: true });
+      }
       const id = 'p' + crypto.randomBytes(4).toString('hex');
       const token = crypto.randomBytes(18).toString('hex');
       G.addPlayer(state, { id, token, name: body.name, pet: body.pet });

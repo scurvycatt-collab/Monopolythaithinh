@@ -10,7 +10,7 @@
    ============================================================================ */
 (function (root) {
   'use strict';
-  const VERSION = '1.6.0';
+  const VERSION = '1.6.2';
 
   /* ===================== LỚP 1 — THÔNG SỐ ===================== */
   const CONFIG = {
@@ -84,6 +84,12 @@
   const PETS = [
     { id: 'animal-dog', n: 'Chó', c: '#ec3f78' }, { id: 'animal-cat', n: 'Mèo', c: '#2c8ff0' },
     { id: 'animal-fox', n: 'Cáo', c: '#3cb043' }, { id: 'animal-panda', n: 'Gấu trúc', c: '#f5a20a' },
+  ];
+
+  // Danh sách map có thể chọn trong room. Map hiện tại là map mặc định;
+  // thêm map mới vào đây trước khi nối renderer/asset tương ứng.
+  const MAPS = [
+    { id: 'map-1', name: 'Map 1', description: 'Bản đồ Thái Thịnh mặc định', default: true },
   ];
 
   /* ===================== LỚP 2 — SƠ ĐỒ TRẠNG THÁI ===================== */
@@ -169,7 +175,7 @@
     D('Thắng', 'W2', 'Hết thời lượng ván', 'Ván dừng, người có tổng tài sản lớn nhất thắng', { money: 5000, timeUp: true }, [], { phase: 'over', winner: 'me' }),
   ];
 
-  const RULES = { VERSION, CONFIG, LEVEL_NAMES, GROUPS, TILES, CARDS, PETS, STATES, FLOW, DECISIONS };
+  const RULES = { VERSION, CONFIG, LEVEL_NAMES, GROUPS, TILES, CARDS, PETS, MAPS, STATES, FLOW, DECISIONS };
   if (typeof module !== 'undefined' && module.exports) module.exports = RULES;
   else root.RULES = RULES;
 })(typeof self !== 'undefined' ? self : this);

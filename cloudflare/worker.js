@@ -158,6 +158,12 @@ export class GameRoom extends DurableObject {
     const s = this.state;
     try {
       if (url.pathname === '/api/join') {
+        const existing = G.byName(s, body.name);
+        if (existing) {
+          if (this.isOnline(existing.id)) return json(409, { error: `${existing.name} đang online trên một thiết bị khác` });
+          this.offlineSince.set(existing.id, Date.now());
+          return json(200, { id: existing.id, token: existing.token, rejoined: true });
+        }
         const id = 'p' + hex(4), token = hex(18);
         G.addPlayer(s, { id, token, name: body.name, pet: body.pet });
         this.offlineSince.set(id, Date.now());

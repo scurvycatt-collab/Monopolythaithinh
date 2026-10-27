@@ -4,7 +4,7 @@
 (function (root) {
   'use strict';
   const R = typeof module !== 'undefined' && module.exports ? require('./rules.js') : root.RULES;
-  const { CONFIG: CFG, GROUPS, TILES, CARDS, PETS, LEVEL_NAMES, STATES } = R;
+  const { CONFIG: CFG, GROUPS, TILES, CARDS, PETS, MAPS, LEVEL_NAMES, STATES } = R;
   const COLORS = PETS.map((x) => ({ c: x.c, n: x.n }));
 
   const isBuyable = (t) => t.type === 'city' || t.type === 'resort';
@@ -79,7 +79,7 @@
       version: 0, phase: 'lobby', hostId: null, players: [], props: {}, festival: null, festLevel: 0, outage: {}, bonus: [], turn: 0, step: null,
       dice: null, moves: [], lastCard: null, log: [], round: 1, seq: 0, again: false,
       pending: null, winner: null, winReason: null, startedAt: null, endsAt: null, stepAt: null,
-      settings: { roundLimit: 0, timeLimitMin: CFG.TIME_OPTIONS[0], turnSec: CFG.TURN_SEC, autoSec: CFG.AUTO_OFFLINE_SEC },
+      settings: { mapId: MAPS[0].id, roundLimit: 0, timeLimitMin: CFG.TIME_OPTIONS[0], turnSec: CFG.TURN_SEC, autoSec: CFG.AUTO_OFFLINE_SEC },
     };
   }
   const nextSeq = (s) => ++s.seq;
@@ -107,6 +107,10 @@
     name = String(name || '').replace(/\s+/g, ' ').trim().slice(0, 16);
     if (!name) fail('Hãy nhập tên');
     return name;
+  }
+  function byName(s, name) {
+    name = cleanName(name);
+    return s.players.find((p) => p.name.toLowerCase() === name.toLowerCase()) || null;
   }
   function freePet(s, want) {
     const used = new Set(s.players.map((p) => p.pet));
@@ -152,6 +156,7 @@
   function setSettings(s, o) {
     if (s.phase !== 'lobby') fail('Chỉ chỉnh khi chưa bắt đầu');
     const rl = Number(o.roundLimit), as = Number(o.autoSec), tl = Number(o.timeLimitMin), ts = Number(o.turnSec);
+    if (MAPS.some((map) => map.id === o.mapId)) s.settings.mapId = o.mapId;
     if ([0, ...CFG.TURN_OPTIONS].includes(ts)) s.settings.turnSec = ts;
     if ([0, 15, 20, 30, 40].includes(rl)) s.settings.roundLimit = rl;
     if ([0, 30, 60, 120].includes(as)) s.settings.autoSec = as;
@@ -641,8 +646,8 @@
 
   const api = {
     RULES: R, STATES, stepLeft, checkTurn,
-    GROUPS, TILES, CFG, COLORS, PETS, CARDS, LEVEL_NAMES, RESORTS, SIDES, GameError,
-    setRng, createState, publicView, ensureHost, isHost, addPlayer, removePlayer, setPet, renamePlayer, setSettings, startGame, resetGame,
+    GROUPS, TILES, CFG, COLORS, PETS, MAPS, CARDS, LEVEL_NAMES, RESORTS, SIDES, GameError,
+    setRng, createState, publicView, ensureHost, isHost, byName, addPlayer, removePlayer, setPet, renamePlayer, setSettings, startGame, resetGame,
     act, autoAction, checkTime, cur, byId, value, invested, toll, upgradeCost, rentOf, takeoverPrice, canTakeover, sellValue, ownedBy, networth,
     ownsGroup, canUpgrade, nextLevel, isBuyable, maxBuild, villaLocked, taxBase, outaged, festMult, cardTargets,
   };

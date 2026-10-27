@@ -9,7 +9,7 @@ import { normalizeRoom, roomEndpoint, selectRoomCode, validRoom } from './room-s
 const HK = { loadKit, building: houseBuilding, colosseum, worldTour, lostIsland, startGate, chanceBox, beachHouse, festivalFlag, festivalPlaque, BEACH_LEVELS };
 
 const G = window.Game;
-const { TILES, GROUPS, CFG } = G;
+const { TILES, GROUPS, CFG, MAPS } = G;
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -502,6 +502,8 @@ function syncBuildings(instant) {
 
 /* quân cờ: thú khối */
 const FACE_CAM = Math.PI / 4; // quay mặt về phía người nhìn
+// Mọi nhân vật dùng cùng chiều cao hiển thị; 1.08 = kích thước cũ xấp xỉ 0.9, tăng 20%.
+const TOKEN_HEIGHT = 1.08;
 const tokens = {};
 function tokenSpot(pid, pos) {
   const here = S.players.filter((p) => !p.bankrupt && (dispPos[p.id] ?? p.pos) === pos);
@@ -518,7 +520,7 @@ const dispPos = {};
 function buildTokens() {
   Object.values(tokens).forEach((t) => scene.remove(t));
   for (const p of S.players) {
-    const t = place(seatOf[p.id].pet, 0.66);
+    const t = place(seatOf[p.id].pet, TOKEN_HEIGHT, { byHeight: true });
     const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.05, 28), new THREE.MeshStandardMaterial({ color: seatOf[p.id].color, roughness: .6 }));
     ring.position.y = 0.025; ring.receiveShadow = true; t.add(ring);
     t.children[0].position.y += 0.05;
@@ -982,6 +984,15 @@ async function showStatus(text, ms = 1900) {
   const el = $('#status'); el.innerHTML = `<p>${esc(text)}</p>`;
   el.classList.add('show'); await sleep(REDUCED ? 1200 : ms); el.classList.remove('show'); await sleep(260);
 }
+let turnNoticeKey = '';
+async function showTurnNotice() {
+  if (S.phase !== 'play' || !curP()) return;
+  const p = curP(), key = `${S.startedAt}:${S.round}:${p.id}`;
+  if (key === turnNoticeKey) return;
+  turnNoticeKey = key;
+  const text = MODE === 'net' && isMe(p.id) ? 'Đến lượt bạn!' : `Đến lượt ${p.name}!`;
+  await showStatus(text, 1500);
+}
 
 /* ---------------- bán đất khi thiếu tiền (kiểu Business Tour) ---------------- */
 let sell = null; // { pid, picked:Set }
@@ -1152,6 +1163,7 @@ async function playOut() {
   }
   busy = false; pickLevel = 0;
   if (MODE === 'local') { G.checkTime(S, Date.now()); save(); }
+  await showTurnNotice();
   renderHub();
 }
 // dựng lại toàn bộ bàn theo trạng thái hiện tại, không hoạt ảnh (ván mới, vào giữa ván, đổi người chơi)
@@ -1165,6 +1177,7 @@ function resetView() {
   syncFestival.first = true;
   syncBonus(); buildTokens(); syncBuildings(true); renderCards(); renderHub(); renderLobby();
   syncFestival.first = false;
+  void showTurnNotice();
 }
 
 /* ---------------- chế độ mạng: API + SSE ---------------- */
@@ -1192,13 +1205,15 @@ function connect() {
 }
 async function autoJoinRoom(state) {
   if (!pendingJoinName || me || joiningRoom) return;
-  if (state.phase !== 'lobby') { lobbyDraftName = pendingJoinName; pendingJoinName = ''; return; }
-  if (state.players.length >= CFG.MAX_PLAYERS) { lobbyDraftName = pendingJoinName; pendingJoinName = ''; return; }
+  const cleanPending = pendingJoinName.replace(/\s+/g, ' ').trim().toLowerCase();
+  const existing = state.players.find((p) => p.name.toLowerCase() === cleanPending);
+  if (state.phase !== 'lobby' && !existing) { lobbyDraftName = pendingJoinName; pendingJoinName = ''; return; }
+  if (state.players.length >= CFG.MAX_PLAYERS && !existing) { lobbyDraftName = pendingJoinName; pendingJoinName = ''; return; }
   const pet = (G.PETS.find((x) => !state.players.some((p) => p.pet === x.id)) || {}).id;
   const name = pendingJoinName;
   joiningRoom = true;
   try {
-    setMe(await api('api/join', { name, pet }));
+    acceptSession(await api('api/join', { name, pet }));
     pendingJoinName = '';
   } catch (e) {
     pendingJoinName = '';
@@ -1206,6 +1221,10 @@ async function autoJoinRoom(state) {
     toast(e.message);
     renderLobby();
   } finally { joiningRoom = false; }
+}
+function acceptSession(session) {
+  if (session.rejoined) toast('Đã vào lại ghế cũ');
+  setMe({ id: session.id, token: session.token });
 }
 const queue = []; let draining = false;
 function onState(ns) { queue.push(ns); if (!draining) drain(); }
@@ -1255,8 +1274,10 @@ function renderLobby() {
 const petGrid = (sel, taken, attr) => `<div class="pets">${G.PETS.map((x) => `<button type="button" class="pet${x.id === sel ? ' on' : ''}" ${attr}="${x.id}" ${taken.has(x.id) && x.id !== sel ? 'disabled' : ''} style="--c:${x.c}"><img alt="" src="${petImg(x.id)}"><span>${x.n}</span></button>`).join('')}</div>`;
 const timeRow = (cur, attr) => `<div class="times">${CFG.TIME_OPTIONS.map((m) => `<button type="button" class="pill ${m === cur ? '' : 'ghost'}" ${attr}="${m}">${timeLabel(m)}</button>`).join('')}</div>`;
 const turnRow = (cur, attr) => `<div class="times">${CFG.TURN_OPTIONS.map((v) => `<button type="button" class="pill ${v === cur ? '' : 'ghost'}" ${attr}="${v}">${v} giây</button>`).join('')}</div>`;
+const mapRow = (cur) => `<div class="map-options">${MAPS.map((map, index) => `<button type="button" class="map-option${map.id === cur ? ' on' : ''}" data-map="${map.id}"><span class="map-thumb"><i>${index + 1}</i></span><span><b>${esc(map.name)}</b><small>${esc(map.description)}${map.default ? ' · Mặc định' : ''}</small></span></button>`).join('')}</div>`;
 function lobbyNet(el) {
   const mine = me && G.byId(S, me.id), amHost = !!mine && S.hostId === mine.id, taken = new Set(S.players.map((p) => p.pet));
+  const currentMap = MAPS.find((map) => map.id === S.settings.mapId) || MAPS[0];
   const list = S.players.map((p) => `<li style="--c:${p.color}"><img alt="" src="${petImg(p.pet)}"><b>${esc(p.name)}</b>${p.id === S.hostId ? '<em class="host">HOST</em>' : ''}${isMe(p.id) ? '<em>bạn</em>' : ''}<i class="dot${presence[p.id] && presence[p.id].on ? ' on' : ''}" title="${presence[p.id] && presence[p.id].on ? 'Đang online' : 'Mất kết nối'}"></i>${amHost && !isMe(p.id) && !(presence[p.id] && presence[p.id].on) ? `<button type="button" class="kick" data-kick="${p.id}" aria-label="Mời ${esc(p.name)} ra khỏi phòng">×</button>` : ''}</li>`).join('');
   if (!mine) {
     const pet = (S.players.length < CFG.MAX_PLAYERS) && (lobbyNet.pick && !taken.has(lobbyNet.pick) ? lobbyNet.pick : (G.PETS.find((x) => !taken.has(x.id)) || {}).id);
@@ -1269,20 +1290,22 @@ function lobbyNet(el) {
     el.querySelectorAll('[data-pet]').forEach((b) => { b.onclick = () => { lobbyDraftName = $('#lname').value; lobbyNet.pick = b.dataset.pet; renderLobby(); }; });
     const join = async () => {
       const name = $('#lname').value.trim(); if (!name) { toast('Hãy nhập tên'); return $('#lname').focus(); }
-      try { setMe(await api('api/join', { name, pet: lobbyNet.pick })); } catch (e) { toast(e.message); }
+      try { acceptSession(await api('api/join', { name, pet: lobbyNet.pick })); } catch (e) { toast(e.message); }
     };
     if ($('#ljoin')) { $('#ljoin').onclick = join; $('#lname').onkeydown = (e) => { if (e.key === 'Enter') join(); }; }
     return;
   }
   el.innerHTML = sheet('#2c8ff0', 'Thái Thịnh Monopoly', 'Phòng chờ', `<ul class="who">${list}</ul>
     <div class="fld">Đổi nhân vật</div>${petGrid(mine.pet, taken, 'data-pet')}
-    ${amHost ? `<div class="fld">Thời lượng ván</div>${timeRow(S.settings.timeLimitMin, 'data-t')}
-    <div class="fld">Thời gian mỗi lượt</div>${turnRow(S.settings.turnSec || CFG.TURN_SEC, 'data-ts')}` : `<div class="room-readonly"><b>Host đang cài đặt phòng</b><span>${timeLabel(S.settings.timeLimitMin)} · ${S.settings.turnSec || CFG.TURN_SEC} giây/lượt</span></div>`}
+    ${amHost ? `<div class="fld">Bản đồ</div>${mapRow(S.settings.mapId || MAPS[0].id)}
+    <div class="fld">Thời lượng ván</div>${timeRow(S.settings.timeLimitMin, 'data-t')}
+    <div class="fld">Thời gian mỗi lượt</div>${turnRow(S.settings.turnSec || CFG.TURN_SEC, 'data-ts')}` : `<div class="room-readonly"><b>Host đang cài đặt phòng</b><span>${esc(currentMap.name)} · ${timeLabel(S.settings.timeLimitMin)} · ${S.settings.turnSec || CFG.TURN_SEC} giây/lượt</span></div>`}
     ${inviteBox()}`,
     `<button class="pill ghost" type="button" id="lleave">Rời phòng</button>${amHost ? `<button class="pill big" type="button" id="lstart" ${S.players.length < 2 ? 'disabled' : ''}>Bắt đầu</button>` : '<span class="host-wait">Chờ host bắt đầu…</span>'}`);
   const send = (type, data) => api('api/act', { token: me.token, type, data }).catch((e) => toast(e.message));
   el.querySelectorAll('[data-pet]').forEach((b) => { b.onclick = () => send('pet', { pet: b.dataset.pet }); });
   el.querySelectorAll('[data-kick]').forEach((b) => { b.onclick = () => send('kick', { id: b.dataset.kick }); });
+  el.querySelectorAll('[data-map]').forEach((b) => { b.onclick = () => send('settings', { mapId: b.dataset.map }); });
   el.querySelectorAll('[data-t]').forEach((b) => { b.onclick = () => send('settings', { timeLimitMin: Number(b.dataset.t) }); });
   el.querySelectorAll('[data-ts]').forEach((b) => { b.onclick = () => send('settings', { turnSec: Number(b.dataset.ts) }); });
   $('#lleave').onclick = () => send('leave').then(exitRoom);

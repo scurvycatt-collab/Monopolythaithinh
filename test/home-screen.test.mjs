@@ -15,5 +15,9 @@ assert.match(css, /#gate\{[^}]*box-sizing:border-box/);
 const gateFirst = app.indexOf("if (MODE === 'net' && ROOM_GATE) { showRoomGate(); return; }");
 const prepareAfterGate = app.indexOf('await prepareBoard();', gateFirst);
 assert.ok(gateFirst >= 0 && prepareAfterGate > gateFirst, 'cloud home must return before preparing the 3D board');
+assert.match(app, /const TOKEN_HEIGHT = 1\.08;/, 'all characters must share the enlarged token height');
+assert.match(app, /place\(seatOf\[p\.id\]\.pet, TOKEN_HEIGHT, \{ byHeight: true \}\)/, 'tokens must be normalized by height');
+assert.match(app, /Đến lượt bạn!/);
+assert.match(app, /`Đến lượt \$\{p\.name\}!`/);
 
 console.log('Home screen lazy-map tests passed.');

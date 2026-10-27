@@ -45,6 +45,8 @@ async function snapshot(token) {
   await start();
   const ok = (r) => { assert.strictEqual(r.status, 200, JSON.stringify(r.body)); return r.body; };
   const a = ok(await post('api/join', { name: 'Bố', pet: 'animal-dog' }));
+  const aAgain = ok(await post('api/join', { name: '  Bố  ', pet: 'animal-panda' }));
+  assert.deepStrictEqual([aAgain.id, aAgain.token, aAgain.rejoined], [a.id, a.token, true], 'username cũ + room cũ phải vào lại đúng ghế');
   assert.strictEqual((await post('api/join', { name: 'Mẹ', pet: 'animal-dog' })).status, 400, 'trùng nhân vật phải bị từ chối');
   const b = ok(await post('api/join', { name: 'Mẹ', pet: 'animal-cat' }));
   ok(await post('api/act', { token: b.token, type: 'pet', data: { pet: 'animal-fox' } }));
@@ -53,9 +55,10 @@ async function snapshot(token) {
   assert.strictEqual((await post('api/act', { token: b.token, type: 'kick', data: { id: c0.id } })).status, 403, 'khách không được mời người khác ra');
   assert.strictEqual((await post('api/act', { token: b.token, type: 'start' })).status, 403, 'khách không được bắt đầu');
   ok(await post('api/act', { token: a.token, type: 'kick', data: { id: c0.id } })); // mời ra ghế mất kết nối
-  ok(await post('api/act', { token: a.token, type: 'settings', data: { timeLimitMin: 90 } }));
+  ok(await post('api/act', { token: a.token, type: 'settings', data: { mapId: 'map-1', timeLimitMin: 90 } }));
   let d = await snapshot();
   assert.strictEqual(d.state.hostId, a.id, 'người đầu tiên phải là host');
+  assert.strictEqual(d.state.settings.mapId, 'map-1', 'Map 1 phải là map mặc định');
   assert.deepStrictEqual(d.state.players.map((p) => p.pet), ['animal-dog', 'animal-fox']);
   assert.ok(d.state.players.every((p) => !p.token), 'token không được lộ ra ngoài');
   ok(await post('api/act', { token: a.token, type: 'start' }));
@@ -73,6 +76,10 @@ async function snapshot(token) {
   const v2 = (await snapshot()).state;
   assert.strictEqual(v2.version, v1.version); assert.strictEqual(v2.phase, 'play');
   assert.deepStrictEqual(v2.players.map((p) => [p.pos, p.money]), v1.players.map((p) => [p.pos, p.money]));
+
+  // máy khác nhập username cũ + room cũ trong lúc ván đang chạy → nhận lại đúng ghế
+  const aDuringPlay = ok(await post('api/join', { name: 'Bố', pet: 'animal-panda' }));
+  assert.deepStrictEqual([aDuringPlay.id, aDuringPlay.token, aDuringPlay.rejoined], [a.id, a.token, true]);
 
   // nhận lại ghế từ thiết bị khác khi ghế đó đang offline
   const c = ok(await post('api/claim', { id: a.id }));

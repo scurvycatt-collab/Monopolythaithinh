@@ -43,6 +43,10 @@ Mở bản cloud sẽ thấy main menu riêng, chưa hiện map. Nhập username
 
 Người vào room đầu tiên là **host**. Chỉ host được đổi thời lượng/cấu hình room, mời người khác ra, bắt đầu hoặc reset ván; server từ chối các lệnh quản trị từ người chơi thường. Nếu host rời phòng chờ, quyền host chuyển cho người vào kế tiếp.
 
+Host có thể chọn bản đồ trong cài đặt room. Bản đồ hiện tại được đăng ký là **Map 1 (Mặc định)**; danh sách map được thiết kế để có thể bổ sung thêm map sau này.
+
+Muốn tiếp tục trên máy khác, nhập lại đúng **username cũ + room cũ**. Nếu ghế đang offline, server trả lại đúng ghế, tài sản và quyền host cũ; nếu ghế vẫn online ở thiết bị khác thì yêu cầu bị từ chối để tránh hai máy cùng điều khiển.
+
 ## Bộ luật chính (bắt buộc đọc trước khi sửa)
 
 Toàn bộ luật nằm ở **một file duy nhất: `public/rules.js`**, gồm ba lớp:

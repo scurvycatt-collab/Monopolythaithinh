@@ -39,7 +39,10 @@
 ## Bản Cloudflare (v1.5)
 - `cloudflare/worker.js` + `wrangler.toml`: Worker phục vụ `public/` làm static assets và trả `/health` mà không chạm Durable Object. Main menu thu username + room code và che hoàn toàn game scene; `prepareBoard()` chỉ tải model/map và khởi động render loop sau khi xác nhận. Sau đó client mới gọi `/api/*` và mở `/events`. Mỗi `?room=` hợp lệ ánh xạ tới một `GameRoom` riêng. Durable Object giữ `state` trong storage, SSE bằng TransformStream, alarm hẹn đúng lúc có việc (hết ván, hết giờ bước, tới hạn đi hộ, ping 14 s) và xóa alarm khi phòng chờ không còn kết nối.
 - Quyền room nằm trong `state.hostId`: người đầu tiên là host, host rời lobby thì chuyển cho người kế tiếp. `start`, `reset`, `kick`, `settings` phải qua kiểm tra host server-side ở cả `server.js` và `cloudflare/worker.js`; không dựa vào việc ẩn nút trên UI.
-- Đã thử bằng `wrangler dev`: `TTM_URL=http://127.0.0.1:8787/ node test/e2e.js` qua; alarm tự đi khi hết giờ bước đã thử. **Chưa deploy thật** (người dùng chưa yêu cầu).
+- Danh sách map nằm trong `public/rules.js` (`MAPS`). Room lưu lựa chọn trong `settings.mapId`; `map-1` là map hiện tại và mặc định. Khi thêm map phải bổ sung asset/renderer, entry `MAPS`, kiểm thử và tài liệu cùng nhau.
+- Luồng vào lại từ máy khác dùng chính `/api/join`: `G.byName` tìm username cũ trong room; nếu ghế offline thì trả lại cùng `id`/`token`, nếu online thì 409. Client nhận cờ `rejoined` và lưu phiên room-scoped như bình thường.
+- Khi lượt chuyển sang người mới, client hiện banner toàn màn hình `Đến lượt…`; quân cờ dùng chung chiều cao `TOKEN_HEIGHT = 1.08`, tương đương lớn hơn kích thước cũ khoảng 20%.
+- Đã thử bằng `wrangler dev`: `TTM_URL=http://127.0.0.1:8787/ node test/e2e.js` qua; alarm tự đi khi hết giờ bước đã thử. Production dùng domain thương hiệu và base path ghi trong `docs/CLOUDFLARE.md`.
 - Phòng chờ thêm hành động `kick` (mời ra ghế đang mất kết nối) ở cả server.js và worker.js.
 - Hướng dẫn: `docs/CLOUDFLARE.md`.
 
