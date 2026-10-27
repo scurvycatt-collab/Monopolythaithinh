@@ -24,5 +24,7 @@ assert.match(app, /const MONEY_DEBIT_MS = REDUCED \? 1 : 700;/, 'debit animation
 assert.match(app, /const duration = to < from \? MONEY_DEBIT_MS : MONEY_MS;/, 'only money deductions should use the faster animation');
 assert.match(houses, /const orange = hsl\.s > 0\.35/);
 assert.match(houses, /green \|\| orange/, 'orange source roofs must follow the player ownership color');
+assert.match(app, /turnArrow\.userData\.material\.color\.set\(color\)/, 'turn arrow must use the current player color');
+assert.match(app, /turnArrow\.userData\.material\.emissive\.set\(color\)/, 'turn arrow glow must use the current player color');
 
 console.log('Home screen lazy-map tests passed.');

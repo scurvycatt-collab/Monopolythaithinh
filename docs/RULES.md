@@ -1,4 +1,4 @@
-# Luật chơi Thái Thịnh Monopoly — v1.6.5
+# Luật chơi Thái Thịnh Monopoly — v1.6.6
 
 > Tự sinh từ `public/rules.js` bằng `npm run rules:doc`. Không sửa tay file này: sửa `rules.js`, chạy `npm run verify`.
 

@@ -45,6 +45,7 @@
 - Màu sở hữu của Gấu trúc (trước đây là cam) là vàng `#f4c430`. `G.ensureHost` và `seatSetup` đồng bộ lại màu theo nhân vật để cả room cloud và bản lưu local cũ nhận màu mới.
 - Animation đếm tiền bị trừ dùng `MONEY_DEBIT_MS = 700`; tiền nhận vẫn dùng `MONEY_MS` để đồng bộ với hoạt ảnh xây nhà. Nhãn tiền trừ bay trong 900 ms.
 - `public/js/houses.js` xem cả dải xanh và cam trong texture nguồn là màu nhận diện chủ sở hữu; vì vậy mái cam cũ được tô lại theo màu người chơi (Gấu trúc là vàng), không giữ màu cố định của model.
+- Mũi tên báo lượt không có màu vàng cố định: `placeOverlays()` lấy màu từ `seatOf[p.id].color` và cập nhật đồng thời `color`/`emissive` khi người tới lượt thay đổi.
 - Đã thử bằng `wrangler dev`: `TTM_URL=http://127.0.0.1:8787/ node test/e2e.js` qua; alarm tự đi khi hết giờ bước đã thử. Production dùng domain thương hiệu và base path ghi trong `docs/CLOUDFLARE.md`.
 - Phòng chờ thêm hành động `kick` (mời ra ghế đang mất kết nối) ở cả server.js và worker.js.
 - Hướng dẫn: `docs/CLOUDFLARE.md`.

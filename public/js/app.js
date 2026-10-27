@@ -691,11 +691,12 @@ function pickAt(cx, cy) {
   if (!$('#modal').classList.contains('show')) showInfo(i);
 }
 
-/* mũi tên vàng nhấp nhô trên đầu quân đang tới lượt */
+/* mũi tên nhấp nhô trên đầu quân đang tới lượt, cùng màu với người chơi */
 const turnArrow = (() => {
-  const g = new THREE.Group(), m = new THREE.MeshStandardMaterial({ color: '#ffd23a', emissive: '#ffb300', emissiveIntensity: 0.35, roughness: 0.4 });
+  const g = new THREE.Group(), m = new THREE.MeshStandardMaterial({ color: '#ffffff', emissive: '#ffffff', emissiveIntensity: 0.35, roughness: 0.4 });
   const cone = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.36, 4), m); cone.rotation.x = Math.PI; cone.castShadow = true; g.add(cone);
   const stem = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.2, 0.12), m); stem.position.y = 0.26; g.add(stem);
+  g.userData.material = m; g.userData.playerColor = '';
   g.scale.setScalar(1.7); g.visible = false; scene.add(g); return g;
 })();
 // pháo giấy rơi quanh một ô (tổ chức lễ hội)
@@ -720,7 +721,15 @@ function stepConfetti(now, dt) {
 function placeOverlays() {
   const p = curP(), arrowOn = !!p && !!tokens[p.id] && !p.bankrupt;
   turnArrow.visible = arrowOn;
-  if (arrowOn) { const t = tokens[p.id].position; turnArrow.position.set(t.x, t.y + 1.45 + Math.sin(clockT * 4) * 0.14, t.z); turnArrow.rotation.y = clockT * 1.5; }
+  if (arrowOn) {
+    const color = (seatOf[p.id] && seatOf[p.id].color) || p.color;
+    if (turnArrow.userData.playerColor !== color) {
+      turnArrow.userData.playerColor = color;
+      turnArrow.userData.material.color.set(color);
+      turnArrow.userData.material.emissive.set(color);
+    }
+    const t = tokens[p.id].position; turnArrow.position.set(t.x, t.y + 1.45 + Math.sin(clockT * 4) * 0.14, t.z); turnArrow.rotation.y = clockT * 1.5;
+  }
   const bc = $('#bigclock');
   bc.classList.toggle('show', S.phase === 'play' && !!S.endsAt);
   const bar = document.querySelector('.pcard.cur .tbar i'), left = G.stepLeft(S, now());
