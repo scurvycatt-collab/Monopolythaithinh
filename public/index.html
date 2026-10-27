@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Thái Thịnh Monopoly</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Rubik:wght@700;800;900&family=Fredoka:wght@500;600;700&family=Be+Vietnam+Pro:wght@500;600;700;800&display=swap">
+<link rel="stylesheet" href="style.css">
+<script type="importmap">
+{ "imports": {
+  "three": "./vendor/three/three.module.js",
+  "three/addons/": "./vendor/three/addons/"
+} }
+</script>
+</head>
+<body>
+<div id="stage"></div>
+<div id="cards"></div>
+<div id="hub"></div>
+<div id="zoom">
+  <button type="button" id="zin" aria-label="Phóng to"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+  <button type="button" id="zout" aria-label="Thu nhỏ"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+  <button type="button" id="zfit" aria-label="Xem toàn bàn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+</div>
+<div id="banner"></div>
+<div id="modal" role="dialog" aria-modal="true"></div>
+<div id="toast" role="status"></div>
+<div id="info" role="dialog" aria-modal="true" aria-label="Thông tin ô"></div>
+<div id="status" role="alert"></div>
+<div id="sellbox"></div>
+<div id="selltags"></div>
+<div id="lobby" role="dialog" aria-modal="true" aria-label="Phòng chờ"></div>
+<div id="conn" role="status">Mất kết nối tới server, đang thử lại…</div>
+<button id="newgame" type="button">Ván mới</button>
+<div id="credit">Mô hình 3D: <a href="https://www.kenney.nl" target="_blank" rel="noopener">Kenney.nl</a> (CC0)</div>
+<div id="loading">Đang dựng bàn cờ…<small id="loadmsg">Tải mô hình 3D</small></div>
+<script src="rules.js"></script>
+<script src="game.js"></script>
+<div id="bigclock" aria-label="Thời gian còn lại của ván"></div>
+<div id="dicesum"></div>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

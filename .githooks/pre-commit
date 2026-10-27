@@ -1,0 +1,3 @@
+#!/bin/sh
+# Chặn commit nếu engine lệch bộ luật chính (public/rules.js) hoặc tài liệu luật chưa sinh lại.
+npm run --silent verify || { echo "✗ Commit bị chặn: chạy 'npm run verify' và sửa cho khớp bộ luật."; exit 1; }

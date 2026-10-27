@@ -1,0 +1,11 @@
+# Mọi push / pull request phải qua kiểm tra bộ luật trước khi được merge hoặc deploy.
+name: verify
+on: [push, pull_request]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm run verify

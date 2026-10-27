@@ -1,0 +1,49 @@
+# Thái Thịnh Monopoly: ghi chú bàn giao (27/10/2026, v1.3)
+
+Đính kèm zip này khi mở conversation mới, nhắn: "Đọc docs/HANDOFF.md, làm tiếp từ mục *Việc tiếp theo*."
+
+## Trạng thái
+- **Phần lõi xong:** server làm trọng tài, client 3D chơi qua mạng, phòng chờ chọn tên và nhân vật, nhận lại ghế, đi hộ, lưu ván, hết giờ.
+- **Kiểm thử:** `npm test` gồm `test/sim.js` (giả lập nhiều ván) và `test/e2e.js` (server thật qua HTTP); đã thử hai trình duyệt chơi cùng một ván.
+- Không có `server` thì client tự chuyển sang **chơi chung một máy**. Artifact claude.ai chạy chế độ này: https://claude.ai/artifact/9FVdGVAm4jgr122wB1hxaG
+
+## Kiến trúc
+- **`public/rules.js` là nguồn sự thật duy nhất của luật** (thông số, sơ đồ trạng thái `STATES`, bảng quyết định `DECISIONS`). `public/game.js` (engine UMD, `window.Game` / `require`) chỉ thực thi và đọc mọi số từ đó; `act()` từ chối hành động không có trong `STATES[step].actions`. `docs/RULES.md` sinh từ rules.js. Mọi thay đổi phải qua `npm run verify` (hook pre-commit, CI GitHub, build:exe).
+- Thiếu tiền: khoản phải trả **treo** ở `S.pending = { from, to, amount, why }`, chưa ai mất/nhận tiền; bước `debt` bán đất, đủ thì `settle()` chuyển tiền rồi mới `finish()` (đổ đôi thì đổ tiếp). Phá sản: tiền mặt còn lại về người nhận. Tiền không bao giờ âm.
+- Thời gian mỗi bước: `settings.turnSec` (20/30/45/60, mặc định 30) + 6 s cho hoạt ảnh; `S.stepAt` ghi ở mỗi `act`; `G.checkTurn` tự làm `autoAction` một bước (server mỗi giây; chế độ một máy ở client).
+- `S.notice.kind`: `cantPay`, `noTakeover`, `tour`, `festival` → popup toàn màn hình.
+- `server.js`: Node thuần, không phụ thuộc.
+  - `GET /events?token=`: SSE, gửi `{ state: publicView, presence, now, proxySec }` mỗi khi đổi.
+  - `POST /api/join { name, pet }` → `{ id, token }`. `POST /api/claim { id }`: nhận ghế đang offline.
+  - `POST /api/act { token, type, data }`: hành động ván (`roll`, `buy`, …) và phòng chờ (`start`, `reset`, `leave`, `pet`, `rename`, `settings`, `proxy`).
+  - Lưu `DATA_DIR/game.json` (mặc định `data/`). Tự đi hộ sau `settings.autoSec` (60 s); người khác được bấm đi hộ sau 15 s. Hết giờ: `G.checkTime` mỗi giây.
+  - File tĩnh nén gzip, giữ trong bộ nhớ. `GET /health` trả `{ app: 'thai-thinh-monopoly' }`; client dùng để nhận ra đang có server.
+- `public/js/app.js`:
+  - `MODE = 'net' | 'local'`.
+  - **Mạng:** `act()` gửi API. Trạng thái tới qua SSE vào hàng đợi `onState` → `drain`: chỉ đổi online thì vẽ lại thẻ; ván mới, đổi người chơi hoặc phòng chờ thì `resetView()` dựng lại không hoạt ảnh; còn lại `playOut()` chạy hoạt ảnh theo `seen` (xúc xắc, nước đi, thẻ, thông báo).
+  - **Một máy:** `G.act` tại chỗ rồi `playOut()`; lưu `localStorage['tt-monopoly-v11']`.
+  - Token của mình lưu ở `localStorage['tt-monopoly-me']`.
+  - Chỉ người tới lượt thấy nút và bảng (`myTurn()`); người khác thấy "Đang chờ…" và nút "Đi hộ lượt này" khi người kia offline đủ 15 s.
+- Giao diện:
+  - Thẻ người chơi 4 góc, người tới lượt sáng (`.cur`, có thanh thời gian bước `.tbar`), người khác tối (`.dim`), offline mờ ảnh. Mũi tên vàng trên đầu quân đang tới lượt; ô đất tô theo nhóm (`GROUPS[g].ground` trong rules.js, hoa văn `GROUND_PATTERN`), dải giá trắng, không còn vạch màu nhóm; tổng xúc xắc `#dicesum` bật giữa màn hình ~1 s; lễ hội: bảng xanh có cúp + hệ số (`festivalPlaque` trong specials.js) gắn phẳng lên mặt đất nâu dưới dải giá, cạnh gần cao 0,28, cạnh xa 0,19 (phần lộ trên mặt giữa bàn); đồng hồ ván `#bigclock` giữa mép trên; tổng xúc xắc `#dicesum`; ô chưa có chủ không hiện giá; thế giới giữa bàn hạ `WORLD_DROP = 0.24` cho hàng ô nổi lên; tổ chức lễ hội: pháo giấy + băng rôn mọc lên; popup thẻ của người khác tự tắt (`#modal.peek`).
+  - Phòng chờ `#lobby`: mạng có `lobbyNet` / `lobbyClaim`; một máy có `lobbyLocal`.
+  - Bán đất khi nợ: `startSell`. Thông báo toàn màn hình: `showStatus`. Thẻ thông tin ô: `showInfo`.
+- Đồ hoạ: three.js 0.160 đóng kèm ở `public/vendor/three`. Mô hình Kenney gói trong `public/models/bundle.json` (base64) + `Textures/colormap.png`. `?low`: giảm bóng đổ và độ phân giải.
+
+## Bản chạy local (.exe)
+- `scripts/build-exe.mjs`: chép `public/` → `build/assets`, sinh `build/entry.js` import từng file kiểu `with { type: 'file' }` rồi gán `globalThis.__TTM_ASSETS`, sau đó `import('../server.js')`; gọi `npx bun@1.3.1 build --compile --target=bun-windows-x64`. Không nhúng thẳng `public/` vì server `require('./public/game.js')` sẽ bị Bun gộp thành đường dẫn file.
+- `server.js` khi có `__TTM_ASSETS` (`PACKED`): đọc file tĩnh bằng `Bun.file`, lưu ván ở `data/` cạnh file `.exe`, tự mở trình duyệt (`OPEN=0` để tắt), trùng cổng thì chỉ mở trình duyệt rồi thoát.
+- `GET /api/info` trả link Tailscale (MagicDNS nếu `tailscale status` chạy được) và LAN; phòng chờ hiện link đầu tiên kèm mã QR (`public/vendor/qrcode.mjs`).
+- File `.exe` khoảng 120 MB vì chứa runtime Bun; chưa ký số nên SmartScreen cảnh báo lần đầu. Chưa thử trực tiếp trên Windows (chỉ thử bản Linux cùng mã bằng `TTM_BIN=… node test/e2e.js` và trình duyệt).
+
+## Ràng buộc bản quyền (giữ nguyên)
+Không dùng asset gốc của Business Tour (bundle unity3d, PNG trích xuất, bản AI vẽ lại). Chỉ dùng Kenney CC0 và mô hình dựng bằng code. Ghi credit "Mô hình 3D: Kenney.nl (CC0)".
+
+## Việc tiếp theo (người dùng chọn)
+1. **Web app:** đẩy lên repo GitHub riêng tư, nối Railway (hoặc Fly.io/Render) để push là tự deploy. Cần ổ lưu cho `DATA_DIR`, thêm mã phòng hoặc mật khẩu vì link công khai.
+2. ~~**App local:** `.exe` một file~~ (xong v1.1). Có thể thêm: ký số file, chạy nền không cửa sổ, tự khởi động cùng Windows.
+3. Có thể thêm: âm thanh, nhiều phòng song song, PWA "Thêm vào màn hình chính".
+
+## Ghi chú môi trường thử (sandbox Claude)
+- Chromium headless dùng swiftshader (`--use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader`), mở `?low`, viewport nhỏ. Chỉ được khoảng 1–2 khung hình/giây nên chờ lâu.
+- Google Fonts bị chặn trong sandbox (chỉ đổi font, không lỗi).
