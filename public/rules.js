@@ -10,7 +10,7 @@
    ============================================================================ */
 (function (root) {
   'use strict';
-  const VERSION = '1.7.0';
+  const VERSION = '1.7.1';
 
   /* ===================== LỚP 1 — THÔNG SỐ ===================== */
   const CONFIG = {
@@ -22,14 +22,14 @@
     FESTIVAL_IDX: 16, FEST_MULT: [1, 2, 3, 4, 5],   // lần tổ chức thứ n → thuê × FEST_MULT[n]
     TOUR_IDX: 24, TOUR_FEE: 50,
     TAX_RATE: 0.1, TAX_MIN: 50,   // thuế = 10% tổng tài sản (tiền mặt + giá trị đất), tối thiểu 50
-    VALUE_MULT: [1, 1.5, 2.5, 4, 6],      // giá trị cộng dồn theo cấp 0..4 (× giá đất)
+    VALUE_MULT: [1, 1.5, 2.5, 4, 6],      // hệ số tạm cho thành phố chưa có bảng giá đối chiếu riêng
     TOLL_MULT: [0.25, 0.6, 1.5, 3.2, 5.5], // tiền thuê theo cấp 0..4 (× giá đất)
     LAP_CAP: [2, 3],              // cấp xây tối đa: vòng đầu Nhà 2; đã qua Start: Nhà 3
     LANDMARK: 4,                  // Khách sạn: chỉ xây khi quay lại ô đã có Nhà 3; không bị mua lại
     BUYOUT_MULT: 2,               // giá mua lại = 2 × giá trị cộng dồn
     SELL_MULT: 0.5,               // bán cho ngân hàng = 50% giá trị cộng dồn
     MONOPOLY_MULT: 2,             // sở hữu cả nhóm màu → thuê × 2
-    RESORT_PRICE: 200, RESORT_TOLL: [0, 50, 100, 200, 400], // thuê bãi biển theo số bãi cùng chủ
+    RESORT_PRICE: 200, RESORT_TOLL: [0, 25, 50, 100, 200], // thuê bãi biển theo số resort cùng chủ
     OUTAGE_ROUNDS: 3,             // thẻ Cúp điện
     BONUS_TILES: 3, BONUS_MULT: 1.5, // mỗi ván 3 ô ngẫu nhiên cắm cờ lễ hội: thuê × 1.5
     RENT_ROUND: 0.5,              // tiền thuê làm tròn tới 0,5K
@@ -52,18 +52,22 @@
 
   // bố cục bàn theo Business Tour; [loại, tên, nhóm, giá đất]
   const TILE_LIST = [
-    ['start', 'Start'], ['city', 'Granada', 'A', 50], ['city', 'Seville', 'A', 60], ['city', 'Madrid', 'A', 70],
-    ['resort', 'Bali'], ['city', 'Hong Kong', 'B', 80], ['city', 'Beijing', 'B', 90], ['city', 'Shanghai', 'B', 100],
-    ['island', 'Lost Island'], ['city', 'Venice', 'C', 120], ['city', 'Milan', 'C', 130], ['city', 'Rome', 'C', 140],
-    ['chance', 'Chance'], ['city', 'Hamburg', 'D', 160], ['resort', 'Cyprus'], ['city', 'Berlin', 'D', 180],
-    ['festival', 'Championships'], ['city', 'London', 'E', 200], ['resort', 'Dubai'], ['city', 'Sydney', 'E', 220],
-    ['chance', 'Chance'], ['city', 'Chicago', 'F', 240], ['city', 'Las Vegas', 'F', 260], ['city', 'New York', 'F', 280],
-    ['tour', 'World Tour'], ['resort', 'Nice'], ['city', 'Lyon', 'G', 300], ['city', 'Paris', 'G', 320],
-    ['chance', 'Chance'], ['city', 'Osaka', 'H', 350], ['tax', 'Tax'], ['city', 'Tokyo', 'H', 400],
+    ['start', 'Start'], ['city', 'Granada', 'A', 60, [60, 110, 160, 210, 360]], ['city', 'Seville', 'A', 60, [60, 110, 160, 210, 360]], ['city', 'Madrid', 'A', 60, [60, 110, 160, 210, 360]],
+    ['resort', 'Bali'], ['city', 'Hong Kong', 'B', 100, [100, 150, 200, 250, 400]], ['city', 'Beijing', 'B', 100, [100, 150, 200, 250, 400]], ['city', 'Shanghai', 'B', 120, [120, 170, 220, 270, 420]],
+    ['island', 'Lost Island'], ['city', 'Venice', 'C', 140, [140, 240, 340, 440, 690]], ['city', 'Milan', 'C', 140, [140, 240, 340, 440, 690]], ['city', 'Rome', 'C', 160, [160, 260, 360, 460, 710]],
+    ['chance', 'Chance'], ['city', 'Hamburg', 'D', 180, [180, 280, 380, 480, 730]], ['resort', 'Cyprus'], ['city', 'Berlin', 'D', 200, [200, 300, 400, 500, 750], [16, 90, 180, 270, 495]],
+    ['festival', 'Championships'], ['city', 'London', 'E', 220, [220, 370, 520, 670, 1045]], ['resort', 'Dubai'], ['city', 'Sydney', 'E', 240, [240, 390, 540, 690, 1065], [20, 120, 240, 360, 660]],
+    ['chance', 'Chance'], ['city', 'Chicago', 'F', 260, [260, 410, 560, 710, 1085]], ['city', 'Las Vegas', 'F', 260, [260, 410, 560, 710, 1085]], ['city', 'New York', 'F', 280, [280, 430, 580, 730, 1105]],
+    ['tour', 'World Tour'], ['resort', 'Nice'], ['city', 'Lyon', 'G', 300, [300, 500, 700, 900, 1400]], ['city', 'Paris', 'G', 320, [320, 520, 720, 920, 1420]],
+    ['chance', 'Chance'], ['city', 'Osaka', 'H', 350, [350, 550, 750, 950, 1450]], ['tax', 'Tax'], ['city', 'Tokyo', 'H', 400, [400, 600, 800, 1000, 1500]],
   ];
-  const TILES = TILE_LIST.map(([type, name, group, price], i) => {
+  const TILES = TILE_LIST.map(([type, name, group, price, values, rents], i) => {
     const t = { i, type, name };
-    if (type === 'city') Object.assign(t, { group, price });
+    if (type === 'city') Object.assign(t, {
+      group, price,
+      values: values || CONFIG.VALUE_MULT.map((mult) => price * mult),
+      rents: rents || CONFIG.TOLL_MULT.map((mult) => price * mult),
+    });
     if (type === 'resort') t.price = CONFIG.RESORT_PRICE;
     return t;
   });
@@ -132,31 +136,31 @@
     D('Thành phố — chưa có chủ', 'C1', 'Đủ tiền mua đất', 'Bước buy', { pos: 30, dice: [1, 2] }, [['roll']], { step: 'buy' }),
     D('Thành phố — chưa có chủ', 'C2', 'Không đủ tiền mua đất', 'Bỏ qua, sang người kế', { money: 30, dice: [1, 2] }, [['roll']], { step: 'next', me: 30 }),
     D('Thành phố — chưa có chủ', 'C3', 'Vòng đầu, chọn mua kèm Nhà 3', 'Bị từ chối (vòng đầu tối đa Nhà 2)', { dice: [1, 2] }, [['roll'], ['buy', { level: 3 }]], { error: true }),
-    D('Thành phố — chưa có chủ', 'C4', 'Vòng đầu, mua kèm Nhà 2', 'Trả 2,5× giá đất', { dice: [1, 2] }, [['roll'], ['buy', { level: 2 }]], { owner: [3, 'me'], level: [3, 2], me: 2000 - 175 }),
-    D('Thành phố — chưa có chủ', 'C5', 'Đã qua Start, mua kèm Nhà 3', 'Được phép, trả 4× giá đất', { laps: 1, dice: [1, 2] }, [['roll'], ['buy', { level: 3 }]], { level: [3, 3], me: 2000 - 280 }),
+    D('Thành phố — chưa có chủ', 'C4', 'Vòng đầu, mua kèm Nhà 2', 'Trả giá Nhà 2 của Madrid: 160K', { dice: [1, 2] }, [['roll'], ['buy', { level: 2 }]], { owner: [3, 'me'], level: [3, 2], me: 2000 - 160 }),
+    D('Thành phố — chưa có chủ', 'C5', 'Đã qua Start, mua kèm Nhà 3', 'Được phép, trả giá Nhà 3 của Madrid: 210K', { laps: 1, dice: [1, 2] }, [['roll'], ['buy', { level: 3 }]], { level: [3, 3], me: 2000 - 210 }),
     // ---- ô thành phố của mình
     D('Thành phố — của mình', 'C6', 'Ô của mình cấp 1, còn được xây', 'Bước upgrade', { props: { 3: ['me', 1] }, dice: [1, 2] }, [['roll']], { step: 'upgrade' }),
     D('Thành phố — của mình', 'C7', 'Ô của mình cấp 2, vòng đầu', 'Không nâng được nữa → kết thúc', { props: { 3: ['me', 2] }, dice: [1, 2] }, [['roll']], { step: 'next' }),
     D('Thành phố — của mình', 'C8', 'Ô của mình Nhà 3', 'Được xây Khách sạn', { props: { 3: ['me', 3] }, dice: [1, 2] }, [['roll'], ['upgrade', { level: 4 }]], { level: [3, 4] }),
     // ---- ô thành phố của người khác
-    D('Thành phố — của người khác', 'C9', 'Đủ thuê, đủ mua lại', 'Trả thuê, chủ nhà hiện mặt vui → bước takeover', { props: { 3: ['op', 1] }, dice: [1, 2] }, [['roll']], { me: 2000 - 42, op: 2042, reaction: ['op', 'happyRent'], step: 'takeover' }),
-    D('Thành phố — của người khác', 'C10', 'Mua lại ô cấp 1', 'Trả 2× giá trị cho chủ, nhận nguyên Nhà 1', { props: { 3: ['op', 1] }, dice: [1, 2] }, [['roll'], ['takeover']], { owner: [3, 'me'], level: [3, 1], me: 2000 - 42 - 210, op: 2042 + 210 }),
-    D('Thành phố — của người khác', 'C11', 'Đủ thuê, không đủ mua lại', 'Trả thuê, thông báo "không đủ tiền mua tài sản này"', { money: 100, props: { 3: ['op', 1] }, dice: [1, 2] }, [['roll']], { me: 58, notice: 'noTakeover', step: 'next' }),
-    D('Thành phố — của người khác', 'C12', 'Khách sạn của người khác', 'Trả thuê, không được mua lại', { props: { 3: ['op', 4] }, dice: [1, 2] }, [['roll']], { me: 2000 - 385, step: 'next' }),
-    D('Thành phố — của người khác', 'C13', 'Tiền thuê lớn hơn tiền mặt', 'Khoản thuê treo lại, chưa ai mất/nhận tiền → bước debt, thông báo "không đủ tiền thanh toán"', { money: 100, props: { 3: ['op', 3], 9: ['me', 2] }, dice: [1, 2] }, [['roll']], { step: 'debt', me: 100, op: 2000, pending: 224, notice: 'cantPay' }),
-    D('Thành phố — của người khác', 'C14', 'Đang nợ, bán 1 ô đủ tiền', 'Trả khoản treo cho chủ rồi mới sang người kế', { money: 100, props: { 3: ['op', 3], 9: ['me', 2] }, dice: [1, 2] }, [['roll'], ['sell', { tile: 9 }]], { me: 100 + 150 - 224, op: 2224, pending: 0, step: 'next' }),
-    D('Thành phố — của người khác', 'C15', 'Đổ đôi vào ô người khác, không đủ tiền', 'Phải bán trả xong mới được đổ tiếp', { money: 200, props: { 6: ['op', 3], 9: ['me', 2] }, dice: [3, 3] }, [['roll'], ['sell', { tile: 9 }]], { me: 200 + 150 - 288, op: 2000 + 288, step: 'roll', turn: 'me' }),
+    D('Thành phố — của người khác', 'C9', 'Đủ thuê, đủ mua lại', 'Trả thuê, chủ nhà hiện mặt vui → bước takeover', { props: { 3: ['op', 1] }, dice: [1, 2] }, [['roll']], { me: 2000 - 36, op: 2036, reaction: ['op', 'happyRent'], step: 'takeover' }),
+    D('Thành phố — của người khác', 'C10', 'Mua lại ô cấp 1', 'Trả 2× giá trị cho chủ, nhận nguyên Nhà 1', { props: { 3: ['op', 1] }, dice: [1, 2] }, [['roll'], ['takeover']], { owner: [3, 'me'], level: [3, 1], me: 2000 - 36 - 220, op: 2036 + 220 }),
+    D('Thành phố — của người khác', 'C11', 'Đủ thuê, không đủ mua lại', 'Trả thuê, thông báo "không đủ tiền mua tài sản này"', { money: 100, props: { 3: ['op', 1] }, dice: [1, 2] }, [['roll']], { me: 64, notice: 'noTakeover', step: 'next' }),
+    D('Thành phố — của người khác', 'C12', 'Khách sạn của người khác', 'Trả thuê, không được mua lại', { props: { 3: ['op', 4] }, dice: [1, 2] }, [['roll']], { me: 2000 - 330, step: 'next' }),
+    D('Thành phố — của người khác', 'C13', 'Tiền thuê lớn hơn tiền mặt', 'Khoản thuê treo lại, chưa ai mất/nhận tiền → bước debt, thông báo "không đủ tiền thanh toán"', { money: 100, props: { 3: ['op', 3], 9: ['me', 2] }, dice: [1, 2] }, [['roll']], { step: 'debt', me: 100, op: 2000, pending: 192, notice: 'cantPay' }),
+    D('Thành phố — của người khác', 'C14', 'Đang nợ, bán 1 ô đủ tiền', 'Trả khoản treo cho chủ rồi mới sang người kế', { money: 100, props: { 3: ['op', 3], 9: ['me', 2] }, dice: [1, 2] }, [['roll'], ['sell', { tile: 9 }]], { me: 100 + 170 - 192, op: 2192, pending: 0, step: 'next' }),
+    D('Thành phố — của người khác', 'C15', 'Đổ đôi vào ô người khác, không đủ tiền', 'Phải bán trả xong mới được đổ tiếp', { money: 200, props: { 6: ['op', 3], 9: ['me', 2] }, dice: [3, 3] }, [['roll'], ['sell', { tile: 9 }]], { me: 200 + 170 - 320, op: 2000 + 320, step: 'roll', turn: 'me' }),
     D('Thành phố — của người khác', 'C16', 'Đang nợ, phá sản', 'Toàn bộ tiền mặt cho chủ nợ, đất về ngân hàng', { money: 100, props: { 3: ['op', 3], 9: ['me', 2] }, dice: [1, 2] }, [['roll'], ['bankrupt']], { op: 2100, owner: [9, null], phase: 'over' }),
-    D('Thành phố — của người khác', 'C17', 'Chủ sở hữu cả nhóm màu', 'Thuê × 2', { props: { 1: ['op', 0], 2: ['op', 0], 3: ['op', 1] }, dice: [1, 2] }, [['roll']], { me: 2000 - 84 }),
-    D('Thành phố — của người khác', 'C18', 'Ô cắm cờ lễ hội', 'Thuê × 1,5', { bonus: [3], props: { 3: ['op', 1] }, dice: [1, 2] }, [['roll']], { me: 2000 - 63 }),
-    D('Thành phố — của người khác', 'C19', 'Ô đang tổ chức lễ hội lần 2', 'Thuê × 3', { festival: 3, festLevel: 2, props: { 3: ['op', 1] }, dice: [1, 2] }, [['roll']], { me: 2000 - 126 }),
+    D('Thành phố — của người khác', 'C17', 'Chủ sở hữu cả nhóm màu', 'Thuê × 2', { props: { 1: ['op', 0], 2: ['op', 0], 3: ['op', 1] }, dice: [1, 2] }, [['roll']], { me: 2000 - 72 }),
+    D('Thành phố — của người khác', 'C18', 'Ô cắm cờ lễ hội', 'Thuê × 1,5', { bonus: [3], props: { 3: ['op', 1] }, dice: [1, 2] }, [['roll']], { me: 2000 - 54 }),
+    D('Thành phố — của người khác', 'C19', 'Ô đang tổ chức lễ hội lần 2', 'Thuê × 3', { festival: 3, festLevel: 2, props: { 3: ['op', 1] }, dice: [1, 2] }, [['roll']], { me: 2000 - 108 }),
     D('Thành phố — của người khác', 'C20', 'Ô đang mất điện', 'Không trả thuê', { outage: { 3: 4 }, props: { 3: ['op', 1] }, dice: [1, 2] }, [['roll']], { me: 2000, op: 2000 }),
     D('Thành phố — của người khác', 'C21', 'Có thẻ VIP, dừng ở ô đối thủ', 'Tự dùng 1 thẻ, miễn tiền thuê và hiện thông báo', { shields: 1, props: { 3: ['op', 1] }, dice: [1, 2] }, [['roll']], { me: 2000, op: 2000, shields: 0, notice: 'vipUsed', step: 'takeover' }),
     D('Thành phố — của người khác', 'C22', 'Có thẻ VIP nhưng không đủ tiền mua lại', 'Ưu tiên thông báo đã dùng thẻ miễn thuê', { money: 10, shields: 1, props: { 3: ['op', 1] }, dice: [1, 2] }, [['roll']], { me: 10, op: 2000, shields: 0, notice: 'vipUsed', step: 'next' }),
     D('Thành phố — của người khác', 'C21', 'Có thẻ VIP', 'Miễn thuê, mất 1 thẻ VIP', { shields: 1, props: { 3: ['op', 1] }, dice: [1, 2] }, [['roll']], { me: 2000, shields: 0 }),
     // ---- bãi biển
     D('Bãi biển', 'R1', 'Bãi biển chưa chủ', 'Bước buy (chỉ mua đất)', { dice: [1, 3] }, [['roll'], ['buy', { level: 0 }]], { owner: [4, 'me'], me: 1800 }),
-    D('Bãi biển', 'R2', 'Bãi của người có 2 bãi', 'Thuê 100, không được mua lại', { props: { 4: ['op', 0], 14: ['op', 0] }, dice: [1, 3] }, [['roll']], { me: 1900, step: 'next' }),
+    D('Bãi biển', 'R2', 'Bãi của người có 2 bãi', 'Thuê 50, không được mua lại', { props: { 4: ['op', 0], 14: ['op', 0] }, dice: [1, 3] }, [['roll']], { me: 1950, step: 'next' }),
     // ---- ô đặc biệt
     D('Ô đặc biệt', 'S1', 'Dừng ở Lost Island', 'Kẹt 3 lượt', { pos: 5, dice: [1, 2] }, [['roll']], { pos: 8, island: 3, step: 'next' }),
     D('Ô đặc biệt', 'S2', 'Đang kẹt, trả phí', 'Trả 200 → đổ bình thường', { pos: 8, island: 3, step: 'island' }, [['payIsland']], { me: 1800, island: 0, step: 'roll' }),
@@ -164,7 +168,7 @@
     D('Ô đặc biệt', 'S4', 'Đang kẹt, dùng thẻ Thoát đảo', 'Rời đảo miễn phí và hiện thông báo', { pos: 8, island: 3, escapeCards: 1, step: 'island' }, [['useCard']], { me: 2000, island: 0, escapeCards: 0, notice: 'escapeUsed', step: 'roll' }),
     D('Ô đặc biệt', 'S5', 'Dừng ở World Tour', 'Lượt sau được bay', { pos: 21, dice: [1, 2] }, [['roll']], { pos: 24, tourPending: true, step: 'next' }),
     D('Ô đặc biệt', 'S6', 'Bay từ World Tour tới Madrid', 'Trả vé 50, qua Start +300, tính 1 vòng', { pos: 24, tourPending: true, step: 'tour' }, [['tour', { tile: 3 }]], { pos: 3, me: 2250, laps: 1, step: 'buy' }),
-    D('Ô đặc biệt', 'S7', 'Bay tới ô của người khác', 'Trả vé, nhận lương nếu qua Start, rồi trả thuê', { pos: 24, tourPending: true, step: 'tour', props: { 3: ['op', 1] } }, [['tour', { tile: 3 }]], { me: 2000 - 50 + 300 - 42, op: 2042 }),
+    D('Ô đặc biệt', 'S7', 'Bay tới ô của người khác', 'Trả vé, nhận lương nếu qua Start, rồi trả thuê', { pos: 24, tourPending: true, step: 'tour', props: { 3: ['op', 1] } }, [['tour', { tile: 3 }]], { me: 2000 - 50 + 300 - 36, op: 2036 }),
     D('Ô đặc biệt', 'S8', 'Dừng ở Tax, tổng tài sản 2000', 'Nộp 10% = 200', { pos: 27, dice: [1, 2] }, [['roll']], { pos: 30, me: 1800 }),
     D('Ô đặc biệt', 'S9', 'Dừng ở Championships, có đất', 'Chọn ô tổ chức, hệ số lên ×2', { pos: 13, dice: [1, 2], props: { 3: ['me', 1] } }, [['roll'], ['festival', { tile: 3 }]], { festival: 3, festLevel: 1 }),
     // ---- thẻ Chance

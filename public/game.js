@@ -26,11 +26,11 @@
   function value(i, level) {
     const t = TILES[i];
     if (t.type === 'resort') return t.price;
-    return r2(t.price * CFG.VALUE_MULT[level]);
+    return r2(t.values[level]);
   }
   const invested = value;
   function upgradeCost(i, from, to) { return r2(value(i, to) - value(i, from)); }
-  function toll(i, level) { return r2(TILES[i].price * CFG.TOLL_MULT[level]); }
+  function toll(i, level) { return r2(TILES[i].rents[level]); }
   function ownsGroup(s, pid, g) {
     return TILES.every((t, i) => t.group !== g || (s.props[i] && s.props[i].owner === pid));
   }

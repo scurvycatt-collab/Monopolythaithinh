@@ -463,8 +463,9 @@ function festivalBannerSpot(i) {
 }
 const bonusFlags = [];
 // Bảng Championships vàng nổi ngay dưới dải giá, đủ lớn để đọc ở mọi cạnh bàn.
-const CHAMPIONSHIP_PLAQUE_WIDTH = 1.18;
-const CHAMPIONSHIP_PLAQUE_HEIGHT = 0.48;
+const CHAMPIONSHIP_PLAQUE_WIDTH = 1.56;
+const CHAMPIONSHIP_PLAQUE_HEIGHT = 0.44;
+const CHAMPIONSHIP_PLAQUE_FAR_HEIGHT = 0.28;
 let festBanner = null, festSig = '';
 function syncFestival() {
   const sig = S.festival === null || S.festival === undefined || !S.props[S.festival] ? '' : `${S.festival}:${G.festMult(S)}`;
@@ -472,9 +473,10 @@ function syncFestival() {
   if (festBanner) { board.remove(festBanner); festBanner = null; }
   if (!sig) return;
   const i = S.festival, f = tileFrame(i), far = FAR(f.side);
-  // Canh mép trên theo mặt ô; bảng có thể phủ xuống thành bàn để không bị ép thấp ở hai cạnh xa.
-  const top = TOPY - 0.025, bottom = top - CHAMPIONSHIP_PLAQUE_HEIGHT;
-  festBanner = HK.festivalPlaque(G.festMult(S), CHAMPIONSHIP_PLAQUE_WIDTH, CHAMPIONSHIP_PLAQUE_HEIGHT);
+  // Cạnh xa có mặt giữa bàn cao hơn đáy ô: nâng bảng lên để toàn bộ cúp/chữ không bị che.
+  const height = far ? CHAMPIONSHIP_PLAQUE_FAR_HEIGHT : CHAMPIONSHIP_PLAQUE_HEIGHT;
+  const bottom = far ? TOPY - WORLD_DROP + 0.02 : TOPY - 0.025 - height;
+  festBanner = HK.festivalPlaque(CHAMPIONSHIP_PLAQUE_WIDTH, height);
   const p = local(i, 0, (far ? -1 : 1) * ((f.d - 0.06) / 2 + 0.014));
   festBanner.position.set(p.x, bottom, p.z); festBanner.rotation.y = f.rot + (far ? Math.PI : 0); board.add(festBanner);
   festBanner.userData.t0 = syncFestival.first ? -1 : performance.now(); // dựng ván lần đầu thì không chạy hoạt ảnh
@@ -1035,11 +1037,15 @@ function renderModal() {
   if (S.phase === 'over') {
     const rank = S.players.slice().sort((a, b) => (a.bankrupt - b.bankrupt) || G.networth(S, b) - G.networth(S, a));
     const w = G.byId(S, S.winner), timeUp = /hết/.test(S.winReason);
+    const resultActions = `${MODE === 'local' || me ? '<button class="pill" type="button" id="again">Chơi ván mới</button>' : ''}${MODE === 'net' && ROOM_GATE ? '<button class="pill red" type="button" id="result-exit">Thoát phòng</button>' : ''}`;
     m.innerHTML = sheet('#86a81f', timeUp ? `Hết giờ! ${esc(w.name)} thắng` : `${esc(w.name)} thắng!`, esc(S.winReason),
       `<table class="rank"><thead><tr><th></th><th>NGƯỜI CHƠI</th><th>TIỀN MẶT</th><th>TỔNG TÀI SẢN</th></tr></thead><tbody>${rank.map((p, k) => `<tr><td>${k + 1}</td><td>${esc(p.name)}</td><td>${p.bankrupt ? '—' : money(p.money)}</td><td>${p.bankrupt ? 'Phá sản' : money(G.networth(S, p))}</td></tr>`).join('')}</tbody></table>
 `,
-      MODE === 'local' || me ? '<button class="pill" type="button" id="again">Chơi ván mới</button>' : '');
-    m.classList.add('show'); if ($('#again')) $('#again').onclick = newGameFlow; return;
+      resultActions);
+    m.classList.add('show');
+    if ($('#again')) $('#again').onclick = newGameFlow;
+    if ($('#result-exit')) $('#result-exit').onclick = exitRoom;
+    return;
   }
   const st = S.step, p = S.players[S.turn];
   if (!myTurn()) { m.classList.remove('show'); m.innerHTML = ''; return; }
@@ -1219,10 +1225,10 @@ function showInfo(i) {
     color = GROUPS[t.group].color; sub = `${GROUPS[t.group].name} · ${owner ? 'của ' + esc(owner.name) : 'chưa có chủ'}`;
     const lv = pr ? pr.level : -1;
     const rows = [0, 1, 2, 3, 4].map((l) => `<tr class="${l === lv ? 'cur' : ''}"><td><span class="ck">${l <= lv ? '✓' : ''}</span>${G.LEVEL_NAMES[l]}</td>
-      <td>${money(l === 0 ? G.value(i, 0) : G.upgradeCost(i, l - 1, l))}</td><td>${money(G.toll(i, l))}</td><td>${money(G.value(i, l) * CFG.SELL_MULT)}</td></tr>`).join('');
+      <td>${money(G.value(i, l))}</td><td>${money(G.toll(i, l))}</td><td>${money(G.value(i, l) * CFG.SELL_MULT)}</td></tr>`).join('');
     if (pr && G.ownsGroup(S, pr.owner, t.group)) notes.push(`Độc quyền nhóm ${GROUPS[t.group].name}: tiền thuê x${CFG.MONOPOLY_MULT}`);
     body = `<div class="tinfo"><div class="pic"><img alt="" src="${snapshot(`h${Math.max(0, lv)}${hex}`, HK.building('suburb', Math.max(0, lv), hex))}"></div><div>
-      <table class="lvl"><thead><tr><th>Công trình</th><th>Giá xây</th><th>Tiền thuê</th><th>Bán ngân hàng</th></tr></thead><tbody>${rows}</tbody></table>
+      <table class="lvl"><thead><tr><th>Công trình</th><th>Giá theo cấp</th><th>Tiền thuê</th><th>Bán ngân hàng</th></tr></thead><tbody>${rows}</tbody></table>
       ${pr ? `<div class="kv"><span>Tiền thuê hiện tại</span><b>${money(G.rentOf(S, i))}</b></div>
         <div class="kv"><span>Giá mua lại</span><b>${G.canTakeover(S, i) ? money(G.takeoverPrice(S, i)) : 'Không thể mua lại'}</b></div>` : ''}
     </div></div>`;

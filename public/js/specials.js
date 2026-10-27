@@ -721,26 +721,21 @@ export function festivalFlag(mult = 1.5) {
 /* ===================== BẢNG LỄ HỘI (ô đang tổ chức Championships) ===================== */
 // tấm bảng xanh có cúp vàng và hệ số thuê, gắn phẳng lên mặt đất nâu phía dưới dải giá của ô.
 // w, h: kích thước mặt nâu còn trống (đơn vị bàn cờ); mặt bảng nhìn về +z, đáy ở y = 0.
-export function festivalPlaque(mult, w, h) {
+export function festivalPlaque(w, h) {
   const PXU = 480, cw = Math.round(w * PXU), ch = Math.round(h * PXU);
   const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch; const c = cv.getContext('2d');
   const r = ch * 0.16;
   const bg = c.createLinearGradient(0, 0, 0, ch); bg.addColorStop(0, '#ffdd48'); bg.addColorStop(1, '#eeb512');
   c.fillStyle = bg; c.beginPath(); c.roundRect(0, 0, cw, ch, r); c.fill();
   c.strokeStyle = '#fff3a0'; c.lineWidth = Math.max(5, ch * 0.055); c.beginPath(); c.roundRect(ch * 0.055, ch * 0.055, cw - ch * 0.11, ch - ch * 0.11, r * 0.7); c.stroke();
-  // cúp vàng + hệ số, cùng căn giữa tấm bảng
-  const th = ch * 0.78, tw = th * 0.94, txt = '×' + mult;
-  c.font = `900 ${Math.round(ch * 0.62)}px Rubik, sans-serif`;
-  const gap = ch * 0.12, total = tw + gap + c.measureText(txt).width, tx = (cw - total) / 2, ty = (ch - th) / 2;
+  // Một cúp lớn ở giữa giống huy hiệu Championships trên cạnh ô trong mẫu.
+  const th = ch * 0.78, tw = th * 0.94, tx = (cw - tw) / 2, ty = (ch - th) / 2;
   c.fillStyle = '#9b7900'; c.strokeStyle = '#795c00'; c.lineWidth = Math.max(3, ch * 0.025);
   c.beginPath(); c.moveTo(tx + tw * 0.2, ty); c.lineTo(tx + tw * 0.8, ty); c.quadraticCurveTo(tx + tw * 0.8, ty + th * 0.6, tx + tw / 2, ty + th * 0.64); c.quadraticCurveTo(tx + tw * 0.2, ty + th * 0.6, tx + tw * 0.2, ty); c.closePath(); c.fill(); c.stroke();
   c.strokeStyle = '#9b7900'; c.lineWidth = Math.max(4, ch * 0.055);
   c.beginPath(); c.arc(tx + tw * 0.18, ty + th * 0.2, th * 0.15, Math.PI * 0.5, Math.PI * 1.5); c.stroke();
   c.beginPath(); c.arc(tx + tw * 0.82, ty + th * 0.2, th * 0.15, -Math.PI * 0.5, Math.PI * 0.5); c.stroke();
   c.fillRect(tx + tw * 0.43, ty + th * 0.64, tw * 0.14, th * 0.18); c.fillRect(tx + tw * 0.25, ty + th * 0.82, tw * 0.5, th * 0.18);
-  c.textAlign = 'left'; c.textBaseline = 'middle';
-  c.fillStyle = 'rgba(92,65,0,.25)'; c.fillText(txt, tx + tw + gap, ch * 0.52 + ch * 0.035);
-  c.fillStyle = '#6f5300'; c.fillText(txt, tx + tw + gap, ch * 0.52);
   const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
   const face = new THREE.MeshBasicMaterial({ map: tex }), edge = mat('#c68f08');
   const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.04), [edge, edge, edge, edge, face, edge]);

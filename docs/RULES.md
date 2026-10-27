@@ -1,4 +1,4 @@
-# Luật chơi Thái Thịnh Monopoly — v1.7.0
+# Luật chơi Thái Thịnh Monopoly — v1.7.1
 
 > Tự sinh từ `public/rules.js` bằng `npm run rules:doc`. Không sửa tay file này: sửa `rules.js`, chạy `npm run verify`.
 
@@ -16,13 +16,13 @@ Bộ luật có ba lớp: **thông số** (con số), **sơ đồ trạng thái*
 | Lễ hội (Championships) | ×2 → ×3 → ×4 → ×5 theo số lần tổ chức |
 | Vé World Tour | 50K |
 | Thuế | 10% tổng tài sản, tối thiểu 50K |
-| Giá trị cộng dồn theo cấp | Ô đất ×1, Nhà 1 ×1.5, Nhà 2 ×2.5, Nhà 3 ×4, Khách sạn ×6 (× giá đất) |
+| Bảng giá công trình | Mỗi thành phố dùng bảng giá tuyệt đối theo cấp; ô chưa đối chiếu tạm dùng Ô đất ×1, Nhà 1 ×1.5, Nhà 2 ×2.5, Nhà 3 ×4, Khách sạn ×6 |
 | Tiền thuê theo cấp | Ô đất ×0.25, Nhà 1 ×0.6, Nhà 2 ×1.5, Nhà 3 ×3.2, Khách sạn ×5.5 (× giá đất) |
 | Giới hạn xây | vòng đầu tối đa Nhà 2; đã qua Start: Nhà 3; Khách sạn khi quay lại ô đã có Nhà 3 |
 | Mua lại | 2× giá trị cộng dồn; Khách sạn và bãi biển không bị mua lại; người mua nhận nguyên cấp nhà |
 | Bán cho ngân hàng | 50% giá trị cộng dồn |
 | Độc quyền nhóm màu | thuê ×2 |
-| Bãi biển | giá 200K; thuê 50K / 100K / 200K / 400K theo số bãi cùng chủ |
+| Bãi biển | giá 200K; thuê 25K / 50K / 100K / 200K theo số bãi cùng chủ |
 | Cờ lễ hội | mỗi ván 3 ô ngẫu nhiên, thuê ×1.5 |
 | Làm tròn tiền thuê | 0.5K |
 | Thẻ Cúp điện | 3 vòng |
@@ -32,40 +32,40 @@ Bộ luật có ba lớp: **thông số** (con số), **sơ đồ trạng thái*
 
 ### Bàn cờ
 
-| Ô | Tên | Loại | Nhóm | Giá đất | Thuê Ô đất → Khách sạn |
-|---|---|---|---|---|---|
-| 0 | Start | start |  |  |  |
-| 1 | Granada | city | Tây Ban Nha | 50K | 12.5 / 30 / 75 / 160 / 275 |
-| 2 | Seville | city | Tây Ban Nha | 60K | 15 / 36 / 90 / 192 / 330 |
-| 3 | Madrid | city | Tây Ban Nha | 70K | 17.5 / 42 / 105 / 224 / 385 |
-| 4 | Bali | resort |  | 200K |  |
-| 5 | Hong Kong | city | Trung Quốc | 80K | 20 / 48 / 120 / 256 / 440 |
-| 6 | Beijing | city | Trung Quốc | 90K | 22.5 / 54 / 135 / 288 / 495 |
-| 7 | Shanghai | city | Trung Quốc | 100K | 25 / 60 / 150 / 320 / 550 |
-| 8 | Lost Island | island |  |  |  |
-| 9 | Venice | city | Ý | 120K | 30 / 72 / 180 / 384 / 660 |
-| 10 | Milan | city | Ý | 130K | 32.5 / 78 / 195 / 416 / 715 |
-| 11 | Rome | city | Ý | 140K | 35 / 84 / 210 / 448 / 770 |
-| 12 | Chance | chance |  |  |  |
-| 13 | Hamburg | city | Đức | 160K | 40 / 96 / 240 / 512 / 880 |
-| 14 | Cyprus | resort |  | 200K |  |
-| 15 | Berlin | city | Đức | 180K | 45 / 108 / 270 / 576 / 990 |
-| 16 | Championships | festival |  |  |  |
-| 17 | London | city | Anh – Úc | 200K | 50 / 120 / 300 / 640 / 1100 |
-| 18 | Dubai | resort |  | 200K |  |
-| 19 | Sydney | city | Anh – Úc | 220K | 55 / 132 / 330 / 704 / 1210 |
-| 20 | Chance | chance |  |  |  |
-| 21 | Chicago | city | Mỹ | 240K | 60 / 144 / 360 / 768 / 1320 |
-| 22 | Las Vegas | city | Mỹ | 260K | 65 / 156 / 390 / 832 / 1430 |
-| 23 | New York | city | Mỹ | 280K | 70 / 168 / 420 / 896 / 1540 |
-| 24 | World Tour | tour |  |  |  |
-| 25 | Nice | resort |  | 200K |  |
-| 26 | Lyon | city | Pháp | 300K | 75 / 180 / 450 / 960 / 1650 |
-| 27 | Paris | city | Pháp | 320K | 80 / 192 / 480 / 1024 / 1760 |
-| 28 | Chance | chance |  |  |  |
-| 29 | Osaka | city | Nhật Bản | 350K | 87.5 / 210 / 525 / 1120 / 1925 |
-| 30 | Tax | tax |  |  |  |
-| 31 | Tokyo | city | Nhật Bản | 400K | 100 / 240 / 600 / 1280 / 2200 |
+| Ô | Tên | Loại | Nhóm | Giá đất | Giá Ô đất → Khách sạn | Thuê Ô đất → Khách sạn |
+|---|---|---|---|---|---|---|
+| 0 | Start | start |  |  |  |  |
+| 1 | Granada | city | Tây Ban Nha | 60K | 60K / 110K / 160K / 210K / 360K | 15K / 36K / 90K / 192K / 330K |
+| 2 | Seville | city | Tây Ban Nha | 60K | 60K / 110K / 160K / 210K / 360K | 15K / 36K / 90K / 192K / 330K |
+| 3 | Madrid | city | Tây Ban Nha | 60K | 60K / 110K / 160K / 210K / 360K | 15K / 36K / 90K / 192K / 330K |
+| 4 | Bali | resort |  | 200K |  |  |
+| 5 | Hong Kong | city | Trung Quốc | 100K | 100K / 150K / 200K / 250K / 400K | 25K / 60K / 150K / 320K / 550K |
+| 6 | Beijing | city | Trung Quốc | 100K | 100K / 150K / 200K / 250K / 400K | 25K / 60K / 150K / 320K / 550K |
+| 7 | Shanghai | city | Trung Quốc | 120K | 120K / 170K / 220K / 270K / 420K | 30K / 72K / 180K / 384K / 660K |
+| 8 | Lost Island | island |  |  |  |  |
+| 9 | Venice | city | Ý | 140K | 140K / 240K / 340K / 440K / 690K | 35K / 84K / 210K / 448K / 770K |
+| 10 | Milan | city | Ý | 140K | 140K / 240K / 340K / 440K / 690K | 35K / 84K / 210K / 448K / 770K |
+| 11 | Rome | city | Ý | 160K | 160K / 260K / 360K / 460K / 710K | 40K / 96K / 240K / 512K / 880K |
+| 12 | Chance | chance |  |  |  |  |
+| 13 | Hamburg | city | Đức | 180K | 180K / 280K / 380K / 480K / 730K | 45K / 108K / 270K / 576K / 990K |
+| 14 | Cyprus | resort |  | 200K |  |  |
+| 15 | Berlin | city | Đức | 200K | 200K / 300K / 400K / 500K / 750K | 16K / 90K / 180K / 270K / 495K |
+| 16 | Championships | festival |  |  |  |  |
+| 17 | London | city | Anh – Úc | 220K | 220K / 370K / 520K / 670K / 1045K | 55K / 132K / 330K / 704K / 1210K |
+| 18 | Dubai | resort |  | 200K |  |  |
+| 19 | Sydney | city | Anh – Úc | 240K | 240K / 390K / 540K / 690K / 1065K | 20K / 120K / 240K / 360K / 660K |
+| 20 | Chance | chance |  |  |  |  |
+| 21 | Chicago | city | Mỹ | 260K | 260K / 410K / 560K / 710K / 1085K | 65K / 156K / 390K / 832K / 1430K |
+| 22 | Las Vegas | city | Mỹ | 260K | 260K / 410K / 560K / 710K / 1085K | 65K / 156K / 390K / 832K / 1430K |
+| 23 | New York | city | Mỹ | 280K | 280K / 430K / 580K / 730K / 1105K | 70K / 168K / 420K / 896K / 1540K |
+| 24 | World Tour | tour |  |  |  |  |
+| 25 | Nice | resort |  | 200K |  |  |
+| 26 | Lyon | city | Pháp | 300K | 300K / 500K / 700K / 900K / 1400K | 75K / 180K / 450K / 960K / 1650K |
+| 27 | Paris | city | Pháp | 320K | 320K / 520K / 720K / 920K / 1420K | 80K / 192K / 480K / 1024K / 1760K |
+| 28 | Chance | chance |  |  |  |  |
+| 29 | Osaka | city | Nhật Bản | 350K | 350K / 550K / 750K / 950K / 1450K | 87.5K / 210K / 525K / 1120K / 1925K |
+| 30 | Tax | tax |  |  |  |  |
+| 31 | Tokyo | city | Nhật Bản | 400K | 400K / 600K / 800K / 1000K / 1500K | 100K / 240K / 600K / 1280K / 2200K |
 
 ### Thẻ Chance
 
@@ -151,8 +151,8 @@ stateDiagram-v2
 | C1 | Đủ tiền mua đất | Bước buy |
 | C2 | Không đủ tiền mua đất | Bỏ qua, sang người kế |
 | C3 | Vòng đầu, chọn mua kèm Nhà 3 | Bị từ chối (vòng đầu tối đa Nhà 2) |
-| C4 | Vòng đầu, mua kèm Nhà 2 | Trả 2,5× giá đất |
-| C5 | Đã qua Start, mua kèm Nhà 3 | Được phép, trả 4× giá đất |
+| C4 | Vòng đầu, mua kèm Nhà 2 | Trả giá Nhà 2 của Madrid: 160K |
+| C5 | Đã qua Start, mua kèm Nhà 3 | Được phép, trả giá Nhà 3 của Madrid: 210K |
 
 ### Thành phố — của mình
 
@@ -187,7 +187,7 @@ stateDiagram-v2
 | Mã | Tình huống | Kết quả |
 |---|---|---|
 | R1 | Bãi biển chưa chủ | Bước buy (chỉ mua đất) |
-| R2 | Bãi của người có 2 bãi | Thuê 100, không được mua lại |
+| R2 | Bãi của người có 2 bãi | Thuê 50, không được mua lại |
 
 ### Ô đặc biệt
 

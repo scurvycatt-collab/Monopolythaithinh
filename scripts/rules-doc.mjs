@@ -22,7 +22,7 @@ const rows = [
   ['Đổ đôi liên tiếp vào đảo', `lần thứ ${C.MAX_DOUBLES}`], ['Lost Island', `kẹt ${C.ISLAND_TURNS} lượt, phí rời đảo ${k(C.ISLAND_FEE)}`],
   ['Lễ hội (Championships)', C.FEST_MULT.slice(1).map((m) => '×' + m).join(' → ') + ' theo số lần tổ chức'], ['Vé World Tour', k(C.TOUR_FEE)],
   ['Thuế', `${C.TAX_RATE * 100}% tổng tài sản, tối thiểu ${k(C.TAX_MIN)}`],
-  ['Giá trị cộng dồn theo cấp', C.VALUE_MULT.map((m, i) => `${R.LEVEL_NAMES[i]} ×${m}`).join(', ') + ' (× giá đất)'],
+  ['Bảng giá công trình', 'Mỗi thành phố dùng bảng giá tuyệt đối theo cấp; ô chưa đối chiếu tạm dùng ' + C.VALUE_MULT.map((m, i) => `${R.LEVEL_NAMES[i]} ×${m}`).join(', ')],
   ['Tiền thuê theo cấp', C.TOLL_MULT.map((m, i) => `${R.LEVEL_NAMES[i]} ×${m}`).join(', ') + ' (× giá đất)'],
   ['Giới hạn xây', `vòng đầu tối đa ${R.LEVEL_NAMES[C.LAP_CAP[0]]}; đã qua Start: ${R.LEVEL_NAMES[C.LAP_CAP[1]]}; ${R.LEVEL_NAMES[C.LANDMARK]} khi quay lại ô đã có ${R.LEVEL_NAMES[3]}`],
   ['Mua lại', `${C.BUYOUT_MULT}× giá trị cộng dồn; ${R.LEVEL_NAMES[C.LANDMARK]} và bãi biển không bị mua lại; người mua nhận nguyên cấp nhà`],
@@ -34,8 +34,8 @@ const rows = [
   ['Mất kết nối', `người khác bấm "Đi hộ" sau ${C.PROXY_SEC} giây; server tự đi sau ${C.AUTO_OFFLINE_SEC} giây`],
 ];
 rows.forEach(([a, b]) => L.push(`| ${a} | ${b} |`));
-L.push('', '### Bàn cờ', '', '| Ô | Tên | Loại | Nhóm | Giá đất | Thuê Ô đất → Khách sạn |', '|---|---|---|---|---|---|');
-R.TILES.forEach((t) => L.push(`| ${t.i} | ${t.name} | ${t.type} | ${t.group ? R.GROUPS[t.group].name : ''} | ${t.price ? k(t.price) : ''} | ${t.type === 'city' ? C.TOLL_MULT.map((m) => Math.round(t.price * m * 10) / 10).join(' / ') : ''} |`));
+L.push('', '### Bàn cờ', '', '| Ô | Tên | Loại | Nhóm | Giá đất | Giá Ô đất → Khách sạn | Thuê Ô đất → Khách sạn |', '|---|---|---|---|---|---|---|');
+R.TILES.forEach((t) => L.push(`| ${t.i} | ${t.name} | ${t.type} | ${t.group ? R.GROUPS[t.group].name : ''} | ${t.price ? k(t.price) : ''} | ${t.type === 'city' ? t.values.map(k).join(' / ') : ''} | ${t.type === 'city' ? t.rents.map(k).join(' / ') : ''} |`));
 L.push('', '### Thẻ Chance', '', '| Thẻ | Trọng số | Tác dụng |', '|---|---|---|');
 R.CARDS.forEach((c) => L.push(`| ${c.title} | ${c.w} | ${c.text} |`));
 
