@@ -14,9 +14,89 @@ const $ = (s, r = document) => r.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const LOW = /[?&]low\b/.test(location.search); // đồ hoạ nhẹ cho máy yếu: bóng đổ nhỏ, độ phân giải 1x
+const GRAPHICS_KEY = 'tt-monopoly-graphics-v1';
+const GRAPHICS = { low: { ratio: 1, shadows: false, shadowSize: 512 }, medium: { ratio: 1.5, shadows: true, shadowSize: 1024 }, high: { ratio: 2, shadows: true, shadowSize: 4096 } };
+let graphicsLevel = 'high';
+try { const saved = localStorage.getItem(GRAPHICS_KEY); if (GRAPHICS[saved]) graphicsLevel = saved; } catch (e) { /* dùng mặc định */ }
+if (/[?&]low\b/.test(location.search)) graphicsLevel = 'low'; // tương thích link ?low cũ
 const money = (n) => Math.round(n * 1000).toLocaleString('vi-VN');
 const shortK = (n) => (n >= 1000 ? (n / 1000).toFixed(n % 1000 ? 1 : 0).replace('.', ',') + 'M' : n + 'K');
+const outageRounds = (i) => Math.max(0, Number(S.outage && S.outage[i] || 0) - Number(S.round || 0));
+
+/* ---------------- âm thanh ---------------- */
+const SOUND_KEY = 'tt-monopoly-sound-v1';
+const soundPrefs = { music: true, musicVolume: 20, turn: true, turnVolume: 55 };
+try { Object.assign(soundPrefs, JSON.parse(localStorage.getItem(SOUND_KEY) || '{}')); } catch (e) { /* dùng mặc định */ }
+let audioCtx = null, musicTimer = null, musicStep = 0;
+const musicNotes = [261.63, 329.63, 392, 329.63, 293.66, 349.23, 440, 349.23];
+function saveSoundPrefs() { try { localStorage.setItem(SOUND_KEY, JSON.stringify(soundPrefs)); } catch (e) { /* trình duyệt chặn lưu */ } }
+function tone(freq, duration, volume, type = 'sine', at = audioCtx && audioCtx.currentTime) {
+  if (!audioCtx || audioCtx.state !== 'running' || !volume) return;
+  const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+  osc.type = type; osc.frequency.setValueAtTime(freq, at);
+  gain.gain.setValueAtTime(0.0001, at); gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, volume), at + 0.025);
+  gain.gain.exponentialRampToValueAtTime(0.0001, at + duration);
+  osc.connect(gain).connect(audioCtx.destination); osc.start(at); osc.stop(at + duration + 0.04);
+}
+function playMusicStep() {
+  if (!soundPrefs.music || document.hidden || document.body.dataset.screen !== 'game') return;
+  const volume = soundPrefs.musicVolume / 100 * 0.09, note = musicNotes[musicStep % musicNotes.length];
+  tone(note, 0.48, volume, 'triangle');
+  if (musicStep % 4 === 0) tone(note / 2, 0.8, volume * 0.52, 'sine');
+  musicStep++;
+}
+function syncMusic() {
+  const shouldPlay = !!audioCtx && audioCtx.state === 'running' && soundPrefs.music && !document.hidden && document.body.dataset.screen === 'game';
+  if (!shouldPlay) { if (musicTimer) clearInterval(musicTimer); musicTimer = null; return; }
+  if (!musicTimer) { playMusicStep(); musicTimer = setInterval(playMusicStep, 620); }
+}
+function unlockAudio() {
+  const Audio = window.AudioContext || window.webkitAudioContext;
+  if (!Audio) return;
+  if (!audioCtx) audioCtx = new Audio();
+  audioCtx.resume().then(syncMusic).catch(() => {});
+}
+function playTurnSound() {
+  if (!soundPrefs.turn || !audioCtx || audioCtx.state !== 'running') return;
+  const volume = soundPrefs.turnVolume / 100 * 0.16, at = audioCtx.currentTime;
+  tone(523.25, 0.2, volume, 'sine', at); tone(659.25, 0.24, volume * 0.88, 'sine', at + 0.12); tone(783.99, 0.38, volume * 0.82, 'sine', at + 0.25);
+}
+let timeWarningKey = '';
+function playTimeWarning() {
+  if (!soundPrefs.turn || !audioCtx || audioCtx.state !== 'running' || S.phase !== 'play' || !myTurn()) return;
+  const left = G.stepLeft(S, now());
+  if (left === null || left <= 0 || left > 5000) return;
+  const second = Math.ceil(left / 1000), key = `${S.stepAt}:${second}`;
+  if (key === timeWarningKey) return;
+  timeWarningKey = key;
+  const volume = soundPrefs.turnVolume / 100 * 0.12;
+  tone(second <= 2 ? 880 : 659.25, second <= 2 ? 0.18 : 0.11, volume, second <= 2 ? 'square' : 'sine');
+}
+function renderSoundSettings() {
+  $('#music-enabled').checked = !!soundPrefs.music; $('#music-volume').value = soundPrefs.musicVolume;
+  $('#turn-enabled').checked = !!soundPrefs.turn; $('#turn-volume').value = soundPrefs.turnVolume;
+  $('#music-volume').disabled = !soundPrefs.music; $('#turn-volume').disabled = !soundPrefs.turn;
+  $('#graphics-level').value = graphicsLevel;
+  $('#settings-leave').classList.toggle('show', MODE === 'net' && !!me);
+}
+function updateSoundPref(key, value) { soundPrefs[key] = value; saveSoundPrefs(); renderSoundSettings(); syncMusic(); }
+$('#soundbtn').onclick = () => { unlockAudio(); renderSoundSettings(); $('#soundpanel').classList.toggle('show'); };
+$('#soundclose').onclick = () => $('#soundpanel').classList.remove('show');
+$('#music-enabled').onchange = (e) => updateSoundPref('music', e.target.checked);
+$('#music-volume').oninput = (e) => updateSoundPref('musicVolume', Number(e.target.value));
+$('#turn-enabled').onchange = (e) => { updateSoundPref('turn', e.target.checked); if (e.target.checked) playTurnSound(); };
+$('#turn-volume').oninput = (e) => { updateSoundPref('turnVolume', Number(e.target.value)); };
+$('#graphics-level').onchange = (e) => setGraphicsLevel(e.target.value);
+$('#settings-leave').onclick = async () => {
+  if (MODE !== 'net' || !me) return;
+  const button = $('#settings-leave'); button.disabled = true;
+  try {
+    if (S.phase === 'lobby') await api('api/act', { token: me.token, type: 'leave' });
+    exitRoom();
+  } catch (e) { toast(e.message); button.disabled = false; }
+};
+addEventListener('pointerdown', unlockAudio, { once: true, capture: true });
+document.addEventListener('visibilitychange', syncMusic);
 
 /* ---------------- chế độ chơi ----------------
    'net'  : có server (máy nhà qua Tailscale/LAN, hoặc cloud). Server giữ ván và luật; trình duyệt hiển thị và gửi hành động.
@@ -39,8 +119,8 @@ const online = (pid) => MODE === 'local' || !presence[pid] || presence[pid].on;
 /* ---------------- three.js: cảnh ---------------- */
 const stage = $('#stage');
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-renderer.setPixelRatio(LOW ? 1 : Math.min(devicePixelRatio, 2));
-renderer.shadowMap.enabled = true;
+renderer.setPixelRatio(Math.min(devicePixelRatio, GRAPHICS[graphicsLevel].ratio));
+renderer.shadowMap.enabled = GRAPHICS[graphicsLevel].shadows;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 stage.appendChild(renderer.domElement);
@@ -52,11 +132,26 @@ const hemi = new THREE.HemisphereLight(0xffffff, 0xc4d2de, 1.6); scene.add(hemi)
 const sun = new THREE.DirectionalLight(0xfff8ee, 1.35);
 sun.position.set(10, 18, 6);
 sun.castShadow = true;
-sun.shadow.mapSize.set(LOW ? 1024 : 4096, LOW ? 1024 : 4096);
+sun.shadow.mapSize.set(GRAPHICS[graphicsLevel].shadowSize, GRAPHICS[graphicsLevel].shadowSize);
 Object.assign(sun.shadow.camera, { left: -14, right: 14, top: 14, bottom: -14, near: 1, far: 60 });
 sun.shadow.bias = -0.0008;
 sun.shadow.normalBias = 0.02;
 scene.add(sun);
+function setGraphicsLevel(level) {
+  if (!GRAPHICS[level]) return;
+  graphicsLevel = level;
+  try { localStorage.setItem(GRAPHICS_KEY, level); } catch (e) { /* trình duyệt chặn lưu */ }
+  const profile = GRAPHICS[level];
+  renderer.setPixelRatio(Math.min(devicePixelRatio, profile.ratio));
+  renderer.shadowMap.enabled = profile.shadows;
+  if (sun.shadow.mapSize.x !== profile.shadowSize) {
+    sun.shadow.mapSize.set(profile.shadowSize, profile.shadowSize);
+    if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; }
+  }
+  renderer.shadowMap.needsUpdate = true;
+  resize();
+  renderSoundSettings();
+}
 
 /* kích thước bàn */
 const C = 3.1, W = 1.7, D = 3.1;
@@ -269,7 +364,7 @@ function drawTile(i) {
     text(t.name.toUpperCase(), cw / 2, nameY, 50, 700, 'Fredoka', '#111111', cw - 22, 0);
     const out = own && G.outaged(S, i);
     if (own) text(out ? '⚡ 0K' : shortK(G.rentOf(S, i)), cw / 2, sY + sH / 2 + 4, 84, 600, 'Fredoka', out ? '#8a94a3' : '#000000', cw - 20); // chưa có chủ: để trống
-    if (out) text('MẤT ĐIỆN', cw / 2, far ? ch - 44 : 44, 34, 900, 'Rubik', '#f2b632', cw - 20, 0, SH);
+    if (out) text(`⚡ CÒN ${outageRounds(i)} VÒNG`, cw / 2, far ? ch - 44 : 44, 31, 900, 'Rubik', '#f2b632', cw - 20, 0, SH);
   } else {
     text(KIND[t.type].label, cw / 2, sY + sH / 2 + 4, 56, 600, 'Fredoka', '#000000', cw - 20);
   }
@@ -362,11 +457,10 @@ function decorate() {
   const w = centerWorld(); w.position.y = TOPY - WORLD_DROP; board.add(w); specials.push(w);
 }
 
-/* cờ lễ hội: mỗi ván 3 ô ngẫu nhiên (S.bonus), cắm ở góc trên (xa người nhìn nhất) của phần sân */
-// hai góc phía sau phần sân (xa dải giá), góc cao hơn trên màn hình đứng trước
-function backCorners(i) {
-  const f = tileFrame(i), hx = f.w / 2 - 0.15, lz = FAR(f.side) ? D / 2 - 0.15 : -D / 2 + 0.15;
-  return [-hx, hx].map((lx) => local(i, lx, lz)).sort((a, b) => (a.x + a.z) - (b.x + b.z));
+/* băng rôn lễ hội: mỗi ván 3 ô ngẫu nhiên (S.bonus), căng giữa hai cọc dọc cạnh sau của phần sân */
+function festivalBannerSpot(i) {
+  const f = tileFrame(i), lz = FAR(f.side) ? D / 2 - 0.16 : -D / 2 + 0.16;
+  return local(i, 0, lz);
 }
 const bonusFlags = [];
 // bảng lễ hội gắn phẳng lên mặt đất nâu ngay dưới dải giá (mặt hướng về người nhìn), vừa khít khoảng nâu
@@ -387,8 +481,8 @@ function syncFestival() {
 function syncBonus() {
   bonusFlags.splice(0).forEach((o) => board.remove(o));
   for (const i of S.bonus || []) {
-    const best = backCorners(i)[0];
-    const flag = HK.festivalFlag(); flag.position.set(best.x, TOPY, best.z); flag.scale.setScalar(1.25); flag.rotation.y = Math.PI / 4; // lá cờ bay sang phải màn hình, mặt cờ hướng về người nhìn
+    const f = tileFrame(i), best = festivalBannerSpot(i);
+    const flag = HK.festivalFlag(CFG.BONUS_MULT); flag.position.set(best.x, TOPY, best.z); flag.scale.setScalar(1.12); flag.rotation.y = f.rot + (FAR(f.side) ? Math.PI : 0);
     board.add(flag); bonusFlags.push(flag);
   }
 }
@@ -478,7 +572,7 @@ function syncBuildings(instant) {
   let startAt = 0;
   for (let i = 0; i < 32; i++) {
     const pr = S.props[i], t = TILES[i];
-    const tsig = pr ? `${pr.owner}:${pr.level}:${S.festival === i}:${S.festLevel}:${G.outaged(S, i)}:${G.rentOf(S, i)}` : '';
+    const tsig = pr ? `${pr.owner}:${pr.level}:${S.festival === i}:${S.festLevel}:${outageRounds(i)}:${G.rentOf(S, i)}` : '';
     if (tileSigs[i] !== tsig) { tileSigs[i] = tsig; refreshTile(i); }
     const msig = pr ? `${pr.owner}:${t.type === 'resort' ? 'b' + beachLevel(pr.owner) : pr.level}` : '';
     if ((buildObjs[i] ? buildObjs[i].sig : '') === msig) continue;
@@ -521,6 +615,11 @@ function buildTokens() {
   Object.values(tokens).forEach((t) => scene.remove(t));
   for (const p of S.players) {
     const t = place(seatOf[p.id].pet, TOKEN_HEIGHT, { byHeight: true });
+    const glowMat = new THREE.MeshBasicMaterial({ color: seatOf[p.id].color, side: THREE.BackSide, transparent: true, opacity: 0.7, depthWrite: false });
+    const controlGlow = place(seatOf[p.id].pet, TOKEN_HEIGHT, { byHeight: true, material: () => glowMat });
+    controlGlow.position.y = 0.05; controlGlow.scale.setScalar(1.075); controlGlow.visible = false;
+    controlGlow.traverse((o) => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = false; o.renderOrder = -1; } });
+    t.add(controlGlow); t.userData.controlGlow = controlGlow; t.userData.glowMaterial = glowMat;
     const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.05, 28), new THREE.MeshStandardMaterial({ color: seatOf[p.id].color, roughness: .6 }));
     ring.position.y = 0.025; ring.receiveShadow = true; t.add(ring);
     t.children[0].position.y += 0.05;
@@ -532,6 +631,8 @@ function syncTokens(snap) {
   for (const p of S.players) {
     const t = tokens[p.id];
     t.visible = !p.bankrupt;
+    const controlled = MODE === 'net' ? isMe(p.id) : (!!curP() && curP().id === p.id);
+    if (t.userData.controlGlow) t.userData.controlGlow.visible = !p.bankrupt && controlled;
     if (dispPos[p.id] !== undefined) continue;
     const v = tokenSpot(p.id, p.pos);
     if (snap) t.position.set(v.x, TOPY, v.z);
@@ -745,6 +846,7 @@ function frame(now) {
   stepAnims(now);
   if (!REDUCED) { specials.forEach((o) => o.userData.update && o.userData.update(clockT, dt)); bonusFlags.forEach((o, k) => o.userData.update(clockT + k * 0.7));  if (tourTex) tourTex.offset.set((-clockT * 0.035) % 1, (-clockT * 0.035) % 1); }
   for (const p of S ? S.players : []) { const t = tokens[p.id]; if (t && t.userData.to && dispPos[p.id] === undefined) { t.position.lerp(new THREE.Vector3(t.userData.to.x, TOPY, t.userData.to.z), 0.25); } }
+  Object.values(tokens).forEach((t) => { const g = t.userData.controlGlow; if (g && g.visible) { const pulse = 1.075 + Math.sin(clockT * 4.5) * 0.012; g.scale.setScalar(pulse); t.userData.glowMaterial.opacity = 0.58 + Math.sin(clockT * 4.5) * 0.12; } });
   placeSellTags(); placeOverlays(); stepConfetti(now, dt);
   if (festBanner) { // bảng lễ hội bật ra rồi đứng yên
     const k = festBanner.userData.t0 < 0 || REDUCED ? 1 : Math.min(1, (now - festBanner.userData.t0) / 650);
@@ -800,7 +902,7 @@ function renderCards(delay = 0) {
     el.dataset.ids = key;
     el.innerHTML = S.players.map((p) => { const st = seatOf[p.id]; return `<div class="pcard ${st.corner}" style="--c:${st.color}" data-p="${p.id}">
       <div class="av"><img alt="" src="${snapshot('pet-' + st.pet, place(st.pet, 1))}"></div>
-      <div class="info"><div class="nm">${esc(p.name)}${MODE === 'net' && isMe(p.id) ? ' <em>(bạn)</em>' : ''}</div><div class="mo"><span class="num"></span><small></small></div><div class="tbar"><i></i></div></div></div>`; }).join('');
+      <div class="info"><div class="nm">${esc(p.name)}${MODE === 'net' && isMe(p.id) ? ' <em>(bạn)</em>' : ''}</div><div class="mo"><span class="num"></span><small></small><div class="power"></div></div><div class="tbar"><i></i></div></div></div>`; }).join('');
   }
   S.players.forEach((p, idx) => {
     const card = el.querySelector(`[data-p="${p.id}"]`), cur = S.phase === 'play' && idx === S.turn;
@@ -813,6 +915,10 @@ function renderCards(delay = 0) {
     if (!online(p.id)) tags.unshift('⚠ mất kết nối');
     if (p.island) tags.push('kẹt đảo'); if (p.tourPending) tags.push('sắp bay'); if (p.shields) tags.push(`🛡️ VIP${p.shields > 1 ? ' x' + p.shields : ''}`); if (p.escapeCards) tags.push('🛟 thoát đảo');
     card.querySelector('small').textContent = tags.join(' · ');
+    const powerCuts = G.ownedBy(S, p.id).filter((i) => G.outaged(S, i));
+    const power = card.querySelector('.power');
+    power.textContent = powerCuts.length ? `⚡ Mất điện · ${powerCuts.map((i) => `${TILES[i].name}: ${outageRounds(i)} vòng`).join(' · ')}` : '';
+    power.classList.toggle('show', powerCuts.length > 0);
     if (target[p.id] === undefined) { target[p.id] = shown[p.id] = p.money; moneyEl(p.id).textContent = money(Math.max(0, p.money)); return; }
     if (Math.abs(target[p.id] - p.money) > 1e-6) {
       const d = p.money - target[p.id]; target[p.id] = p.money;
@@ -855,6 +961,7 @@ function renderClock() {
 setInterval(() => {
   if (!S || S.phase !== 'play') return;
   renderClock();
+  playTimeWarning();
   if (MODE === 'local' && !busy && G.checkTime(S, Date.now())) { save(); renderCards(); renderHub(); }
   else if (MODE === 'local' && !busy && !sending && G.checkTurn(S, Date.now())) playOut(); // hết giờ bước → tự đi
   if (MODE === 'net' && !busy && !myTurn() && !online(curP().id)) renderHub(); // để hiện nút "Đi hộ" khi đủ thời gian
@@ -924,6 +1031,11 @@ function renderModal() {
   }
   const st = S.step, p = S.players[S.turn];
   if (!myTurn()) { m.classList.remove('show'); m.innerHTML = ''; return; }
+  if (!busy && st && st.kind === 'flight') {
+    const card = G.CARDS.find((x) => x.id === 'FLIGHT_TICKET');
+    m.innerHTML = sheet('#f5a20a', esc(card.title), 'Chance', `<div class="chance"><p>${esc(card.text)}</p></div>`, '<button class="pill" type="button" id="ok">OK</button>');
+    m.classList.remove('peek'); m.classList.add('show'); $('#ok').onclick = () => act('flight'); return;
+  }
   if (busy || !st || !['buy', 'upgrade', 'takeover'].includes(st.kind)) { m.classList.remove('show'); m.innerHTML = ''; return; }
   const col = seatOf[p.id].color;
   if (st.kind === 'buy' || st.kind === 'upgrade') {
@@ -996,13 +1108,30 @@ async function showStatus(text, ms = 1900) {
   const el = $('#status'); el.innerHTML = `<p>${esc(text)}</p>`;
   el.classList.add('show'); await sleep(REDUCED ? 1200 : ms); el.classList.remove('show'); await sleep(260);
 }
+async function showAchievement(event) {
+  const el = $('#achievement'), p = G.byId(S, event.pid), who = isMe(event.pid) ? 'Bạn' : (p ? p.name : 'Một người chơi');
+  const missing = (event.missing || []).map((i) => TILES[i] && TILES[i].name).filter(Boolean).join(', ');
+  let icon = '🏆', title = 'MONOPOLY!', detail = `${who} đã hoàn thành một Monopoly.`;
+  if (event.kind === 'monopoly') detail = `${who} hoàn thành độc quyền ${GROUPS[event.group] ? GROUPS[event.group].name : 'một vùng'}.`;
+  if (event.kind === 'tripleReady') { icon = '⚠️'; title = 'SẮP THẮNG!'; detail = `${who} đã có 2/3 Monopoly — chỉ còn một vùng để thắng Triple Monopoly.`; }
+  if (event.kind === 'lineReady') { icon = '⚠️'; title = 'LINE MONOPOLY'; detail = `${who} chỉ còn thiếu ${missing} để độc quyền ${event.sideName || 'một cạnh bàn cờ'}.`; }
+  if (event.kind === 'resortReady') { icon = '⚠️'; title = 'RESORT MONOPOLY'; detail = `${who} đã có 3/4 bãi biển — chỉ còn ${missing} để thắng.`; }
+  const warn = event.kind !== 'monopoly';
+  el.innerHTML = `<div class="achievement-card${warn ? ' warn' : ''}"><div class="achievement-icon">${icon}</div><h2>${esc(title)}</h2><p>${esc(detail)}</p></div>`;
+  el.classList.add('show');
+  await sleep(REDUCED ? 1400 : 2400);
+  el.classList.remove('show');
+  await sleep(220);
+}
 let turnNoticeKey = '';
 async function showTurnNotice() {
   if (S.phase !== 'play' || !curP()) return;
   const p = curP(), key = `${S.startedAt}:${S.round}:${p.id}`;
+  if (MODE === 'net' && !isMe(p.id)) return;
   if (key === turnNoticeKey) return;
   turnNoticeKey = key;
-  const text = MODE === 'net' && isMe(p.id) ? 'Đến lượt bạn!' : `Đến lượt ${p.name}!`;
+  playTurnSound();
+  const text = MODE === 'net' ? 'Đến lượt bạn!' : `Đến lượt ${p.name}!`;
   await showStatus(text, 1500);
 }
 
@@ -1030,8 +1159,8 @@ function drawSell() {
     <div class="btns"><button class="pill red" type="button" id="sbk">Phá sản</button><button class="pill ghost" type="button" id="sauto">Bán tự động</button><button class="pill" type="button" id="sgo" ${sell.picked.size ? '' : 'disabled'}>Bán</button></div>`;
   b.classList.add('show');
   $('#sbk').onclick = () => { endSell(); act('bankrupt'); };
-  $('#sauto').onclick = () => { sell.picked = autoPick(p); drawSell(); doSell(); };
-  $('#sgo').onclick = doSell;
+  $('#sauto').onclick = () => { sell.picked = autoPick(p); drawSell(); doSell(true); };
+  $('#sgo').onclick = () => doSell(false);
 }
 // chọn ít đất nhất đủ trả nợ: một ô rẻ nhất đủ tiền, nếu không thì gom từ ô đắt nhất
 function autoPick(p) {
@@ -1042,11 +1171,14 @@ function autoPick(p) {
   for (const i of own.slice().reverse()) { if (sum >= need) break; pick.add(i); sum += G.sellValue(S, i); }
   return pick;
 }
-async function doSell() {
-  if (!sell || !sell.picked.size || busy) return;
+async function doSell(autoBankrupt = false) {
+  if (!sell || busy) return;
+  const p = G.byId(S, sell.pid), debt = S.pending ? S.pending.amount : 0;
   const list = [...sell.picked].sort((a, b) => G.sellValue(S, a) - G.sellValue(S, b));
+  const mustBankrupt = autoBankrupt && p.money + list.reduce((sum, i) => sum + G.sellValue(S, i), 0) < debt;
   endSell();
   for (const i of list) { if (!S.step || S.step.kind !== 'debt') break; await act('sell', { tile: i }); }
+  if (mustBankrupt) await act('bankrupt');
 }
 function endSell() { sell = null; $('#sellbox').classList.remove('show'); $('#selltags').innerHTML = ''; }
 function placeSellTags() {
@@ -1128,11 +1260,11 @@ function showInfo(i) {
 }
 function hideInfo() { $('#info').classList.remove('show'); }
 $('#info').addEventListener('click', (e) => { if (e.target.id === 'info') hideInfo(); });
-addEventListener('keydown', (e) => { if (e.key === 'Escape') hideInfo(); });
+addEventListener('keydown', (e) => { if (e.key === 'Escape') { hideInfo(); $('#soundpanel').classList.remove('show'); } });
 
 /* ---------------- hành động & hoạt ảnh ---------------- */
-const seen = { dice: null, move: -1, card: null, notice: null };
-function markSeen() { seen.dice = S.dice && S.dice.seq; seen.move = S.moves.reduce((a, m) => Math.max(a, m.seq), -1); seen.card = S.lastCard && S.lastCard.seq; seen.notice = S.notice && S.notice.seq; }
+const seen = { dice: null, move: -1, card: null, notice: null, achievement: -1 };
+function markSeen() { seen.dice = S.dice && S.dice.seq; seen.move = S.moves.reduce((a, m) => Math.max(a, m.seq), -1); seen.card = S.lastCard && S.lastCard.seq; seen.notice = S.notice && S.notice.seq; seen.achievement = (S.achievements || []).reduce((a, x) => Math.max(a, x.seq), -1); }
 let sending = false;
 async function act(type, data) {
   if (busy || sending) return;
@@ -1152,6 +1284,7 @@ async function playOut() {
   const moves = S.moves.filter((m) => m.seq > seen.move).sort((a, b) => a.seq - b.seq);
   const card = S.lastCard && S.lastCard.seq !== seen.card ? S.lastCard : null;
   const notice = S.notice && S.notice.seq !== seen.notice ? S.notice : null;
+  const achievements = (S.achievements || []).filter((x) => x.seq > seen.achievement).sort((a, b) => a.seq - b.seq);
   markSeen();
   if (diceNew) { await rollDice(diceNew.a, diceNew.b); await sleep(200); }
   for (const mv of moves) {
@@ -1165,8 +1298,10 @@ async function playOut() {
     }
     await sleep(120);
   }
-  if (card) await showCard(card);
+  // Người rút Vé máy bay xác nhận bằng modal trạng thái `flight`; sau OK server mới tạo bước di chuyển.
+  if (card && !(card.id === 'FLIGHT_TICKET' && isMe(card.pid))) await showCard(card);
   const wait = syncBuildings(); syncTokens(false); renderCards(wait);
+  for (const achievement of achievements) await showAchievement(achievement);
   if (notice && S.phase === 'play') {
     const who = G.byId(S, notice.pid);
     await sleep(Math.min(MONEY_MS, 900));
@@ -1391,6 +1526,7 @@ function showRoomGate() {
   $('#gname').value = savedName || lobbyDraftName || '';
   $('#groom').value = normalizeRoom(params.get('room') || ROOM);
   document.body.dataset.screen = 'gate';
+  syncMusic();
   $('#loading').classList.add('hidden');
   $('#gate').classList.add('show');
   setTimeout(() => ($('#groom').value ? $('#gname') : $('#groom')).focus(), 0);
@@ -1460,6 +1596,7 @@ async function prepareBoard() {
   await boardReadyPromise;
   document.body.dataset.screen = 'game';
   $('#loading').classList.add('hidden');
+  syncMusic();
   startFrame();
 }
 (async () => {

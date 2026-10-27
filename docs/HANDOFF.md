@@ -46,12 +46,20 @@
 - Animation đếm tiền bị trừ dùng `MONEY_DEBIT_MS = 700`; tiền nhận vẫn dùng `MONEY_MS` để đồng bộ với hoạt ảnh xây nhà. Nhãn tiền trừ bay trong 900 ms.
 - `public/js/houses.js` xem cả dải xanh và cam trong texture nguồn là màu nhận diện chủ sở hữu; vì vậy mái cam cũ được tô lại theo màu người chơi (Gấu trúc là vàng), không giữ màu cố định của model.
 - Mũi tên báo lượt không có màu vàng cố định: `placeOverlays()` lấy màu từ `seatOf[p.id].color` và cập nhật đồng thời `color`/`emissive` khi người tới lượt thay đổi.
+- Âm thanh dùng Web Audio trong `public/js/app.js`, không tải asset ngoài: nhạc nền và hiệu ứng lượt/cảnh báo có công tắc/âm lượng riêng, lưu tại `tt-monopoly-sound-v1`; trình duyệt chỉ khởi tạo AudioContext sau tương tác người dùng. Trong chế độ mạng, chuỗi chuông đến lượt và tiếng tick 5 giây cuối chỉ chạy khi tới lượt chính người dùng trên máy đó, không chạy ở lượt đối thủ.
+- Bảng bánh răng còn có mức đồ hoạ `low` / `medium` / `high`, lưu ở `tt-monopoly-graphics-v1` và áp dụng ngay bằng pixel ratio + shadow map; `?low` cũ vẫn ép mức thấp. Nút **Rời phòng** gọi `leave` khi còn ở lobby, nhưng trong ván chỉ ngắt phiên local để ghế/tài sản được giữ cho luồng rejoin.
+- Tám thẻ Chance dùng cùng trọng số `w: 1` (12,5% mỗi thẻ). Vé máy bay chuyển sang bước `flight`: server chỉ tạo chuyển động tới World Tour sau khi người rút bấm OK; hết giờ thì `autoAction` xác nhận để ván không bị kẹt.
+- Quân đang được điều khiển có một bản sao BackSide lớn hơn 1,075 lần làm viền sáng theo màu người chơi. Chơi mạng chỉ viền quân `me`; chơi chung một máy viền quân đang tới lượt.
+- Nút **Bán tự động** tính trước tổng tiền mặt + giá bán các tài sản đã chọn; nếu vẫn thấp hơn khoản nợ thì bán hết rồi tự gọi `bankrupt`. Nút bán thủ công không tự phá sản.
+- Engine lưu các mốc giao diện trong `state.achievements[]` và chặn phát trùng bằng `state.milestones`: `monopoly` khi hoàn thành một vùng màu, `tripleReady` khi có 2/3 vùng, `lineReady` khi còn thiếu một ô trên một cạnh và `resortReady` khi có 3/4 bãi biển. Client phát lần lượt các màn này trước modal kết quả; người vào phòng giữa ván đánh dấu các mốc cũ là đã xem.
+- Mất điện dùng `outageRounds(i) = state.outage[i] - state.round` để hiện số vòng còn lại trên texture ô đất và trong `.pcard .power` của chủ sở hữu. Chữ ký `tileSigs` chứa số vòng này để texture được vẽ lại sau mỗi vòng, không chỉ khi trạng thái bật/tắt.
+- Ba ô thưởng lễ hội `state.bonus` dùng `festivalFlag()` dưới dạng một băng rôn cam đậm căng giữa hai cọc ở chính giữa cạnh sau ô đất; không dùng lá cờ một cọc bán trong suốt. Băng rôn quay theo từng cạnh bàn và ghi rõ hệ số `CFG.BONUS_MULT`.
 - Đã thử bằng `wrangler dev`: `TTM_URL=http://127.0.0.1:8787/ node test/e2e.js` qua; alarm tự đi khi hết giờ bước đã thử. Production dùng domain thương hiệu và base path ghi trong `docs/CLOUDFLARE.md`.
 - Phòng chờ thêm hành động `kick` (mời ra ghế đang mất kết nối) ở cả server.js và worker.js.
 - Hướng dẫn: `docs/CLOUDFLARE.md`.
 
 ## Ràng buộc bản quyền (giữ nguyên)
-Không dùng asset gốc của Business Tour (bundle unity3d, PNG trích xuất, bản AI vẽ lại). Chỉ dùng Kenney CC0 và mô hình dựng bằng code. Ghi credit "Mô hình 3D: Kenney.nl (CC0)".
+Không dùng asset gốc của Business Tour (bundle unity3d, PNG trích xuất, bản AI vẽ lại). Chỉ dùng Kenney CC0 và mô hình dựng bằng code. Thông tin nguồn được giữ trong tài liệu dự án, không hiện chú thích cố định trên giao diện game.
 
 ## Việc tiếp theo (người dùng chọn)
 1. **Web app:** đẩy lên repo GitHub riêng tư, nối Railway (hoặc Fly.io/Render) để push là tự deploy. Cần ổ lưu cho `DATA_DIR`, thêm mã phòng hoặc mật khẩu vì link công khai.

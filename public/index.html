@@ -24,12 +24,23 @@
   <button type="button" id="zin" aria-label="Phóng to"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
   <button type="button" id="zout" aria-label="Thu nhỏ"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg></button>
   <button type="button" id="zfit" aria-label="Xem toàn bàn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+  <button type="button" id="soundbtn" aria-label="Cài đặt"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.37a1.7 1.7 0 0 0-1 .63 1.7 1.7 0 0 0-.4 1.1V21h-4v-.1A1.7 1.7 0 0 0 8.55 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.18 15a1.7 1.7 0 0 0-.63-1A1.7 1.7 0 0 0 2.45 13H2v-4h.45A1.7 1.7 0 0 0 4 8.05a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 8.37 3a1.7 1.7 0 0 0 1-.63A1.7 1.7 0 0 0 9.77 1.3V1h4v.3A1.7 1.7 0 0 0 15 3a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.37 7a1.7 1.7 0 0 0 .63 1 1.7 1.7 0 0 0 1.1.4h.1v4h-.1A1.7 1.7 0 0 0 19.4 15Z"/></svg></button>
 </div>
+<section id="soundpanel" role="dialog" aria-modal="false" aria-labelledby="soundtitle">
+  <div class="sound-head"><strong id="soundtitle">Cài đặt</strong><button type="button" id="soundclose" aria-label="Đóng">×</button></div>
+  <label class="setting-select"><span><b>Đồ hoạ</b><small>Áp dụng ngay trên máy này</small></span><select id="graphics-level"><option value="low">Thấp</option><option value="medium">Cân bằng</option><option value="high">Cao</option></select></label>
+  <label class="sound-toggle"><span><b>Nhạc nền</b><small>Nhạc nhẹ trong lúc chơi</small></span><input type="checkbox" id="music-enabled"></label>
+  <label class="sound-volume"><span>Âm lượng nhạc</span><input type="range" id="music-volume" min="0" max="100" step="5"></label>
+  <label class="sound-toggle"><span><b>Âm thanh lượt &amp; cảnh báo</b><small>Báo đến lượt và 5 giây cuối</small></span><input type="checkbox" id="turn-enabled"></label>
+  <label class="sound-volume"><span>Âm lượng hiệu ứng</span><input type="range" id="turn-volume" min="0" max="100" step="5"></label>
+  <button type="button" id="settings-leave">Rời phòng</button>
+</section>
 <div id="banner"></div>
 <div id="modal" role="dialog" aria-modal="true"></div>
 <div id="toast" role="status"></div>
 <div id="info" role="dialog" aria-modal="true" aria-label="Thông tin ô"></div>
 <div id="status" role="alert"></div>
+<div id="achievement" role="alert" aria-live="assertive"></div>
 <div id="sellbox"></div>
 <div id="selltags"></div>
 <div id="gate" role="dialog" aria-modal="true" aria-label="Chọn người chơi và phòng">
@@ -62,7 +73,6 @@
 <div id="lobby" role="dialog" aria-modal="true" aria-label="Phòng chờ"></div>
 <div id="conn" role="status">Mất kết nối tới server, đang thử lại…</div>
 <button id="newgame" type="button">Ván mới</button>
-<div id="credit">Mô hình 3D: <a href="https://www.kenney.nl" target="_blank" rel="noopener">Kenney.nl</a> (CC0)</div>
 <div id="loading">Đang dựng bàn cờ…<small id="loadmsg">Tải mô hình 3D</small></div>
 <script src="rules.js"></script>
 <script src="game.js"></script>

@@ -17,6 +17,7 @@ function randomAction(s) {
       if (p.escapeCards) opts.push(['useCard']);
       break;
     case 'tour': opts.push(['skip']); if (p.money >= G.CFG.TOUR_FEE) for (let i = 0; i < 32; i++) if (i !== p.pos) opts.push(['tour', { tile: i }]); break;
+    case 'flight': opts.push(['flight']); break;
     case 'buy': {
       opts.push(['skip']);
       const t = G.TILES[p.pos];

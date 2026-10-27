@@ -5,11 +5,19 @@ const html = fs.readFileSync(new URL('../public/index.html', import.meta.url), '
 const css = fs.readFileSync(new URL('../public/style.css', import.meta.url), 'utf8');
 const app = fs.readFileSync(new URL('../public/js/app.js', import.meta.url), 'utf8');
 const houses = fs.readFileSync(new URL('../public/js/houses.js', import.meta.url), 'utf8');
+const specials = fs.readFileSync(new URL('../public/js/specials.js', import.meta.url), 'utf8');
 
 assert.match(html, /<body data-screen="boot">/);
 assert.match(html, /class="gate-layout"/);
 assert.match(html, /class="gate-brand"/);
 assert.match(html, /class="gate-card"/);
+assert.match(html, /id="soundbtn"/);
+assert.match(html, /id="music-enabled"/);
+assert.match(html, /id="turn-enabled"/);
+assert.match(html, /id="graphics-level"/);
+assert.match(html, /id="settings-leave"/);
+assert.match(html, /id="achievement"/);
+assert.doesNotMatch(html, /id="credit"/, '3D model credit must not remain as a fixed UI note');
 assert.match(css, /body\[data-screen="gate"\][^{]*:is\([^)]*#stage/);
 assert.match(css, /#gate\{[^}]*box-sizing:border-box/);
 
@@ -19,12 +27,36 @@ assert.ok(gateFirst >= 0 && prepareAfterGate > gateFirst, 'cloud home must retur
 assert.match(app, /const TOKEN_HEIGHT = 1\.08;/, 'all characters must share the enlarged token height');
 assert.match(app, /place\(seatOf\[p\.id\]\.pet, TOKEN_HEIGHT, \{ byHeight: true \}\)/, 'tokens must be normalized by height');
 assert.match(app, /Đến lượt bạn!/);
-assert.match(app, /`Đến lượt \$\{p\.name\}!`/);
+assert.match(app, /MODE === 'net' && !isMe\(p\.id\)/, 'network clients must not announce another player turn');
+assert.match(app, /MODE === 'net' \? 'Đến lượt bạn!' : `Đến lượt \$\{p\.name\}!`/);
 assert.match(app, /const MONEY_DEBIT_MS = REDUCED \? 1 : 700;/, 'debit animation must use the shorter duration');
 assert.match(app, /const duration = to < from \? MONEY_DEBIT_MS : MONEY_MS;/, 'only money deductions should use the faster animation');
 assert.match(houses, /const orange = hsl\.s > 0\.35/);
 assert.match(houses, /green \|\| orange/, 'orange source roofs must follow the player ownership color');
 assert.match(app, /turnArrow\.userData\.material\.color\.set\(color\)/, 'turn arrow must use the current player color');
 assert.match(app, /turnArrow\.userData\.material\.emissive\.set\(color\)/, 'turn arrow glow must use the current player color');
+assert.match(app, /const SOUND_KEY = 'tt-monopoly-sound-v1'/);
+assert.match(app, /const GRAPHICS_KEY = 'tt-monopoly-graphics-v1'/);
+assert.match(app, /function setGraphicsLevel\(level\)/);
+assert.match(app, /if \(S\.phase === 'lobby'\) await api\('api\/act', \{ token: me\.token, type: 'leave' \}\)/, 'settings leave must release only a lobby seat');
+assert.match(app, /playTurnSound\(\);/);
+assert.match(app, /left > 5000/, 'time warning must start in the final five seconds');
+assert.match(app, /playTimeWarning\(\);/, 'turn timer must run the warning sound');
+assert.match(app, /st\.kind === 'flight'/, 'flight card must wait for confirmation');
+assert.match(app, /side: THREE\.BackSide/, 'controlled character must have a silhouette glow');
+assert.match(app, /MODE === 'net' \? isMe\(p\.id\)/, 'network mode must highlight only the local player token');
+assert.match(app, /doSell\(true\)/, 'automatic selling must enable bankruptcy fallback');
+assert.match(app, /if \(mustBankrupt\) await act\('bankrupt'\)/, 'automatic selling must declare bankruptcy when assets are insufficient');
+assert.match(app, /async function showAchievement\(event\)/);
+assert.match(app, /event\.kind === 'tripleReady'/);
+assert.match(app, /event\.kind === 'lineReady'/);
+assert.match(app, /event\.kind === 'resortReady'/);
+assert.match(app, /const outageRounds = \(i\) =>/);
+assert.match(app, /⚡ CÒN \$\{outageRounds\(i\)\} VÒNG/, 'outaged tiles must show remaining rounds');
+assert.match(app, /class="power"/, 'player cards must reserve an outage status area');
+assert.match(app, /⚡ Mất điện · \$\{powerCuts\.map/, 'land owner card must show affected cities');
+assert.match(specials, /for \(const x of \[-postX, postX\]\)/, 'festival banner must use two posts');
+assert.match(specials, /LỄ HỘI ×\$\{mult\}/, 'festival banner must visibly label its multiplier');
+assert.match(app, /festivalBannerSpot\(i\)/, 'festival banner must be centered along the back of its tile');
 
 console.log('Home screen lazy-map tests passed.');

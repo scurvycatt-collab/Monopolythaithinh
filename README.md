@@ -47,6 +47,12 @@ Host có thể chọn bản đồ trong cài đặt room. Bản đồ hiện t�
 
 Muốn tiếp tục trên máy khác, nhập lại đúng **username cũ + room cũ**. Nếu ghế đang offline, server trả lại đúng ghế, tài sản và quyền host cũ; nếu ghế vẫn online ở thiết bị khác thì yêu cầu bị từ chối để tránh hai máy cùng điều khiển.
 
+Trong bàn chơi có nút bánh răng để chọn mức đồ hoạ **Thấp / Cân bằng / Cao**, bật/tắt và chỉnh riêng âm lượng **nhạc nền** và **âm báo chuyển lượt**, hoặc rời phòng. Cài đặt hình ảnh và âm thanh được lưu trên từng trình duyệt. Nếu rời khi ván đang chơi, ghế được giữ lại để người chơi có thể nhập lại đúng username và room; rời ở phòng chờ sẽ trả ghế. Tám thẻ Chance có xác suất bằng nhau (12,5% mỗi thẻ); riêng Vé máy bay phải bấm **OK** trên thẻ trước khi nhân vật đi tới World Tour.
+
+Khi một người hoàn thành một vùng màu, mọi người sẽ thấy màn chúc mừng **Monopoly**. Game cũng cảnh báo một lần khi người chơi chỉ còn cách chiến thắng một vùng (Triple Monopoly), một ô trên cùng cạnh bàn cờ (Line Monopoly), hoặc một bãi biển (Resort Monopoly).
+
+Khi một thành phố bị cúp điện, ngay trên ô đất sẽ hiện số vòng mất điện còn lại. Thẻ của chủ sở hữu cũng hiện tên từng thành phố đang mất điện và bộ đếm tương ứng; số vòng tự giảm khi sang vòng mới.
+
 ## Bộ luật chính (bắt buộc đọc trước khi sửa)
 
 Toàn bộ luật nằm ở **một file duy nhất: `public/rules.js`**, gồm ba lớp:

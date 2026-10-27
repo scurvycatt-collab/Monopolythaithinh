@@ -78,7 +78,7 @@
     return {
       version: 0, phase: 'lobby', hostId: null, players: [], props: {}, festival: null, festLevel: 0, outage: {}, bonus: [], turn: 0, step: null,
       dice: null, moves: [], lastCard: null, log: [], round: 1, seq: 0, again: false,
-      pending: null, winner: null, winReason: null, startedAt: null, endsAt: null, stepAt: null,
+      pending: null, winner: null, winReason: null, achievements: [], milestones: {}, startedAt: null, endsAt: null, stepAt: null,
       settings: { mapId: MAPS[0].id, roundLimit: 0, timeLimitMin: CFG.TIME_OPTIONS[0], turnSec: CFG.TURN_SEC, autoSec: CFG.AUTO_OFFLINE_SEC },
     };
   }
@@ -173,7 +173,7 @@
     now = now || Date.now();
     Object.assign(s, {
       phase: 'play', props: {}, festival: null, festLevel: 0, outage: {}, turn: 0, step: null, dice: null, moves: [], lastCard: null,
-      log: [], round: 1, again: false, pending: null, winner: null, winReason: null,
+      log: [], round: 1, again: false, pending: null, winner: null, winReason: null, achievements: [], milestones: {},
       startedAt: now, stepAt: now, endsAt: s.settings.timeLimitMin ? now + s.settings.timeLimitMin * 60000 : null,
       bonus: shuffle(TILES.filter(isBuyable).map((t) => t.i)).slice(0, CFG.BONUS_TILES).sort((a, b) => a - b),
     });
@@ -182,7 +182,7 @@
   }
   function resetGame(s) {
     s.players.forEach(resetPlayer);
-    Object.assign(s, { phase: 'lobby', props: {}, festival: null, festLevel: 0, outage: {}, bonus: [], turn: 0, step: null, dice: null, moves: [], lastCard: null, log: [], again: false, pending: null, winner: null, winReason: null, round: 1, startedAt: null, endsAt: null, stepAt: null });
+    Object.assign(s, { phase: 'lobby', props: {}, festival: null, festLevel: 0, outage: {}, bonus: [], turn: 0, step: null, dice: null, moves: [], lastCard: null, log: [], again: false, pending: null, winner: null, winReason: null, achievements: [], milestones: {}, round: 1, startedAt: null, endsAt: null, stepAt: null });
     log(s, 'Quay về phòng chờ');
   }
 
@@ -204,8 +204,25 @@
     if (a.length <= 1) { endGame(s, a[0] || s.players[0], 'các đối thủ đều đã phá sản'); return true; }
     return false;
   }
+  function addAchievement(s, p, key, kind, data) {
+    s.milestones = s.milestones || {};
+    const id = `${p.id}:${key}`;
+    if (s.milestones[id]) return;
+    s.milestones[id] = true;
+    s.achievements = s.achievements || [];
+    s.achievements.push(Object.assign({ seq: nextSeq(s), pid: p.id, kind }, data || {}));
+    if (s.achievements.length > 24) s.achievements.splice(0, s.achievements.length - 24);
+  }
   function checkWin(s, p) {
     const groups = Object.keys(GROUPS).filter((g) => ownsGroup(s, p.id, g));
+    groups.forEach((g) => addAchievement(s, p, `monopoly:${g}`, 'monopoly', { group: g }));
+    if (groups.length === 2) addAchievement(s, p, 'triple-ready', 'tripleReady', { groups: groups.slice() });
+    for (let j = 0; j < SIDES.length; j++) {
+      const owned = SIDES[j].filter((i) => s.props[i] && s.props[i].owner === p.id).length;
+      if (owned === SIDES[j].length - 1) addAchievement(s, p, `line-ready:${j}`, 'lineReady', { side: j, sideName: SIDE_NAMES[j], missing: SIDES[j].filter((i) => !s.props[i] || s.props[i].owner !== p.id) });
+    }
+    const ownedResorts = RESORTS.filter((i) => s.props[i] && s.props[i].owner === p.id);
+    if (ownedResorts.length === RESORTS.length - 1) addAchievement(s, p, 'resort-ready', 'resortReady', { missing: RESORTS.filter((i) => !s.props[i] || s.props[i].owner !== p.id) });
     if (groups.length >= 3) {
       endGame(s, p, `độc quyền 3 vùng (${groups.map((g) => GROUPS[g].name).join(', ')})`);
       return true;
@@ -418,7 +435,7 @@
       case 'VIP_SHIELD': p.shields = (p.shields || 0) + 1; return finish(s);
       case 'ESCAPE_ISLAND': p.escapeCards++; return finish(s);
       case 'HOST_FESTIVAL': moveTo(s, p, CFG.FESTIVAL_IDX); return resolve(s, p);
-      case 'FLIGHT_TICKET': moveTo(s, p, CFG.TOUR_IDX); return resolve(s, p);
+      case 'FLIGHT_TICKET': s.step = { kind: 'flight' }; return;
       default: {
         const tiles = cardTargets(s, p, c.id, 1);
         const ok = tiles.length && (c.id !== 'FORCED_SWAP' || cardTargets(s, p, c.id, 2).length);
@@ -571,6 +588,12 @@
         return resolve(s, p);
       }
 
+      case 'flight':
+        need('flight');
+        s.step = null;
+        moveTo(s, p, CFG.TOUR_IDX);
+        return resolve(s, p);
+
       case 'card': {
         need('card');
         return applyCard(s, p, st, tileArg());
@@ -614,6 +637,7 @@
     const st = s.step, p = cur(s);
     switch (st.kind) {
       case 'roll': case 'island': return ['roll', {}];
+      case 'flight': return ['flight', {}];
       case 'card': {
         // tấn công ô giá trị cao nhất; khi đổi đất thì đưa ra ô rẻ nhất của mình
         const byVal = st.tiles.slice().sort((a, b) => value(a, s.props[a].level) - value(b, s.props[b].level));
@@ -649,7 +673,7 @@
   const api = {
     RULES: R, STATES, stepLeft, checkTurn,
     GROUPS, TILES, CFG, COLORS, PETS, MAPS, CARDS, LEVEL_NAMES, RESORTS, SIDES, GameError,
-    setRng, createState, publicView, ensureHost, isHost, byName, addPlayer, removePlayer, setPet, renamePlayer, setSettings, startGame, resetGame,
+    setRng, createState, publicView, ensureHost, isHost, byName, addPlayer, removePlayer, setPet, renamePlayer, setSettings, startGame, resetGame, checkWin,
     act, autoAction, checkTime, cur, byId, value, invested, toll, upgradeCost, rentOf, takeoverPrice, canTakeover, sellValue, ownedBy, networth,
     ownsGroup, canUpgrade, nextLevel, isBuyable, maxBuild, villaLocked, taxBase, outaged, festMult, cardTargets,
   };

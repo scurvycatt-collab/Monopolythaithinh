@@ -676,35 +676,43 @@ export function startGate() {
   return out;
 }
 
-/* ===================== CỜ LỄ HỘI (ô thuê x1.5) ===================== */
-// cột cờ đuôi én vàng hồng có ngôi sao, dây cờ đuôi nheo nhỏ; đặt ở góc trên (xa người nhìn) của ô
-export function festivalFlag() {
+/* ===================== BĂNG RÔN LỄ HỘI (ô thuê x1.5) ===================== */
+// Một băng rôn đậm màu căng giữa hai cọc, đặt dọc cạnh sau của ô để không bị công trình che khuất.
+export function festivalFlag(mult = 1.5) {
   const g = new THREE.Group();
-  g.add(cyl(0.07, 0.04, '#f4e6c8', 0, 0, 0, 12));
-  g.add(cyl(0.018, 1.05, '#fbf8f1', 0, 0.04, 0, 8));
-  g.add(at(new THREE.Mesh(new THREE.SphereGeometry(0.04, 12, 10), mat('#ffc23a', { metalness: 0.3, roughness: 0.35 })), 0, 1.1, 0));
-  // lá cờ đuôi én: lưới phẳng vẫy theo sóng
-  const w = 0.42, h = 0.27, geo = new THREE.PlaneGeometry(w, h, 12, 4); geo.translate(w / 2, 0, 0);
-  const pos = geo.attributes.position;
-  for (let i = 0; i < pos.count; i++) { const x = pos.getX(i), y = pos.getY(i); if (x > w * 0.75) pos.setX(i, x - (1 - Math.abs(y) / (h / 2)) * w * 0.2); }
-  const base = pos.array.slice();
-  const cv = document.createElement('canvas'); cv.width = 128; cv.height = 84; const c = cv.getContext('2d');
-  c.fillStyle = '#ff6fa0'; c.fillRect(0, 0, 128, 84); c.fillStyle = '#ffc23a'; c.fillRect(0, 34, 128, 16);
-  c.fillStyle = '#ffffff'; c.beginPath(); for (let k = 0; k < 10; k++) { const r = k % 2 ? 9 : 20, a = -Math.PI / 2 + k * Math.PI / 5; c.lineTo(40 + Math.cos(a) * r, 42 + Math.sin(a) * r); } c.closePath(); c.fill();
-  const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
-  const flag = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: tex, roughness: 0.7, side: THREE.DoubleSide })); flag.position.y = 0.92; flag.castShadow = true; g.add(flag);
-  // dây cờ đuôi nheo nhỏ chéo từ đỉnh xuống đất
-  const pennants = [];
-  const cols = ['#ff6fa0', '#ffc23a', '#5cc6e8', '#7fd6a0', '#a98af0'];
-  for (let k = 0; k < 6; k++) {
-    const u = (k + 0.5) / 6, tri = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.08, 3), mat(cols[k % cols.length]));
-    tri.rotation.z = Math.PI; tri.position.set(-0.06 - u * 0.36, 1.0 - u * 0.95, 0); g.add(tri); pennants.push(tri);
+  const postX = 0.54, postH = 1.02;
+  for (const x of [-postX, postX]) {
+    g.add(cyl(0.055, 0.045, '#e9dcc0', x, 0, 0, 12));
+    g.add(cyl(0.018, postH, '#fffaf0', x, 0.04, 0, 8));
+    g.add(at(new THREE.Mesh(new THREE.SphereGeometry(0.035, 12, 10), mat('#ffc23a', { metalness: 0.3, roughness: 0.35 })), x, postH + 0.07, 0));
   }
+  const bannerW = postX * 2 - 0.06, bannerH = 0.3;
+  const geo = new THREE.PlaneGeometry(bannerW, bannerH, 16, 4);
+  const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const u = pos.getX(i) / bannerW + 0.5;
+    pos.setY(i, pos.getY(i) - Math.sin(u * Math.PI) * 0.055);
+  }
+  const base = pos.array.slice();
+  const cv = document.createElement('canvas'); cv.width = 512; cv.height = 160; const c = cv.getContext('2d');
+  const grad = c.createLinearGradient(0, 0, 0, cv.height); grad.addColorStop(0, '#ff9a3c'); grad.addColorStop(1, '#ec5f31');
+  c.fillStyle = grad; c.fillRect(0, 0, cv.width, cv.height);
+  c.strokeStyle = '#ffd45c'; c.lineWidth = 12; c.strokeRect(6, 6, cv.width - 12, cv.height - 12);
+  c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = '900 72px Rubik, sans-serif';
+  c.fillStyle = 'rgba(116,42,16,.32)'; c.fillText(`LỄ HỘI ×${mult}`, cv.width / 2, cv.height / 2 + 7);
+  c.fillStyle = '#ffffff'; c.fillText(`LỄ HỘI ×${mult}`, cv.width / 2, cv.height / 2);
+  const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
+  const banner = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: tex, roughness: 0.62, side: THREE.DoubleSide }));
+  banner.position.y = 0.83; banner.position.z = 0.012; banner.castShadow = true; g.add(banner);
+  // Dây ngang giúp hai đầu băng rôn đọc rõ là đang được căng giữa hai cọc.
+  g.add(box(postX * 2, 0.012, 0.012, '#f6e7c8', 0, 0.99, 0));
   g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
   g.userData.update = (t) => {
-    for (let i = 0; i < pos.count; i++) { const x = base[i * 3], k = x / w; pos.setZ(i, Math.sin(t * 5 - x * 16) * 0.035 * k); }
+    for (let i = 0; i < pos.count; i++) {
+      const x = base[i * 3], u = x / bannerW + 0.5;
+      pos.setZ(i, base[i * 3 + 2] + Math.sin(t * 3.5 - x * 9) * 0.018 * Math.sin(u * Math.PI));
+    }
     pos.needsUpdate = true; geo.computeVertexNormals();
-    pennants.forEach((p, k) => { p.rotation.x = Math.sin(t * 3 + k) * 0.25; });
   };
   g.userData.update(0);
   return g;

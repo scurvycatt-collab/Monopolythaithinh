@@ -34,6 +34,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 .pcard .mo{padding:7px 18px 9px 22px;background:#fff;font:800 31px/1.05 var(--display);font-variant-numeric:tabular-nums}
 .pcard.tr .mo,.pcard.br .mo{text-align:right;padding:5px 20px 7px 16px}
 .pcard .mo small{display:block;font:600 13px/1.35 var(--body);color:var(--ink-soft)}
+.pcard .power{display:none;margin-top:5px;padding:4px 7px;border-radius:7px;background:#fff1b8;color:#805b00;font:800 11px/1.25 var(--body);white-space:normal}.pcard .power.show{display:block}
 .pcard.off .av img{opacity:.45}
 .pcard.bk{filter:grayscale(1) opacity(.6)}
 .pcard .stamp{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-14deg);border:3px solid #d6304a;color:#d6304a;font:800 14px var(--display);padding:0 8px;border-radius:6px;background:rgba(255,255,255,.85);white-space:nowrap}
@@ -109,6 +110,10 @@ table.rank tr:nth-child(odd) td{background:#efe7d8}
 #status.show{opacity:1}
 #status p{margin:0;max-width:900px;text-align:center;color:#fff;font:900 clamp(28px,5.2vw,68px)/1.12 Rubik,var(--display);text-transform:uppercase;letter-spacing:.5px;text-shadow:0 4px 0 rgba(10,40,60,.35);transform:scale(.92);transition:transform .35s cubic-bezier(.2,.8,.3,1.3)}
 #status.show p{transform:scale(1)}
+#achievement{position:fixed;inset:0;z-index:29;display:none;place-items:center;padding:24px;background:rgba(17,48,74,.48);pointer-events:none}
+#achievement.show{display:grid}.achievement-card{width:min(520px,calc(100vw - 48px));box-sizing:border-box;padding:28px 30px;border:5px solid #fff;border-radius:26px;background:linear-gradient(145deg,#fff8cf,#ffd95a);box-shadow:0 12px 0 #d69c00,0 28px 60px rgba(18,45,65,.35);text-align:center;color:#31404a;animation:achievementIn .42s cubic-bezier(.2,.9,.3,1.25)}
+.achievement-card.warn{background:linear-gradient(145deg,#eaf6ff,#72c8ff);box-shadow:0 12px 0 #2586c2,0 28px 60px rgba(18,45,65,.35)}.achievement-icon{font-size:58px;line-height:1}.achievement-card h2{margin:8px 0 4px;font:900 clamp(30px,6vw,54px)/1 Rubik,var(--display);text-transform:uppercase}.achievement-card p{margin:8px auto 0;max-width:430px;font:800 17px/1.45 var(--body)}
+@keyframes achievementIn{from{opacity:0;transform:translateY(35px) scale(.78)}to{opacity:1;transform:none}}
 /* bán đất: chữ giữa bàn nền trắng 50%, nhãn giá bán trên từng ô */
 #sellbox{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:7;display:none;width:min(470px,calc(100% - 32px));padding:16px 18px 18px;border-radius:18px;background:rgba(255,255,255,.5);backdrop-filter:blur(2px);text-align:center;color:var(--ink)}
 #sellbox.show{display:block}
@@ -152,8 +157,12 @@ table.lvl tr.cur .ck{color:#fff}
 #zoom{position:fixed;right:calc(14px + env(safe-area-inset-right,0px));top:calc(150px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:8px;z-index:5}
 #zoom button{width:44px;height:44px;border-radius:50%;border:0;background:#fff;color:var(--ink);box-shadow:0 4px 0 #c9d6e3,0 8px 16px rgba(20,60,100,.18);display:grid;place-items:center}
 #zoom button:active{transform:translateY(2px);box-shadow:0 2px 0 #c9d6e3}
-#credit{position:fixed;left:50%;bottom:calc(6px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);font-size:11px;color:#3d6280;z-index:3;white-space:nowrap}
-#credit a{color:inherit}
+#soundpanel{position:fixed;right:calc(70px + env(safe-area-inset-right,0px));top:calc(150px + env(safe-area-inset-top,0px));z-index:18;display:none;width:min(310px,calc(100vw - 32px));box-sizing:border-box;padding:16px;border-radius:18px;background:rgba(255,255,255,.96);box-shadow:0 12px 36px rgba(20,60,100,.28);color:var(--ink);backdrop-filter:blur(8px)}
+#soundpanel.show{display:block}.sound-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.sound-head strong{font:800 20px var(--display)}.sound-head button{width:32px;height:32px;border:0;border-radius:50%;background:#edf3f8;color:var(--ink);font:800 22px/1 var(--display)}
+.sound-toggle{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:11px 2px;border-top:1px solid #e3ebf1}.sound-toggle span,.sound-toggle b,.sound-toggle small{display:block}.sound-toggle b{font:800 15px var(--display)}.sound-toggle small{margin-top:2px;color:var(--ink-soft);font-size:11px}.sound-toggle input{width:22px;height:22px;accent-color:var(--blue)}
+.sound-volume{display:grid;grid-template-columns:116px 1fr;align-items:center;gap:10px;padding:3px 2px 12px;color:var(--ink-soft);font-size:12px;font-weight:700}.sound-volume input{width:100%;accent-color:var(--blue)}
+.setting-select{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:8px 2px 13px}.setting-select span,.setting-select b,.setting-select small{display:block}.setting-select b{font:800 15px var(--display)}.setting-select small{margin-top:2px;color:var(--ink-soft);font-size:11px}.setting-select select{min-width:112px;padding:8px 9px;border:1px solid #cbd9e4;border-radius:10px;background:#f5f9fc;color:var(--ink);font:700 13px var(--body)}
+#settings-leave{display:none;width:100%;margin-top:5px;padding:10px;border:0;border-radius:11px;background:#ffe5e9;color:#c92643;font:800 14px var(--body)}#settings-leave.show{display:block}#settings-leave:disabled{opacity:.55}
 #newgame{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:5;font:700 13px var(--body);border:0;border-radius:999px;padding:7px 14px;background:rgba(255,255,255,.8);color:var(--ink);box-shadow:0 4px 12px rgba(20,60,100,.15)}
 
 @media (max-width:760px){
@@ -164,6 +173,7 @@ table.lvl tr.cur .ck{color:#fff}
   .pcard .nm{font-size:15px;padding:4px 12px 4px 16px}
   .pcard .mo{font-size:19px;padding:5px 12px 6px 16px}
   .pcard .mo small{font-size:11px}
+  .pcard .power{font-size:9px;padding:3px 5px}
   .pill.big{font-size:22px;padding:12px 30px}
   .lv img{width:60px;height:60px}
 }
@@ -200,7 +210,7 @@ table.lvl tr.cur .ck{color:#fff}
 #gcreate{background:linear-gradient(#35b5ed,#179edb);box-shadow:0 6px 0 #0876aa,0 12px 22px rgba(21,115,154,.24)}
 #gjoin{background:linear-gradient(#a8c82b,#86a916);box-shadow:0 6px 0 #617e09,0 12px 22px rgba(89,120,10,.22)}
 .gate-idle{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:20px;color:#71858d;font-size:12px;font-weight:700}.gate-idle i{width:8px;height:8px;border-radius:50%;background:#8daf17;box-shadow:0 0 0 4px rgba(141,175,23,.16)}
-body[data-screen="gate"] :is(#stage,#cards,#hub,#zoom,#banner,#modal,#info,#status,#sellbox,#selltags,#lobby,#conn,#newgame,#credit,#bigclock,#dicesum){display:none!important}
+body[data-screen="gate"] :is(#stage,#cards,#hub,#zoom,#soundpanel,#banner,#modal,#info,#status,#achievement,#sellbox,#selltags,#lobby,#conn,#newgame,#bigclock,#dicesum){display:none!important}
 @media (max-width:850px){#gate{align-items:start}.gate-layout{grid-template-columns:1fr;gap:28px}.gate-brand{transform:scale(.72);margin:-48px 0 -50px}.gate-card{width:min(520px,100%);box-sizing:border-box;justify-self:center;padding:26px 24px}.gate-ribbon.gold{min-width:min(430px,90vw)}}
 @media (max-width:480px){.gate-layout{gap:14px}.gate-brand{transform:scale(.58);margin:-72px 0 -78px}.gate-card{padding:22px 18px;border-width:3px;border-radius:18px}.gate-actions{grid-template-columns:1fr}.gate-card h1{font-size:27px}.gate-idle{font-size:11px}}
 @media (prefers-reduced-motion:reduce){.gate-pattern{animation:none}}
@@ -272,4 +282,5 @@ body[data-mode="net"] #newgame{display:none}
 #modal.peek{background:transparent;pointer-events:none}
 
 @media (max-width:760px){ #bigclock{top:auto;bottom:calc(56px + env(safe-area-inset-bottom,0px));font-size:22px;padding:4px 12px} }
+@media (max-width:560px){#soundpanel{right:16px;top:calc(132px + env(safe-area-inset-top,0px))}}
 .who .kick{border:0;background:#ffe3e8;color:#d6304a;width:26px;height:26px;border-radius:50%;font:800 16px/1 var(--display);margin-left:6px}
