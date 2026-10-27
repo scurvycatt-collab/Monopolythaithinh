@@ -152,24 +152,32 @@ function tintHex(hex, k) {
   return `rgb(${m(r)},${m(g)},${m(b)})`;
 }
 // nền ô đất theo nhóm (kiểu Business Tour): màu nhóm pha nhạt + hoa văn lát gạch / lát ô
-const GROUND_PATTERN = { A: 'brick', B: 'tile', C: 'brick', D: 'tile', E: 'brick', F: 'tile', G: 'brick', H: 'tile' };
-function paintGround(ctx, x, y, w, h, group, seed) {
-  const col = GROUPS[group].color;
+// hoa văn lát nền theo nhóm (Kenney Pattern Pack, CC0): ảnh đen trắng → pha hai sắc của màu nền nhóm.
+// Phần chiếm diện tích lớn luôn lấy màu sáng, đường ron lấy màu đậm hơn ~14% để chữ trên ô vẫn dễ đọc.
+const groundImg = {}, groundCv = {};
+function loadGroundPatterns() {
+  return Promise.all(Object.entries(GROUPS).map(([g, x]) => new Promise((res) => {
+    const im = new Image(); im.onload = () => { groundImg[g] = im; res(); }; im.onerror = () => res(); im.src = `patterns/pattern_${x.pattern}.png`;
+  })));
+}
+function groundTile(g) {
+  if (groundCv[g] !== undefined) return groundCv[g];
+  const im = groundImg[g]; if (!im) return (groundCv[g] = null);
+  const N = im.width, cv = document.createElement('canvas'); cv.width = cv.height = N; const c = cv.getContext('2d');
+  c.drawImage(im, 0, 0); const d = c.getImageData(0, 0, N, N), px = d.data;
+  let sum = 0; for (let k = 0; k < px.length; k += 4) sum += px[k]; const inv = sum / (px.length / 4) < 128;
+  const hex = GROUPS[g].ground, n = parseInt(hex.slice(1), 16), L = [n >> 16, (n >> 8) & 255, n & 255], Dk = L.map((v) => Math.round(v * 0.86));
+  for (let k = 0; k < px.length; k += 4) { let t = px[k] / 255; if (inv) t = 1 - t; for (let j = 0; j < 3; j++) px[k + j] = Math.round(Dk[j] + (L[j] - Dk[j]) * t); px[k + 3] = 255; }
+  c.putImageData(d, 0, 0); return (groundCv[g] = cv);
+}
+function paintGround(ctx, x, y, w, h, group) {
   ctx.fillStyle = GROUPS[group].ground; ctx.fillRect(x, y, w, h);
-  const r = rng0(seed + 7);
-  for (let n = 0; n < 14; n++) { ctx.fillStyle = r() < 0.5 ? 'rgba(255,255,255,.22)' : tintHex(col, 0.4).replace('rgb', 'rgba').replace(')', ',.35)'); ctx.beginPath(); ctx.ellipse(x + r() * w, y + r() * h, 10 + r() * 26, 6 + r() * 12, r() * 3, 0, 7); ctx.fill(); }
-  ctx.strokeStyle = tintHex(col, 0.5).replace('rgb', 'rgba').replace(')', ',.55)'); ctx.lineWidth = 3;
-  const s = w / 4;
-  if (GROUND_PATTERN[group] === 'brick') {
-    for (let row = 0, yy = y; yy < y + h; row++, yy += s / 2) {
-      ctx.beginPath(); ctx.moveTo(x, yy); ctx.lineTo(x + w, yy); ctx.stroke();
-      for (let xx = x + (row % 2 ? s / 2 : 0); xx < x + w; xx += s) { ctx.beginPath(); ctx.moveTo(xx, yy); ctx.lineTo(xx, Math.min(y + h, yy + s / 2)); ctx.stroke(); }
-    }
-  } else {
-    for (let xx = x + s; xx < x + w - 2; xx += s) { ctx.beginPath(); ctx.moveTo(xx, y); ctx.lineTo(xx, y + h); ctx.stroke(); }
-    for (let yy = y + s; yy < y + h - 2; yy += s) { ctx.beginPath(); ctx.moveTo(x, yy); ctx.lineTo(x + w, yy); ctx.stroke(); }
+  const tile = groundTile(group);
+  if (tile) {
+    const pat = ctx.createPattern(tile, 'repeat'); pat.setTransform(new DOMMatrix().translate(x, y).scale(0.5));
+    ctx.fillStyle = pat; ctx.fillRect(x, y, w, h);
   }
-  ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 4; ctx.strokeRect(x + 2, y + 2, w - 4, h - 4);
+  ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 4; ctx.strokeRect(x + 2, y + 2, w - 4, h - 4);
 }
 function paintPaving(ctx, x, y, w, h, col) {
   ctx.fillStyle = col; ctx.fillRect(x, y, w, h);
@@ -1320,6 +1328,7 @@ async function detectServer() {
     seatSetup(); markSeen();
     await loadModels();
     await HK.loadKit('models', (d, n) => { $('#loadmsg').textContent = `Tải mô hình 3D ${d}/${n}`; });
+    await loadGroundPatterns();
     buildTiles(); decorate();
     resize();
     $('#loading').remove();

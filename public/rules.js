@@ -42,11 +42,12 @@
   const LEVEL_NAMES = ['Ô đất', 'Nhà 1', 'Nhà 2', 'Nhà 3', 'Khách sạn']; // = Land, Villa, Building, Hotel, Landmark
 
   const GROUPS = {
-    // color: màu nhóm (dải tiêu đề, thẻ thông tin); ground: màu nền ô đất trên bàn (kiểu Business Tour)
-    A: { name: 'Tây Ban Nha', color: '#c27a45', ground: '#ebc9a6' }, B: { name: 'Trung Quốc', color: '#e2483d', ground: '#f6b9ad' },
-    C: { name: 'Ý', color: '#4fae52', ground: '#c7e7b4' }, D: { name: 'Đức', color: '#e0a514', ground: '#f6e19a' },
-    E: { name: 'Anh – Úc', color: '#20a99c', ground: '#b4e3dc' }, F: { name: 'Mỹ', color: '#8a63e8', ground: '#d6c9f4' },
-    G: { name: 'Pháp', color: '#e05aa0', ground: '#f7c4de' }, H: { name: 'Nhật Bản', color: '#3a8ff0', ground: '#bed9f6' },
+    // color: màu nhóm (dải tiêu đề, thẻ thông tin); ground: màu nền pastel của ô đất; pattern: hoa văn lát nền (Kenney Pattern Pack, CC0)
+    // nhóm liền kề trên bàn xen kẽ tông nóng / lạnh để không lẫn vào nhau
+    A: { name: 'Tây Ban Nha', color: '#e8843f', ground: '#ffc9a0', pattern: 18 }, B: { name: 'Trung Quốc', color: '#2fae6b', ground: '#a8e6c3', pattern: 72 },
+    C: { name: 'Ý', color: '#e0558f', ground: '#f9b3cf', pattern: 79 }, D: { name: 'Đức', color: '#3d8fe0', ground: '#a9d3f5', pattern: 17 },
+    E: { name: 'Anh – Úc', color: '#d9a40f', ground: '#fbe38e', pattern: 22 }, F: { name: 'Mỹ', color: '#8a63e8', ground: '#cbb8f2', pattern: 14 },
+    G: { name: 'Pháp', color: '#e0564a', ground: '#f7a9a0', pattern: 60 }, H: { name: 'Nhật Bản', color: '#17a8a2', ground: '#9ee0dd', pattern: 59 },
   };
 
   // bố cục bàn theo Business Tour; [loại, tên, nhóm, giá đất]
