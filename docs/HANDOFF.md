@@ -42,6 +42,7 @@
 - Danh sách map nằm trong `public/rules.js` (`MAPS`). Room lưu lựa chọn trong `settings.mapId`; `map-1` là map hiện tại và mặc định. Khi thêm map phải bổ sung asset/renderer, entry `MAPS`, kiểm thử và tài liệu cùng nhau.
 - Luồng vào lại từ máy khác dùng chính `/api/join`: `G.byName` tìm username cũ trong room; nếu ghế offline thì trả lại cùng `id`/`token`, nếu online thì 409. Client nhận cờ `rejoined` và lưu phiên room-scoped như bình thường.
 - Khi lượt chuyển sang người mới, client hiện banner toàn màn hình `Đến lượt…`; quân cờ dùng chung chiều cao `TOKEN_HEIGHT = 1.08`, tương đương lớn hơn kích thước cũ khoảng 20%.
+- Màu sở hữu của Gấu trúc (trước đây là cam) là vàng `#f4c430`. `G.ensureHost` và `seatSetup` đồng bộ lại màu theo nhân vật để cả room cloud và bản lưu local cũ nhận màu mới.
 - Đã thử bằng `wrangler dev`: `TTM_URL=http://127.0.0.1:8787/ node test/e2e.js` qua; alarm tự đi khi hết giờ bước đã thử. Production dùng domain thương hiệu và base path ghi trong `docs/CLOUDFLARE.md`.
 - Phòng chờ thêm hành động `kick` (mời ra ghế đang mất kết nối) ở cả server.js và worker.js.
 - Hướng dẫn: `docs/CLOUDFLARE.md`.

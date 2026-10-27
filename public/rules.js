@@ -10,7 +10,7 @@
    ============================================================================ */
 (function (root) {
   'use strict';
-  const VERSION = '1.6.2';
+  const VERSION = '1.6.3';
 
   /* ===================== LỚP 1 — THÔNG SỐ ===================== */
   const CONFIG = {
@@ -83,7 +83,7 @@
   // nhân vật (Cube Pets, Kenney CC0): mỗi người một con, màu đi theo nhân vật
   const PETS = [
     { id: 'animal-dog', n: 'Chó', c: '#ec3f78' }, { id: 'animal-cat', n: 'Mèo', c: '#2c8ff0' },
-    { id: 'animal-fox', n: 'Cáo', c: '#3cb043' }, { id: 'animal-panda', n: 'Gấu trúc', c: '#f5a20a' },
+    { id: 'animal-fox', n: 'Cáo', c: '#3cb043' }, { id: 'animal-panda', n: 'Gấu trúc', c: '#f4c430' },
   ];
 
   // Danh sách map có thể chọn trong room. Map hiện tại là map mặc định;

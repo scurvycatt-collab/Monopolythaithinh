@@ -30,7 +30,7 @@ let presence = {}, skew = 0, proxySec = 15;
 let ROOM = '', ROOM_GATE = false, pendingJoinName = '', joiningRoom = false;
 let boardReady = false, boardReadyPromise = null, frameRunning = false;
 const now = () => Date.now() + skew;   // giờ theo server
-function seatSetup() { seatOf = {}; S.players.forEach((p, k) => { seatOf[p.id] = { color: p.color, pet: p.pet || G.PETS[k % G.PETS.length].id, corner: CORNERS[k % 4] }; }); }
+function seatSetup() { seatOf = {}; S.players.forEach((p, k) => { const pet = p.pet || G.PETS[k % G.PETS.length].id, def = G.PETS.find((x) => x.id === pet); p.color = def ? def.c : p.color; seatOf[p.id] = { color: p.color, pet, corner: CORNERS[k % 4] }; }); }
 const curP = () => (S.phase === 'play' ? S.players[S.turn] : null);
 const isMe = (pid) => MODE === 'local' || (!!me && me.id === pid);
 const myTurn = () => !!curP() && isMe(curP().id);

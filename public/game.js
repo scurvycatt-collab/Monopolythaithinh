@@ -91,6 +91,8 @@
   const byId = (s, id) => s.players.find((p) => p.id === id);
   const alive = (s) => s.players.filter((p) => !p.bankrupt);
   function ensureHost(s) {
+    // Đồng bộ màu theo nhân vật để các room/file lưu từ phiên bản cũ cũng nhận bảng màu mới.
+    s.players.forEach((p) => { const pet = PETS.find((x) => x.id === p.pet); if (pet) p.color = pet.c; });
     if (!s.hostId || !byId(s, s.hostId)) s.hostId = s.players.length ? s.players[0].id : null;
     return s.hostId;
   }
