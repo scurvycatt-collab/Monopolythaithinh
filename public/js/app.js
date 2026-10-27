@@ -77,7 +77,7 @@ function renderSoundSettings() {
   $('#turn-enabled').checked = !!soundPrefs.turn; $('#turn-volume').value = soundPrefs.turnVolume;
   $('#music-volume').disabled = !soundPrefs.music; $('#turn-volume').disabled = !soundPrefs.turn;
   $('#graphics-level').value = graphicsLevel;
-  $('#settings-leave').classList.toggle('show', MODE === 'net' && !!me);
+  $('#settings-leave').classList.toggle('show', MODE === 'net' && ROOM_GATE && !!ROOM);
 }
 function updateSoundPref(key, value) { soundPrefs[key] = value; saveSoundPrefs(); renderSoundSettings(); syncMusic(); }
 $('#soundbtn').onclick = () => { unlockAudio(); renderSoundSettings(); $('#soundpanel').classList.toggle('show'); };
@@ -88,10 +88,10 @@ $('#turn-enabled').onchange = (e) => { updateSoundPref('turn', e.target.checked)
 $('#turn-volume').oninput = (e) => { updateSoundPref('turnVolume', Number(e.target.value)); };
 $('#graphics-level').onchange = (e) => setGraphicsLevel(e.target.value);
 $('#settings-leave').onclick = async () => {
-  if (MODE !== 'net' || !me) return;
+  if (MODE !== 'net' || !ROOM_GATE || !ROOM) return;
   const button = $('#settings-leave'); button.disabled = true;
   try {
-    if (S.phase === 'lobby') await api('api/act', { token: me.token, type: 'leave' });
+    if (me && S.phase === 'lobby') await api('api/act', { token: me.token, type: 'leave' });
     exitRoom();
   } catch (e) { toast(e.message); button.disabled = false; }
 };
@@ -106,8 +106,8 @@ let MODE = 'local';
 let S = G.createState();  // trạng thái ván (bản công khai từ server, hoặc bản trong máy)
 let seatOf = {};          // id -> { color, pet, corner }
 let me = null;            // chế độ mạng: { id, token } của mình
-let presence = {}, skew = 0, proxySec = 15;
-let ROOM = '', ROOM_GATE = false, pendingJoinName = '', joiningRoom = false;
+let presence = {}, viewers = [], skew = 0, proxySec = 15;
+let ROOM = '', ROOM_GATE = false, WATCH_MODE = false, pendingJoinName = '', pendingRoomMap = '', joiningRoom = false;
 let boardReady = false, boardReadyPromise = null, frameRunning = false;
 const now = () => Date.now() + skew;   // giờ theo server
 function seatSetup() { seatOf = {}; S.players.forEach((p, k) => { const pet = p.pet || G.PETS[k % G.PETS.length].id, def = G.PETS.find((x) => x.id === pet); p.color = def ? def.c : p.color; seatOf[p.id] = { color: p.color, pet, corner: CORNERS[k % 4] }; }); }
@@ -524,10 +524,11 @@ function partsOf(obj) {
   });
 }
 function animate(obj, mode, delay, onDone) {
-  if (REDUCED) { if (mode === 'sell') onDone && onDone(); return 0; }
   const parts = partsOf(obj).sort((p, q) => (p.y - q.y) || (p.h - q.h) || (q.x - p.x));
   if (mode === 'sell') parts.reverse();
-  const n = parts.length, spread = mode === 'build' ? (n > 1 ? BUILD_SPREAD : 0) : Math.min(700, n * 70), dur = mode === 'build' ? (n > 1 ? BUILD_DUR : BUILD_MS) : 360;
+  const motionScale = REDUCED ? 0.55 : 1;
+  const n = parts.length, spread = (mode === 'build' ? (n > 1 ? BUILD_SPREAD : 0) : Math.min(700, n * 70)) * motionScale;
+  const dur = (mode === 'build' ? (n > 1 ? BUILD_DUR : BUILD_MS) : 360) * motionScale;
   parts.forEach((p, k) => { p.at = n > 1 ? Math.pow(k / (n - 1), 0.85) * spread : 0; });
   const an = { obj, mode, parts, t0: performance.now() + (delay || 0), dur, total: spread + dur, onDone };
   stepAnim(an, performance.now()); anims.push(an);
@@ -647,7 +648,7 @@ async function hop(pid, path, onTile) {
     const from = t.position.clone(); dispPos[pid] = pos;
     const to = tokenSpot(pid, pos); to.y = TOPY;
     t.rotation.y = FACE_CAM;
-    const dur = REDUCED ? 1 : path.length > 10 ? 120 : 190;
+    const dur = REDUCED ? (path.length > 10 ? 90 : 120) : (path.length > 10 ? 120 : 190);
     const t0 = performance.now();
     await new Promise((res) => {
       const step = () => {
@@ -684,7 +685,7 @@ async function rollDice(a, b) {
   const startP = [new THREE.Vector3(-3.2, 4.5, -2.4), new THREE.Vector3(-2.4, 5, -3.1)];
   const finalQ = [a, b].map((v, k) => new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), (k ? 0.5 : -0.3) + Math.random() * 0.6).multiply(new THREE.Quaternion().setFromEuler(FACE_UP[v])));
   const axes = [0, 1].map(() => new THREE.Vector3(Math.random() - .5, Math.random() - .5, Math.random() - .5).normalize());
-  const dur = REDUCED ? 1 : 1150, t0 = performance.now();
+  const dur = REDUCED ? 650 : 1150, t0 = performance.now();
   await new Promise((res) => {
     const step = () => {
       const k = Math.min(1, (performance.now() - t0) / dur);
@@ -813,7 +814,7 @@ function burstConfetti(i) {
 function stepConfetti(now, dt) {
   for (let k = confetti.length - 1; k >= 0; k--) {
     const c = confetti[k], age = (now - c.t0) / 1000;
-    c.v.y -= 4.5 * dt; c.v.multiplyScalar(0.985); c.m.position.addScaledVector(c.v, dt); c.m.rotation.set(age * c.spin, age * c.spin * 0.7, 0);
+    c.v.y -= 4.5 * dt; c.v.multiplyScalar(Math.pow(0.985, dt * 60)); c.m.position.addScaledVector(c.v, dt); c.m.rotation.set(age * c.spin, age * c.spin * 0.7, 0);
     if (c.m.position.y < TOPY) c.m.position.y = TOPY, c.v.set(0, 0, 0);
     c.m.material.opacity = Math.max(0, 1 - Math.max(0, age - 2) / 0.8);
     if (age > 2.8) { scene.remove(c.m); confetti.splice(k, 1); }
@@ -845,11 +846,13 @@ function frame(now) {
   const dt = Math.min(0.05, Math.max(0, clockT - (frame.last || clockT))); frame.last = clockT;
   stepAnims(now);
   if (!REDUCED) { specials.forEach((o) => o.userData.update && o.userData.update(clockT, dt)); bonusFlags.forEach((o, k) => o.userData.update(clockT + k * 0.7));  if (tourTex) tourTex.offset.set((-clockT * 0.035) % 1, (-clockT * 0.035) % 1); }
-  for (const p of S ? S.players : []) { const t = tokens[p.id]; if (t && t.userData.to && dispPos[p.id] === undefined) { t.position.lerp(new THREE.Vector3(t.userData.to.x, TOPY, t.userData.to.z), 0.25); } }
+  const followAlpha = 1 - Math.pow(1 - 0.25, dt * 60);
+  for (const p of S ? S.players : []) { const t = tokens[p.id]; if (t && t.userData.to && dispPos[p.id] === undefined) { t.position.lerp(new THREE.Vector3(t.userData.to.x, TOPY, t.userData.to.z), followAlpha); } }
   Object.values(tokens).forEach((t) => { const g = t.userData.controlGlow; if (g && g.visible) { const pulse = 1.075 + Math.sin(clockT * 4.5) * 0.012; g.scale.setScalar(pulse); t.userData.glowMaterial.opacity = 0.58 + Math.sin(clockT * 4.5) * 0.12; } });
   placeSellTags(); placeOverlays(); stepConfetti(now, dt);
   if (festBanner) { // bảng lễ hội bật ra rồi đứng yên
-    const k = festBanner.userData.t0 < 0 || REDUCED ? 1 : Math.min(1, (now - festBanner.userData.t0) / 650);
+    const festDuration = REDUCED ? 300 : 650;
+    const k = festBanner.userData.t0 < 0 ? 1 : Math.min(1, (now - festBanner.userData.t0) / festDuration);
     const e = k < 1 ? 1 + 2.2 * Math.pow(k - 1, 3) + 1.2 * Math.pow(k - 1, 2) : 1;
     festBanner.scale.set(Math.max(0.001, e), Math.max(0.001, e), 1);
   }
@@ -867,8 +870,8 @@ function startFrame() {
 /* ---------------- giao diện ---------------- */
 let busy = false;
 // Tiền bị trừ chạy nhanh để không làm chậm nhịp chơi; tiền nhận vẫn đồng bộ với hoạt ảnh xây nhà.
-const MONEY_MS = REDUCED ? 1 : BUILD_MS;
-const MONEY_DEBIT_MS = REDUCED ? 1 : 700;
+const MONEY_MS = REDUCED ? 900 : BUILD_MS;
+const MONEY_DEBIT_MS = REDUCED ? 400 : 700;
 const target = {}, shown = {};      // số tiền đích / số đang hiển thị của mỗi người
 const fmtDelta = (d) => { const a = Math.abs(d), v = a >= 1000 ? (a / 1000).toFixed(2).replace(/\.?0+$/, '') + 'M' : (Math.round(a * 10) / 10) + 'K'; return (d > 0 ? '+$' : '-$') + v; };
 function moneyEl(pid) { return $(`#cards [data-p="${pid}"] .num`); }
@@ -913,7 +916,7 @@ function renderCards(delay = 0) {
     if (!p.bankrupt) av.querySelector('.stamp')?.remove();
     const n = G.ownedBy(S, p.id).length, tags = [`${n} thành phố`];
     if (!online(p.id)) tags.unshift('⚠ mất kết nối');
-    if (p.island) tags.push('kẹt đảo'); if (p.tourPending) tags.push('sắp bay'); if (p.shields) tags.push(`🛡️ VIP${p.shields > 1 ? ' x' + p.shields : ''}`); if (p.escapeCards) tags.push('🛟 thoát đảo');
+    if (p.island) tags.push('kẹt đảo'); if (p.tourPending) tags.push('sắp bay'); if (p.shields) tags.push(`🛡️ VIP${p.shields > 1 ? ' ×' + p.shields : ''}`); if (p.escapeCards) tags.push(`🛟 Thoát đảo${p.escapeCards > 1 ? ' ×' + p.escapeCards : ''}`);
     card.querySelector('small').textContent = tags.join(' · ');
     const powerCuts = G.ownedBy(S, p.id).filter((i) => G.outaged(S, i));
     const power = card.querySelector('.power');
@@ -1284,7 +1287,8 @@ async function playOut() {
   const moves = S.moves.filter((m) => m.seq > seen.move).sort((a, b) => a.seq - b.seq);
   const card = S.lastCard && S.lastCard.seq !== seen.card ? S.lastCard : null;
   const notice = S.notice && S.notice.seq !== seen.notice ? S.notice : null;
-  const achievements = (S.achievements || []).filter((x) => x.seq > seen.achievement).sort((a, b) => a.seq - b.seq);
+  // Khi ván đã có người thắng, ưu tiên duy nhất màn kết quả; không phát lại các mốc "sắp thắng" vừa sinh cùng hành động cuối.
+  const achievements = S.phase === 'over' ? [] : (S.achievements || []).filter((x) => x.seq > seen.achievement).sort((a, b) => a.seq - b.seq);
   markSeen();
   if (diceNew) { await rollDice(diceNew.a, diceNew.b); await sleep(200); }
   for (const mv of moves) {
@@ -1339,14 +1343,17 @@ const NAME_KEY = 'tt-monopoly-name';
 const meKey = () => `${ME_KEY}:${ROOM || 'main'}`;
 function loadMe() { try { return JSON.parse(localStorage.getItem(meKey()) || 'null'); } catch (e) { return null; } }
 function setMe(m, reconnect = true) { me = m; try { m ? localStorage.setItem(meKey(), JSON.stringify(m)) : localStorage.removeItem(meKey()); } catch (e) { /* bỏ qua */ } if (reconnect) connect(); }
-let es = null;
+let es = null, connectionEpoch = 0;
 function connect() {
+  const epoch = ++connectionEpoch;
   if (es) es.close();
-  es = new EventSource(roomEndpoint(location.href, 'events', ROOM, me ? { token: me.token } : {}));
-  es.onopen = () => $('#conn').classList.remove('show');
-  es.onerror = () => $('#conn').classList.add('show');
-  es.onmessage = (e) => {
-    const d = JSON.parse(e.data); presence = d.presence || {}; proxySec = d.proxySec || 15; skew = d.now - Date.now(); onState(d.state);
+  const source = new EventSource(roomEndpoint(location.href, 'events', ROOM, me ? { token: me.token } : (WATCH_MODE ? { viewer: lobbyDraftName } : {})));
+  es = source;
+  source.onopen = () => { if (epoch === connectionEpoch) $('#conn').classList.remove('show'); };
+  source.onerror = () => { if (epoch === connectionEpoch) $('#conn').classList.add('show'); };
+  source.onmessage = (e) => {
+    if (epoch !== connectionEpoch) return;
+    const d = JSON.parse(e.data); presence = d.presence || {}; viewers = d.viewers || []; proxySec = d.proxySec || 15; skew = d.now - Date.now(); renderWatchBadge(); onState(d.state, epoch);
     if (ROOM_GATE) autoJoinRoom(d.state);
   };
 }
@@ -1357,13 +1364,15 @@ async function autoJoinRoom(state) {
   if (state.phase !== 'lobby' && !existing) { lobbyDraftName = pendingJoinName; pendingJoinName = ''; return; }
   if (state.players.length >= CFG.MAX_PLAYERS && !existing) { lobbyDraftName = pendingJoinName; pendingJoinName = ''; return; }
   const pet = (G.PETS.find((x) => !state.players.some((p) => p.pet === x.id)) || {}).id;
-  const name = pendingJoinName;
+  const name = pendingJoinName, mapId = pendingRoomMap;
   joiningRoom = true;
   try {
-    acceptSession(await api('api/join', { name, pet }));
+    acceptSession(await api('api/join', { name, pet, mapId }));
     pendingJoinName = '';
+    pendingRoomMap = '';
   } catch (e) {
     pendingJoinName = '';
+    pendingRoomMap = '';
     lobbyDraftName = name;
     toast(e.message);
     renderLobby();
@@ -1371,16 +1380,25 @@ async function autoJoinRoom(state) {
 }
 function acceptSession(session) {
   if (session.rejoined) toast('Đã vào lại ghế cũ');
+  WATCH_MODE = false;
   setMe({ id: session.id, token: session.token });
 }
 const queue = []; let draining = false;
-function onState(ns) { queue.push(ns); if (!draining) drain(); }
+function onState(ns, epoch = connectionEpoch) {
+  if (epoch !== connectionEpoch) return;
+  const newest = queue.length ? queue[queue.length - 1].state : S;
+  if (newest && ns.version < newest.version) return;
+  queue.push({ state: ns, epoch }); if (!draining) drain();
+}
 async function drain() {
   draining = true;
   while (queue.length) {
-    const ns = queue.length > 4 ? queue.splice(0).pop() : queue.shift(); // tụt lại quá xa thì nhảy thẳng tới bản mới nhất
+    const item = queue.length > 4 ? queue.splice(0).pop() : queue.shift(); // tụt lại quá xa thì nhảy thẳng tới bản mới nhất
+    if (item.epoch !== connectionEpoch) continue;
+    const ns = item.state;
+    if (ns.version < S.version) continue; // không cho gói SSE cũ kéo giao diện lùi trạng thái
     const ids = (x) => x.players.map((p) => p.id).join();
-    const fresh = ns.phase === 'lobby' || ns.startedAt !== S.startedAt || ids(ns) !== ids(S) || ns.version < S.version;
+    const fresh = ns.phase === 'lobby' || ns.startedAt !== S.startedAt || ids(ns) !== ids(S);
     const same = ns.version === S.version && !fresh;
     S = ns;
     if (me && !S.players.some((p) => p.id === me.id)) setMe(null); // ghế của mình không còn (rời phòng)
@@ -1388,6 +1406,7 @@ async function drain() {
     if (same) { renderCards(); renderHub(); renderLobby(); continue; } // chỉ đổi trạng thái online
     if (fresh) { resetView(); continue; }
     await playOut();
+    if (item.epoch !== connectionEpoch) continue;
     renderLobby();
   }
   draining = false;
@@ -1411,12 +1430,17 @@ let lobbyOpen = false;   // chế độ một máy: đang mở phòng chờ
 let lobbyDraftName = ''; // chế độ mạng: tên đang gõ dở khi đổi nhân vật
 function renderLobby() {
   const el = $('#lobby');
-  const show = MODE === 'net' ? (S.phase === 'lobby' || (S.phase === 'play' && !me)) : lobbyOpen;
+  const show = MODE === 'net' ? (!WATCH_MODE && (S.phase === 'lobby' || (S.phase === 'play' && !me))) : lobbyOpen;
   el.classList.toggle('show', show);
   if (!show) return;
   if (MODE === 'local') return lobbyLocal(el);
   if (S.phase === 'play') return lobbyClaim(el);
   return lobbyNet(el);
+}
+function renderWatchBadge() {
+  const el = $('#watchbadge');
+  el.innerHTML = WATCH_MODE ? `👁 Đang xem: ${esc(lobbyDraftName)} · ${viewers.length || 1} khán giả` : '';
+  el.classList.toggle('show', WATCH_MODE);
 }
 const petGrid = (sel, taken, attr) => `<div class="pets">${G.PETS.map((x) => `<button type="button" class="pet${x.id === sel ? ' on' : ''}" ${attr}="${x.id}" ${taken.has(x.id) && x.id !== sel ? 'disabled' : ''} style="--c:${x.c}"><img alt="" src="${petImg(x.id)}"><span>${x.n}</span></button>`).join('')}</div>`;
 const timeRow = (cur, attr) => `<div class="times">${CFG.TIME_OPTIONS.map((m) => `<button type="button" class="pill ${m === cur ? '' : 'ghost'}" ${attr}="${m}">${timeLabel(m)}</button>`).join('')}</div>`;
@@ -1464,8 +1488,8 @@ function lobbyClaim(el) {
   el.innerHTML = sheet('#2c8ff0', 'Ván đang diễn ra', 'Bạn là ai?', off.length ? `<div class="pets">${off.map((p) => `<button type="button" class="pet" data-id="${p.id}" style="--c:${p.color}"><img alt="" src="${petImg(p.pet)}"><span>${esc(p.name)}</span></button>`).join('')}</div>` : '<p class="center">Mọi người chơi đều đang online.</p>',
     '<button class="pill ghost" type="button" id="lwatch">Chỉ xem</button>');
   el.querySelectorAll('[data-id]').forEach((b) => { b.onclick = async () => { try { setMe(await api('api/claim', { id: b.dataset.id })); } catch (e) { toast(e.message); } }; });
-  $('#lwatch').onclick = () => { el.classList.remove('show'); lobbyClaim.watch = true; };
-  if (lobbyClaim.watch) el.classList.remove('show');
+  $('#lwatch').onclick = () => { el.classList.remove('show'); WATCH_MODE = true; };
+  if (WATCH_MODE) el.classList.remove('show');
 }
 // chơi chung một máy: tự thêm 2–4 người
 function lobbyLocal(el) {
@@ -1516,8 +1540,10 @@ function newGameFlow() {
 function showRoomGate() {
   if (!ROOM_GATE) return;
   frameRunning = false;
+  connectionEpoch++;
   if (es) es.close();
   es = null;
+  queue.length = 0;
   $('#conn').classList.remove('show');
   $('#lobby').classList.remove('show');
   const params = new URLSearchParams(location.search);
@@ -1525,21 +1551,28 @@ function showRoomGate() {
   try { savedName = localStorage.getItem(NAME_KEY) || ''; } catch (e) { /* bỏ qua */ }
   $('#gname').value = savedName || lobbyDraftName || '';
   $('#groom').value = normalizeRoom(params.get('room') || ROOM);
+  const selectedMap = MAPS.some((map) => map.id === $('#gmap').value) ? $('#gmap').value : MAPS[0].id;
+  $('#gmap').innerHTML = MAPS.map((map) => `<option value="${esc(map.id)}">${esc(map.name)}${map.default ? ' (Mặc định)' : ''}</option>`).join('');
+  $('#gmap').value = selectedMap;
   document.body.dataset.screen = 'gate';
   syncMusic();
   $('#loading').classList.add('hidden');
   $('#gate').classList.add('show');
   setTimeout(() => ($('#groom').value ? $('#gname') : $('#groom')).focus(), 0);
 }
-async function enterRoom(create) {
+async function enterRoom(create, watch = false) {
   if (enterRoom.busy) return;
   const name = $('#gname').value.replace(/\s+/g, ' ').trim().slice(0, 16);
   if (!name) { toast('Hãy nhập username'); return $('#gname').focus(); }
   const room = selectRoomCode($('#groom').value, create);
   if (!validRoom(room)) { toast('Mã phòng cần 3–24 ký tự'); return $('#groom').focus(); }
+  const mapId = $('#gmap').value;
+  if (create && !MAPS.some((map) => map.id === mapId)) { toast('Hãy chọn bản đồ'); return $('#gmap').focus(); }
   ROOM = room;
+  WATCH_MODE = watch;
   lobbyDraftName = name;
-  pendingJoinName = name;
+  pendingJoinName = watch ? '' : name;
+  pendingRoomMap = create ? mapId : '';
   try { localStorage.setItem(NAME_KEY, name); } catch (e) { /* bỏ qua */ }
   const url = new URL(location.href); url.searchParams.set('room', ROOM); history.replaceState(null, '', url);
   $('#gate').classList.remove('show');
@@ -1547,10 +1580,10 @@ async function enterRoom(create) {
   $('#loadmsg').textContent = 'Tải bàn cờ và mô hình 3D';
   $('#loading').classList.remove('hidden');
   enterRoom.busy = true;
-  $('#gcreate').disabled = true; $('#gjoin').disabled = true;
+  $('#gcreate').disabled = true; $('#gjoin').disabled = true; $('#gwatch').disabled = true;
   try {
     await prepareBoard();
-    me = loadMe();
+    me = watch ? null : loadMe();
     invite = [];
     connect();
     loadInvite();
@@ -1559,18 +1592,23 @@ async function enterRoom(create) {
     console.error(e);
   } finally {
     enterRoom.busy = false;
-    $('#gcreate').disabled = false; $('#gjoin').disabled = false;
+    $('#gcreate').disabled = false; $('#gjoin').disabled = false; $('#gwatch').disabled = false;
   }
 }
 function exitRoom() {
   setMe(null, false);
+  WATCH_MODE = false;
   pendingJoinName = '';
+  pendingRoomMap = '';
   presence = {};
+  viewers = [];
+  renderWatchBadge();
   S = G.createState();
   showRoomGate();
 }
 $('#gcreate').onclick = () => enterRoom(true);
 $('#gjoin').onclick = () => enterRoom(false);
+$('#gwatch').onclick = () => enterRoom(false, true);
 $('#gname').onkeydown = (e) => { if (e.key === 'Enter') enterRoom(false); };
 $('#groom').onkeydown = (e) => { if (e.key === 'Enter') enterRoom(false); };
 $('#newgame').onclick = newGameFlow;

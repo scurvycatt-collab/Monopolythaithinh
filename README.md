@@ -39,7 +39,7 @@ Mở `public/index.html` qua một web server tĩnh bất kỳ (ví dụ GitHub 
 
 ## Chơi trên Cloudflare
 
-Mở bản cloud sẽ thấy main menu riêng, chưa hiện map. Nhập username rồi **Tạo phòng** hoặc nhập mã để **Vào phòng**. Khi tạo phòng, mã đã nhập sẽ được giữ nguyên; nếu để trống thì game tự sinh mã. Mỗi room code là một ván tách biệt; link mời và mã QR đã mang sẵn chính room code đó. Map, model 3D, SSE và Durable Object chỉ bắt đầu tải/chạy sau khi người chơi xác nhận vào room.
+Mở bản cloud sẽ thấy main menu riêng, chưa hiện map. Nhập username, chọn bản đồ rồi **Tạo phòng**, nhập username + mã để **Vào phòng**, hoặc chọn **Vào xem** bằng username để làm khán giả mà không chiếm ghế. Tên khán giả được hiện trong trạng thái xem nhưng không có token và không thể thao tác game. Khi tạo phòng, mã đã nhập sẽ được giữ nguyên; nếu để trống thì game tự sinh mã. Bản đồ được ghi ngay lúc người chơi đầu tiên tạo phòng; thao tác vào một phòng có sẵn không ghi đè lựa chọn của host. Mỗi room code là một ván tách biệt; link mời và mã QR đã mang sẵn chính room code đó. Map, model 3D, SSE và Durable Object chỉ bắt đầu tải/chạy sau khi người chơi xác nhận vào room.
 
 Người vào room đầu tiên là **host**. Chỉ host được đổi thời lượng/cấu hình room, mời người khác ra, bắt đầu hoặc reset ván; server từ chối các lệnh quản trị từ người chơi thường. Nếu host rời phòng chờ, quyền host chuyển cho người vào kế tiếp.
 

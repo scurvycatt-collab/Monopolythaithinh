@@ -62,7 +62,8 @@ function presence() {
   for (const p of state.players) o[p.id] = { on: isOnline(p.id), since: isOnline(p.id) ? 0 : (offlineSince.get(p.id) || Date.now()) };
   return o;
 }
-const payload = () => `data: ${JSON.stringify({ state: G.publicView(state), presence: presence(), now: Date.now(), proxySec: MANUAL_PROXY_SEC })}\n\n`;
+const viewers = () => [...new Set([...clients].filter((c) => !c.pid && c.viewer).map((c) => c.viewer))];
+const payload = () => `data: ${JSON.stringify({ state: G.publicView(state), presence: presence(), viewers: viewers(), now: Date.now(), proxySec: MANUAL_PROXY_SEC })}\n\n`;
 function broadcast() { const msg = payload(); for (const c of clients) c.res.write(msg); }
 function commit() { state.version++; save(); broadcast(); }
 
@@ -114,10 +115,11 @@ const byToken = (t) => (t ? state.players.find((p) => p.token === t) : null);
 
 function handleEvents(req, res, url) {
   const p = byToken(url.searchParams.get('token'));
+  const viewer = p ? '' : String(url.searchParams.get('viewer') || '').replace(/\s+/g, ' ').trim().slice(0, 16);
   res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache, no-transform', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
   res.write('retry: 1500\n\n');
   req.socket.setKeepAlive(true, 10000); req.socket.setNoDelay(true);
-  const c = { res, pid: p ? p.id : null };
+  const c = { res, pid: p ? p.id : null, viewer };
   clients.add(c);
   if (p) conns.set(p.id, (conns.get(p.id) || 0) + 1);
   broadcast();
@@ -142,9 +144,11 @@ async function handleApi(req, res, url) {
         offlineSince.set(existing.id, Date.now());
         return sendJSON(res, 200, { id: existing.id, token: existing.token, rejoined: true });
       }
+      const wasEmpty = state.players.length === 0;
       const id = 'p' + crypto.randomBytes(4).toString('hex');
       const token = crypto.randomBytes(18).toString('hex');
       G.addPlayer(state, { id, token, name: body.name, pet: body.pet });
+      if (wasEmpty && body.mapId) G.setSettings(state, { mapId: body.mapId });
       offlineSince.set(id, Date.now());
       commit();
       return sendJSON(res, 200, { id, token });

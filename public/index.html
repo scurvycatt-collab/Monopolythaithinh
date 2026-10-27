@@ -41,6 +41,7 @@
 <div id="info" role="dialog" aria-modal="true" aria-label="Thông tin ô"></div>
 <div id="status" role="alert"></div>
 <div id="achievement" role="alert" aria-live="assertive"></div>
+<div id="watchbadge" aria-live="polite"></div>
 <div id="sellbox"></div>
 <div id="selltags"></div>
 <div id="gate" role="dialog" aria-modal="true" aria-label="Chọn người chơi và phòng">
@@ -63,9 +64,12 @@
       <label class="gate-field">Username<input id="gname" maxlength="16" autocomplete="nickname" placeholder="Ví dụ: Bố"></label>
       <label class="gate-field">Mã phòng<input id="groom" maxlength="24" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Ví dụ: gia-dinh"></label>
       <p class="gate-note">Nhập mã bạn muốn, hoặc để trống khi tạo phòng để game tự sinh.</p>
+      <label class="gate-field gate-map-field">Bản đồ khi tạo phòng<select id="gmap" aria-label="Chọn bản đồ khi tạo phòng"></select></label>
+      <p class="gate-note">Lựa chọn này chỉ áp dụng khi tạo một phòng mới.</p>
       <div class="gate-actions">
         <button type="button" id="gcreate">Tạo phòng</button>
         <button type="button" id="gjoin">Vào phòng</button>
+        <button type="button" id="gwatch">Vào xem</button>
       </div>
     </section>
   </main>

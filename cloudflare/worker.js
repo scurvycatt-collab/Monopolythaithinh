@@ -63,7 +63,8 @@ export class GameRoom extends DurableObject {
     for (const p of this.state.players) o[p.id] = { on: this.isOnline(p.id), since: this.isOnline(p.id) ? 0 : (this.offlineSince.get(p.id) || Date.now()) };
     return o;
   }
-  payload() { return `data: ${JSON.stringify({ state: G.publicView(this.state), presence: this.presence(), now: Date.now(), proxySec: C.PROXY_SEC })}\n\n`; }
+  viewers() { return [...new Set([...this.clients].filter((c) => !c.pid && c.viewer).map((c) => c.viewer))]; }
+  payload() { return `data: ${JSON.stringify({ state: G.publicView(this.state), presence: this.presence(), viewers: this.viewers(), now: Date.now(), proxySec: C.PROXY_SEC })}\n\n`; }
   send(c, text) { c.writer.write(enc.encode(text)).catch(() => this.drop(c)); }
   broadcast() { const msg = this.payload(); for (const c of this.clients) this.send(c, msg); }
   async commit() {
@@ -130,8 +131,9 @@ export class GameRoom extends DurableObject {
 
   events(url) {
     const p = this.byToken(url.searchParams.get('token'));
+    const viewer = p ? '' : String(url.searchParams.get('viewer') || '').replace(/\s+/g, ' ').trim().slice(0, 16);
     const { readable, writable } = new TransformStream();
-    const c = { writer: writable.getWriter(), pid: p ? p.id : null };
+    const c = { writer: writable.getWriter(), pid: p ? p.id : null, viewer };
     c.writer.closed.catch(() => this.drop(c)); // trình duyệt đóng kết nối → mất kết nối ngay
     this.clients.add(c);
     if (p) this.conns.set(p.id, (this.conns.get(p.id) || 0) + 1);
@@ -164,8 +166,10 @@ export class GameRoom extends DurableObject {
           this.offlineSince.set(existing.id, Date.now());
           return json(200, { id: existing.id, token: existing.token, rejoined: true });
         }
+        const wasEmpty = s.players.length === 0;
         const id = 'p' + hex(4), token = hex(18);
         G.addPlayer(s, { id, token, name: body.name, pet: body.pet });
+        if (wasEmpty && body.mapId) G.setSettings(s, { mapId: body.mapId });
         this.offlineSince.set(id, Date.now());
         await this.commit();
         return json(200, { id, token });

@@ -30,9 +30,10 @@ async function post(p, body) {
   return { status: r.status, body: await r.json() };
 }
 // đọc một bản trạng thái từ luồng SSE rồi ngắt
-async function snapshot(token) {
+async function snapshot(token, viewer) {
   const ac = new AbortController();
-  const r = await fetch(BASE + 'events' + (token ? '?token=' + token : ''), { signal: ac.signal });
+  const params = new URLSearchParams(); if (token) params.set('token', token); if (viewer) params.set('viewer', viewer);
+  const r = await fetch(BASE + 'events' + (params.size ? '?' + params : ''), { signal: ac.signal });
   const rd = r.body.getReader(); let buf = '';
   for (;;) {
     const { value } = await rd.read(); buf += Buffer.from(value).toString();
@@ -44,7 +45,10 @@ async function snapshot(token) {
 (async () => {
   await start();
   const ok = (r) => { assert.strictEqual(r.status, 200, JSON.stringify(r.body)); return r.body; };
-  const a = ok(await post('api/join', { name: 'Bố', pet: 'animal-dog' }));
+  const a = ok(await post('api/join', { name: 'Bố', pet: 'animal-dog', mapId: 'map-1' }));
+  const watched = await snapshot(null, 'Ông xem');
+  assert.deepStrictEqual(watched.viewers, ['Ông xem'], 'khán giả phải có username nhưng không chiếm ghế');
+  assert.strictEqual(watched.state.players.length, 1, 'vào xem không được tạo người chơi');
   const aAgain = ok(await post('api/join', { name: '  Bố  ', pet: 'animal-panda' }));
   assert.deepStrictEqual([aAgain.id, aAgain.token, aAgain.rejoined], [a.id, a.token, true], 'username cũ + room cũ phải vào lại đúng ghế');
   assert.strictEqual((await post('api/join', { name: 'Mẹ', pet: 'animal-dog' })).status, 400, 'trùng nhân vật phải bị từ chối');

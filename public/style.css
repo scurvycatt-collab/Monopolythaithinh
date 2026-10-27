@@ -114,6 +114,7 @@ table.rank tr:nth-child(odd) td{background:#efe7d8}
 #achievement.show{display:grid}.achievement-card{width:min(520px,calc(100vw - 48px));box-sizing:border-box;padding:28px 30px;border:5px solid #fff;border-radius:26px;background:linear-gradient(145deg,#fff8cf,#ffd95a);box-shadow:0 12px 0 #d69c00,0 28px 60px rgba(18,45,65,.35);text-align:center;color:#31404a;animation:achievementIn .42s cubic-bezier(.2,.9,.3,1.25)}
 .achievement-card.warn{background:linear-gradient(145deg,#eaf6ff,#72c8ff);box-shadow:0 12px 0 #2586c2,0 28px 60px rgba(18,45,65,.35)}.achievement-icon{font-size:58px;line-height:1}.achievement-card h2{margin:8px 0 4px;font:900 clamp(30px,6vw,54px)/1 Rubik,var(--display);text-transform:uppercase}.achievement-card p{margin:8px auto 0;max-width:430px;font:800 17px/1.45 var(--body)}
 @keyframes achievementIn{from{opacity:0;transform:translateY(35px) scale(.78)}to{opacity:1;transform:none}}
+#watchbadge{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));z-index:6;display:none;transform:translateX(-50%);padding:7px 14px;border:2px solid rgba(255,255,255,.9);border-radius:999px;background:rgba(77,67,142,.9);color:#fff;font:800 12px var(--body);box-shadow:0 5px 15px rgba(30,50,90,.2)}#watchbadge.show{display:block}
 /* bán đất: chữ giữa bàn nền trắng 50%, nhãn giá bán trên từng ô */
 #sellbox{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:7;display:none;width:min(470px,calc(100% - 32px));padding:16px 18px 18px;border-radius:18px;background:rgba(255,255,255,.5);backdrop-filter:blur(2px);text-align:center;color:var(--ink)}
 #sellbox.show{display:block}
@@ -202,17 +203,19 @@ table.lvl tr.cur .ck{color:#fff}
 .gate-tagline{margin:0 0 20px;color:#199dd8;font-weight:800;line-height:1.45}
 .gate-field{display:block;margin:14px 0 0;color:#40525b;font:800 13px var(--body);letter-spacing:.02em}
 .gate-field input{display:block;width:100%;box-sizing:border-box;height:54px;margin-top:7px;padding:0 18px;border:3px solid #c6dadd;border-radius:27px;background:#fff;color:#26353d;font:800 18px var(--body);outline:none;transition:border-color .2s,box-shadow .2s}
-.gate-field input:focus{border-color:#199dd8;box-shadow:0 0 0 4px rgba(25,157,216,.14)}
+.gate-field select{display:block;width:100%;box-sizing:border-box;height:54px;margin-top:7px;padding:0 18px;border:3px solid #c6dadd;border-radius:27px;background:#fff;color:#26353d;font:800 16px var(--body);outline:none;appearance:auto}
+.gate-field input:focus,.gate-field select:focus{border-color:#199dd8;box-shadow:0 0 0 4px rgba(25,157,216,.14)}
 .gate-note{margin:12px 4px 0;color:#667982;font-size:12px;font-weight:650;line-height:1.5}
 .gate-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px}
 .gate-actions button{height:54px;border:0;border-radius:27px;color:#fff;font:900 17px var(--display);text-transform:uppercase;letter-spacing:.035em;transition:transform .08s,filter .2s}
 .gate-actions button:active{transform:translateY(3px)}
 #gcreate{background:linear-gradient(#35b5ed,#179edb);box-shadow:0 6px 0 #0876aa,0 12px 22px rgba(21,115,154,.24)}
 #gjoin{background:linear-gradient(#a8c82b,#86a916);box-shadow:0 6px 0 #617e09,0 12px 22px rgba(89,120,10,.22)}
+#gwatch{grid-column:1/-1;background:linear-gradient(#8d82d8,#6c60bd);box-shadow:0 6px 0 #50449b,0 12px 22px rgba(80,68,155,.22)}
 .gate-idle{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:20px;color:#71858d;font-size:12px;font-weight:700}.gate-idle i{width:8px;height:8px;border-radius:50%;background:#8daf17;box-shadow:0 0 0 4px rgba(141,175,23,.16)}
-body[data-screen="gate"] :is(#stage,#cards,#hub,#zoom,#soundpanel,#banner,#modal,#info,#status,#achievement,#sellbox,#selltags,#lobby,#conn,#newgame,#bigclock,#dicesum){display:none!important}
+body[data-screen="gate"] :is(#stage,#cards,#hub,#zoom,#soundpanel,#banner,#modal,#info,#status,#achievement,#watchbadge,#sellbox,#selltags,#lobby,#conn,#newgame,#bigclock,#dicesum){display:none!important}
 @media (max-width:850px){#gate{align-items:start}.gate-layout{grid-template-columns:1fr;gap:28px}.gate-brand{transform:scale(.72);margin:-48px 0 -50px}.gate-card{width:min(520px,100%);box-sizing:border-box;justify-self:center;padding:26px 24px}.gate-ribbon.gold{min-width:min(430px,90vw)}}
-@media (max-width:480px){.gate-layout{gap:14px}.gate-brand{transform:scale(.58);margin:-72px 0 -78px}.gate-card{padding:22px 18px;border-width:3px;border-radius:18px}.gate-actions{grid-template-columns:1fr}.gate-card h1{font-size:27px}.gate-idle{font-size:11px}}
+@media (max-width:480px){.gate-layout{gap:14px}.gate-brand{transform:scale(.58);margin:-72px 0 -78px}.gate-card{padding:22px 18px;border-width:3px;border-radius:18px}.gate-actions{grid-template-columns:1fr}.gate-card h1{font-size:27px}.gate-idle{font-size:11px}#gwatch{grid-column:auto}}
 @media (prefers-reduced-motion:reduce){.gate-pattern{animation:none}}
 #lobby{position:fixed;inset:0;z-index:24;display:none;place-items:center;padding:16px;background:rgba(18,44,70,.38);overflow:auto}
 #lobby.show{display:grid}

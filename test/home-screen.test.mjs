@@ -11,6 +11,8 @@ assert.match(html, /<body data-screen="boot">/);
 assert.match(html, /class="gate-layout"/);
 assert.match(html, /class="gate-brand"/);
 assert.match(html, /class="gate-card"/);
+assert.match(html, /id="gmap"/, 'room creation screen must include map selection');
+assert.match(html, /id="gwatch"/, 'home screen must offer spectator mode');
 assert.match(html, /id="soundbtn"/);
 assert.match(html, /id="music-enabled"/);
 assert.match(html, /id="turn-enabled"/);
@@ -29,8 +31,11 @@ assert.match(app, /place\(seatOf\[p\.id\]\.pet, TOKEN_HEIGHT, \{ byHeight: true 
 assert.match(app, /Đến lượt bạn!/);
 assert.match(app, /MODE === 'net' && !isMe\(p\.id\)/, 'network clients must not announce another player turn');
 assert.match(app, /MODE === 'net' \? 'Đến lượt bạn!' : `Đến lượt \$\{p\.name\}!`/);
-assert.match(app, /const MONEY_DEBIT_MS = REDUCED \? 1 : 700;/, 'debit animation must use the shorter duration');
+assert.match(app, /const MONEY_DEBIT_MS = REDUCED \? 400 : 700;/, 'debit animation must remain visible in reduced-motion mode');
 assert.match(app, /const duration = to < from \? MONEY_DEBIT_MS : MONEY_MS;/, 'only money deductions should use the faster animation');
+assert.doesNotMatch(app, /REDUCED \? 1 :/, 'reduced-motion mode must not collapse animations to one millisecond');
+assert.match(app, /const followAlpha = 1 - Math\.pow\(1 - 0\.25, dt \* 60\)/, 'token following must be refresh-rate independent');
+assert.match(app, /Math\.pow\(0\.985, dt \* 60\)/, 'confetti drag must be refresh-rate independent');
 assert.match(houses, /const orange = hsl\.s > 0\.35/);
 assert.match(houses, /green \|\| orange/, 'orange source roofs must follow the player ownership color');
 assert.match(app, /turnArrow\.userData\.material\.color\.set\(color\)/, 'turn arrow must use the current player color');
@@ -38,7 +43,7 @@ assert.match(app, /turnArrow\.userData\.material\.emissive\.set\(color\)/, 'turn
 assert.match(app, /const SOUND_KEY = 'tt-monopoly-sound-v1'/);
 assert.match(app, /const GRAPHICS_KEY = 'tt-monopoly-graphics-v1'/);
 assert.match(app, /function setGraphicsLevel\(level\)/);
-assert.match(app, /if \(S\.phase === 'lobby'\) await api\('api\/act', \{ token: me\.token, type: 'leave' \}\)/, 'settings leave must release only a lobby seat');
+assert.match(app, /if \(me && S\.phase === 'lobby'\) await api\('api\/act', \{ token: me\.token, type: 'leave' \}\)/, 'settings leave must release only a lobby seat');
 assert.match(app, /playTurnSound\(\);/);
 assert.match(app, /left > 5000/, 'time warning must start in the final five seconds');
 assert.match(app, /playTimeWarning\(\);/, 'turn timer must run the warning sound');
@@ -51,6 +56,7 @@ assert.match(app, /async function showAchievement\(event\)/);
 assert.match(app, /event\.kind === 'tripleReady'/);
 assert.match(app, /event\.kind === 'lineReady'/);
 assert.match(app, /event\.kind === 'resortReady'/);
+assert.match(app, /const achievements = S\.phase === 'over' \? \[\] :/, 'winner screen must suppress pending achievement and almost-win notices');
 assert.match(app, /const outageRounds = \(i\) =>/);
 assert.match(app, /⚡ CÒN \$\{outageRounds\(i\)\} VÒNG/, 'outaged tiles must show remaining rounds');
 assert.match(app, /class="power"/, 'player cards must reserve an outage status area');
@@ -58,5 +64,19 @@ assert.match(app, /⚡ Mất điện · \$\{powerCuts\.map/, 'land owner card mu
 assert.match(specials, /for \(const x of \[-postX, postX\]\)/, 'festival banner must use two posts');
 assert.match(specials, /LỄ HỘI ×\$\{mult\}/, 'festival banner must visibly label its multiplier');
 assert.match(app, /festivalBannerSpot\(i\)/, 'festival banner must be centered along the back of its tile');
+assert.match(app, /pendingRoomMap = create \? mapId : ''/, 'only room creation may send the selected map');
+assert.match(app, /#gwatch'\)\.onclick = \(\) => enterRoom\(false, true\)/, 'watch button must enter spectator mode');
+assert.match(app, /me = watch \? null : loadMe\(\)/, 'spectator mode must not authenticate with a saved player token');
+assert.match(app, /WATCH_MODE \? \{ viewer: lobbyDraftName \} : \{\}/, 'spectator SSE must carry its username without a player token');
+assert.match(app, /Thoát đảo\$\{p\.escapeCards > 1 \? ' ×' \+ p\.escapeCards : ''\}/, 'player card must show stacked escape-card quantity');
+assert.match(app, /if \(epoch !== connectionEpoch\) return;/, 'stale SSE connections must be ignored');
+assert.match(app, /if \(ns\.version < S\.version\) continue;/, 'older SSE states must never roll the board back');
+
+const server = fs.readFileSync(new URL('../server.js', import.meta.url), 'utf8');
+const worker = fs.readFileSync(new URL('../cloudflare/worker.js', import.meta.url), 'utf8');
+assert.match(server, /if \(wasEmpty && body\.mapId\) G\.setSettings\(state, \{ mapId: body\.mapId \}\)/);
+assert.match(worker, /if \(wasEmpty && body\.mapId\) G\.setSettings\(s, \{ mapId: body\.mapId \}\)/);
+assert.match(server, /viewers: viewers\(\)/, 'Node SSE must publish spectator names');
+assert.match(worker, /viewers: this\.viewers\(\)/, 'Cloudflare SSE must publish spectator names');
 
 console.log('Home screen lazy-map tests passed.');
