@@ -169,6 +169,11 @@ table.lvl tr.cur .ck{color:#fff}
 @media (prefers-reduced-motion: reduce){ *{animation:none!important;transition:none!important} }
 
 /* phòng chờ */
+#gate{position:fixed;inset:0;z-index:26;display:none;place-items:center;padding:16px;background:rgba(18,44,70,.48);overflow:auto}
+#gate.show{display:grid}
+#gate .sheet{width:min(520px,100%)}
+#gate .acts .pill{font-size:18px;padding:12px 24px}
+.gate-note{margin:10px 2px 0;color:var(--ink-soft);font-size:13px;font-weight:600;line-height:1.45}
 #lobby{position:fixed;inset:0;z-index:24;display:none;place-items:center;padding:16px;background:rgba(18,44,70,.38);overflow:auto}
 #lobby.show{display:grid}
 #lobby .sheet{width:min(560px,100%)}

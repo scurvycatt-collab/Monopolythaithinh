@@ -5,7 +5,7 @@
    - Luật chơi dùng chung đúng 2 file public/rules.js + public/game.js (nguồn sự thật duy nhất). */
 import { DurableObject } from 'cloudflare:workers';
 import Game from '../public/game.js'; // wrangler đóng gói cả rules.js mà game.js require
-import { resolveAppPath } from './pathing.mjs';
+import { resolveAppPath, validRoomKey } from './pathing.mjs';
 
 const G = Game;
 const C = G.RULES.CONFIG;
@@ -26,9 +26,12 @@ export default {
     const routedReq = new Request(url.toString(), req);
     if (route.basePath) routedReq.headers.set('X-Thai-Thinh-Base-Path', route.basePath);
 
-    if (url.pathname === '/events' || url.pathname === '/health' || url.pathname.startsWith('/api/')) {
-      // một phòng duy nhất cho gia đình; ?room=… để mở thêm phòng nếu cần
-      const room = (url.searchParams.get('room') || 'main').slice(0, 32);
+    // Health check không chạm Durable Object: mở trang chờ không làm phòng game thức dậy.
+    if (url.pathname === '/health') return json(200, { app: 'thai-thinh-monopoly', host: 'cloudflare', rooms: true });
+    if (url.pathname === '/events' || url.pathname.startsWith('/api/')) {
+      // Mỗi room code ánh xạ tới một Durable Object tách biệt.
+      const room = url.searchParams.get('room') || 'main';
+      if (room !== 'main' && !validRoomKey(room)) return json(400, { error: 'Mã phòng không hợp lệ' });
       return env.ROOM.get(env.ROOM.idFromName(room)).fetch(routedReq);
     }
     return env.ASSETS.fetch(routedReq);
@@ -82,8 +85,9 @@ export class GameRoom extends DurableObject {
     return t.length ? Math.max(now + 250, Math.min(...t)) : null;
   }
   async schedule() {
-    const at = this.nextDeadline(); if (at === null) return;
     const cur = await this.ctx.storage.getAlarm();
+    const at = this.nextDeadline();
+    if (at === null) { if (cur) await this.ctx.storage.deleteAlarm(); return; }
     if (!cur || cur > at + 500) await this.ctx.storage.setAlarm(at);
   }
   async alarm() {
@@ -113,7 +117,10 @@ export class GameRoom extends DurableObject {
     if (url.pathname === '/health') return json(200, { app: 'thai-thinh-monopoly', phase: this.state.phase, version: this.state.version, host: 'cloudflare' });
     if (url.pathname === '/api/info' && req.method === 'GET') {
       const basePath = req.headers.get('X-Thai-Thinh-Base-Path') || '';
-      return json(200, { links: [{ kind: 'Web', url: `${url.origin}${basePath}/` }] });
+      const invite = new URL(`${url.origin}${basePath}/`);
+      const room = url.searchParams.get('room');
+      if (room) invite.searchParams.set('room', room);
+      return json(200, { links: [{ kind: 'Web', url: invite.toString() }] });
     }
     if (url.pathname === '/events' && req.method === 'GET') return this.events(url);
     if (req.method === 'POST' && url.pathname.startsWith('/api/')) return this.api(url, req);

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { BASE_PATH, resolveAppPath } from '../cloudflare/pathing.mjs';
+import { BASE_PATH, resolveAppPath, validRoomKey } from '../cloudflare/pathing.mjs';
 
 assert.equal(BASE_PATH, '/monopolyThaithinh');
 assert.deepEqual(resolveAppPath('/monopolyThaithinh'), {
@@ -27,5 +27,10 @@ assert.deepEqual(resolveAppPath('/monopolyThaithinh-other'), {
   pathname: '/monopolyThaithinh-other',
   redirectPath: null,
 });
+assert.equal(validRoomKey('gia-dinh'), true);
+assert.equal(validRoomKey('abc'), true);
+assert.equal(validRoomKey('ab'), false);
+assert.equal(validRoomKey('PhOng'), false);
+assert.equal(validRoomKey('../main'), false);
 
 console.log('Cloudflare base-path tests passed.');

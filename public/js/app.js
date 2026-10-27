@@ -5,6 +5,7 @@ import { loadKit, building as houseBuilding } from './houses.js';
 import { colosseum, worldTour, lostIsland, startGate, chanceBox, beachHouse, festivalFlag, festivalPlaque, BEACH_LEVELS } from './specials.js';
 import { centerWorld } from './world.js';
 import qrcode from '../vendor/qrcode.mjs';
+import { createRoomCode, normalizeRoom, roomEndpoint, validRoom } from './room-session.mjs';
 const HK = { loadKit, building: houseBuilding, colosseum, worldTour, lostIsland, startGate, chanceBox, beachHouse, festivalFlag, festivalPlaque, BEACH_LEVELS };
 
 const G = window.Game;
@@ -26,6 +27,7 @@ let S = G.createState();  // trạng thái ván (bản công khai từ server, h
 let seatOf = {};          // id -> { color, pet, corner }
 let me = null;            // chế độ mạng: { id, token } của mình
 let presence = {}, skew = 0, proxySec = 15;
+let ROOM = '', ROOM_GATE = false, pendingJoinName = '', joiningRoom = false;
 const now = () => Date.now() + skew;   // giờ theo server
 function seatSetup() { seatOf = {}; S.players.forEach((p, k) => { seatOf[p.id] = { color: p.color, pet: p.pet || G.PETS[k % G.PETS.length].id, corner: CORNERS[k % 4] }; }); }
 const curP = () => (S.phase === 'play' ? S.players[S.turn] : null);
@@ -1159,21 +1161,43 @@ function resetView() {
 
 /* ---------------- chế độ mạng: API + SSE ---------------- */
 async function api(path, body) {
-  const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) });
+  const r = await fetch(roomEndpoint(location.href, path, ROOM), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) });
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(j.error || 'Mất kết nối tới server');
   return j;
 }
 const ME_KEY = 'tt-monopoly-me';
-function loadMe() { try { return JSON.parse(localStorage.getItem(ME_KEY) || 'null'); } catch (e) { return null; } }
-function setMe(m) { me = m; try { m ? localStorage.setItem(ME_KEY, JSON.stringify(m)) : localStorage.removeItem(ME_KEY); } catch (e) { /* bỏ qua */ } connect(); }
+const NAME_KEY = 'tt-monopoly-name';
+const meKey = () => `${ME_KEY}:${ROOM || 'main'}`;
+function loadMe() { try { return JSON.parse(localStorage.getItem(meKey()) || 'null'); } catch (e) { return null; } }
+function setMe(m, reconnect = true) { me = m; try { m ? localStorage.setItem(meKey(), JSON.stringify(m)) : localStorage.removeItem(meKey()); } catch (e) { /* bỏ qua */ } if (reconnect) connect(); }
 let es = null;
 function connect() {
   if (es) es.close();
-  es = new EventSource('events' + (me ? '?token=' + encodeURIComponent(me.token) : ''));
+  es = new EventSource(roomEndpoint(location.href, 'events', ROOM, me ? { token: me.token } : {}));
   es.onopen = () => $('#conn').classList.remove('show');
   es.onerror = () => $('#conn').classList.add('show');
-  es.onmessage = (e) => { const d = JSON.parse(e.data); presence = d.presence || {}; proxySec = d.proxySec || 15; skew = d.now - Date.now(); onState(d.state); };
+  es.onmessage = (e) => {
+    const d = JSON.parse(e.data); presence = d.presence || {}; proxySec = d.proxySec || 15; skew = d.now - Date.now(); onState(d.state);
+    if (ROOM_GATE) autoJoinRoom(d.state);
+  };
+}
+async function autoJoinRoom(state) {
+  if (!pendingJoinName || me || joiningRoom) return;
+  if (state.phase !== 'lobby') { lobbyDraftName = pendingJoinName; pendingJoinName = ''; return; }
+  if (state.players.length >= CFG.MAX_PLAYERS) { lobbyDraftName = pendingJoinName; pendingJoinName = ''; return; }
+  const pet = (G.PETS.find((x) => !state.players.some((p) => p.pet === x.id)) || {}).id;
+  const name = pendingJoinName;
+  joiningRoom = true;
+  try {
+    setMe(await api('api/join', { name, pet }));
+    pendingJoinName = '';
+  } catch (e) {
+    pendingJoinName = '';
+    lobbyDraftName = name;
+    toast(e.message);
+    renderLobby();
+  } finally { joiningRoom = false; }
 }
 const queue = []; let draining = false;
 function onState(ns) { queue.push(ns); if (!draining) drain(); }
@@ -1198,12 +1222,12 @@ async function drain() {
 /* ---------------- phòng chờ: chọn tên, nhân vật, thời lượng ---------------- */
 // link mời + mã QR (server trả về link Tailscale/LAN của máy chủ)
 let invite = [];
-async function loadInvite() { try { const r = await fetch('api/info', { cache: 'no-store' }); invite = (await r.json()).links || []; renderLobby(); } catch (e) { /* bỏ qua */ } }
+async function loadInvite() { try { const r = await fetch(roomEndpoint(location.href, 'api/info', ROOM), { cache: 'no-store' }); invite = (await r.json()).links || []; renderLobby(); } catch (e) { /* bỏ qua */ } }
 function inviteBox() {
   if (!invite.length) return '';
   const q = qrcode(0, 'M'); q.addData(invite[0].url); q.make();
   return `<div class="invite"><div class="qr">${q.createSvgTag({ cellSize: 4, margin: 2, scalable: true })}</div><div class="inv">
-    <b>Mời cả nhà</b><span>Quét mã hoặc mở link trên điện thoại, máy tính:</span>
+    <b>Mời cả nhà${ROOM ? ` · Phòng ${esc(ROOM)}` : ''}</b><span>Quét mã hoặc mở link trên điện thoại, máy tính:</span>
     ${invite.map((l, k) => `<a href="${esc(l.url)}" target="_blank" rel="noopener"${k ? ' class="sub"' : ''}>${esc(l.url)}</a>${k ? '' : `<em>${esc(l.kind)}</em>`}`).join('')}</div></div>`;
 }
 const timeLabel = (m) => (m % 60 ? `${Math.floor(m / 60)} giờ ${m % 60}` : `${m / 60} giờ`);
@@ -1253,7 +1277,7 @@ function lobbyNet(el) {
   el.querySelectorAll('[data-kick]').forEach((b) => { b.onclick = () => send('kick', { id: b.dataset.kick }); });
   el.querySelectorAll('[data-t]').forEach((b) => { b.onclick = () => send('settings', { timeLimitMin: Number(b.dataset.t) }); });
   el.querySelectorAll('[data-ts]').forEach((b) => { b.onclick = () => send('settings', { turnSec: Number(b.dataset.ts) }); });
-  $('#lleave').onclick = () => send('leave').then(() => setMe(null));
+  $('#lleave').onclick = () => send('leave').then(exitRoom);
   $('#lstart').onclick = () => send('start');
 }
 // vào giữa ván từ thiết bị khác: nhận lại ghế đang mất kết nối, hoặc chỉ xem
@@ -1311,19 +1335,62 @@ function newGameFlow() {
   if (MODE === 'local') { lobbyOpen = true; localDraft = null; renderLobby(); return; }
   if (S.phase === 'over' && me) api('api/act', { token: me.token, type: 'reset' }).catch((e) => toast(e.message));
 }
+function showRoomGate() {
+  if (!ROOM_GATE) return;
+  if (es) es.close();
+  es = null;
+  $('#conn').classList.remove('show');
+  $('#lobby').classList.remove('show');
+  const params = new URLSearchParams(location.search);
+  let savedName = '';
+  try { savedName = localStorage.getItem(NAME_KEY) || ''; } catch (e) { /* bỏ qua */ }
+  $('#gname').value = savedName || lobbyDraftName || '';
+  $('#groom').value = normalizeRoom(params.get('room') || ROOM);
+  $('#gate').classList.add('show');
+  setTimeout(() => ($('#groom').value ? $('#gname') : $('#groom')).focus(), 0);
+}
+function enterRoom(create) {
+  const name = $('#gname').value.replace(/\s+/g, ' ').trim().slice(0, 16);
+  if (!name) { toast('Hãy nhập username'); return $('#gname').focus(); }
+  const room = create ? createRoomCode() : normalizeRoom($('#groom').value);
+  if (!validRoom(room)) { toast('Mã phòng cần 3–24 ký tự'); return $('#groom').focus(); }
+  ROOM = room;
+  lobbyDraftName = name;
+  pendingJoinName = name;
+  try { localStorage.setItem(NAME_KEY, name); } catch (e) { /* bỏ qua */ }
+  const url = new URL(location.href); url.searchParams.set('room', ROOM); history.replaceState(null, '', url);
+  $('#gate').classList.remove('show');
+  me = loadMe();
+  invite = [];
+  connect();
+  loadInvite();
+}
+function exitRoom() {
+  setMe(null, false);
+  pendingJoinName = '';
+  presence = {};
+  S = G.createState();
+  showRoomGate();
+}
+$('#gcreate').onclick = () => enterRoom(true);
+$('#gjoin').onclick = () => enterRoom(false);
+$('#gname').onkeydown = (e) => { if (e.key === 'Enter') enterRoom(false); };
+$('#groom').onkeydown = (e) => { if (e.key === 'Enter') enterRoom(false); };
 $('#newgame').onclick = newGameFlow;
 addEventListener('resize', resize);
 window.__TT = { get S() { return S; }, get mode() { return MODE; }, get me() { return me; }, get busy() { return busy; }, act, tokens, scr: (i) => { const f = tileFrame(i); return screenOf(new THREE.Vector3(f.x, TOPY, f.z)); }, sync() { resetView(); } }; // cho script kiểm thử
 
 /* ---------------- khởi động ---------------- */
 async function detectServer() {
-  if (location.protocol === 'file:') return false;
-  try { const r = await fetch('health', { cache: 'no-store' }); return r.ok && (await r.json()).app === 'thai-thinh-monopoly'; } catch (e) { return false; }
+  if (location.protocol === 'file:') return null;
+  try { const r = await fetch('health', { cache: 'no-store' }); const info = await r.json(); return r.ok && info.app === 'thai-thinh-monopoly' ? info : null; } catch (e) { return null; }
 }
 (async () => {
   try {
     await Promise.all([document.fonts.load('800 40px "Baloo 2"'), document.fonts.load('800 40px "Be Vietnam Pro"'), document.fonts.load('900 40px Rubik'), document.fonts.load('700 40px Fredoka'), document.fonts.load('600 40px Fredoka')]).catch(() => {});
-    MODE = (await detectServer()) ? 'net' : 'local';
+    const server = await detectServer();
+    MODE = server ? 'net' : 'local';
+    ROOM_GATE = !!(server && server.rooms);
     document.body.dataset.mode = MODE;
     const saved = MODE === 'local' ? loadSaved() : null;
     if (saved) S = saved;
@@ -1335,7 +1402,8 @@ async function detectServer() {
     resize();
     $('#loading').remove();
     requestAnimationFrame(frame);
-    if (MODE === 'net') { me = loadMe(); connect(); loadInvite(); }
+    if (MODE === 'net' && ROOM_GATE) showRoomGate();
+    else if (MODE === 'net') { me = loadMe(); connect(); loadInvite(); }
     else { lobbyOpen = !saved; resetView(); }
   } catch (e) {
     $('#loadmsg').textContent = 'Không tải được bàn cờ: ' + e.message;

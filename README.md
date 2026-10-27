@@ -37,6 +37,10 @@ Không cần cài Node.js hay gì khác. Máy chủ nên tắt chế độ ngủ
 
 Mở `public/index.html` qua một web server tĩnh bất kỳ (ví dụ GitHub Pages) thì game tự chuyển sang **chơi chung một máy**, ván lưu trong trình duyệt.
 
+## Chơi trên Cloudflare
+
+Mở bản cloud, nhập username rồi **Tạo phòng mới** hoặc nhập mã để **Vào phòng**. Mỗi room code là một ván tách biệt; link mời và mã QR đã mang sẵn room code. Trang chờ ban đầu không mở SSE hay đánh thức Durable Object cho tới khi người chơi xác nhận vào room.
+
 ## Bộ luật chính (bắt buộc đọc trước khi sửa)
 
 Toàn bộ luật nằm ở **một file duy nhất: `public/rules.js`**, gồm ba lớp:
