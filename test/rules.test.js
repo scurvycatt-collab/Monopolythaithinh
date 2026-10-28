@@ -118,6 +118,7 @@ function cardR(id) {
 function build(setup) {
   const s = G.createState(); s.settings.timeLimitMin = 0; s.settings.turnSec = 0;
   G.addPlayer(s, { id: 'me', token: 't1', name: 'Me' }); G.addPlayer(s, { id: 'op', token: 't2', name: 'Op' });
+  s.players.forEach((p) => { p.ready = true; });
   G.setRng(() => 0.99); G.startGame(s);
   s.turn = s.players.findIndex((p) => p.id === 'me');
   const me = G.byId(s, 'me');

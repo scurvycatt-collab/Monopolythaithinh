@@ -40,7 +40,7 @@ export async function createBoard2D(ctx, skin) {
   await loadAssets(skin, ctx.base, (d, n) => ctx.onProgress && ctx.onProgress(d, n, 'Tải ảnh bản đồ'));
 
   /* ---------- trạng thái ---------- */
-  let S = null, alive = true, running = false, raf = 0;
+  let S = null, alive = true, running = false, raf = 0, frameTimer = 0;
   const view = { K: 40, ox: 0, oy: 0, fitK: 40, init: false };
   let dpr = 1, W0 = 0, H0 = 0, dirty = true, sceneDirty = true, lastInteract = 0, t = 0, lastT = 0, lastFrame = 0;
   const perf = { ms: 0, buildMs: 0, frames: 0, builds: 0, sprites: 0 };
@@ -210,12 +210,12 @@ export async function createBoard2D(ctx, skin) {
     cv.width = Math.round(W0 * dpr); cv.height = Math.round(H0 * dpr);
     const span = L + 0.9, k = Math.min(W0 / (span * 2 * CX + 0.6), H0 / (span * 2 * CY + 3.6)), z = view.K / view.fitK; view.fitK = k;
     if (!view.init) Object.assign(view, { K: k, ox: W0 / 2, oy: H0 / 2 + 0.9 * k, init: true }); else view.K = k * z;
-    clampView(); sceneDirty = true; dirty = true;
+    clampView(); sceneDirty = true; dirty = true; if (running) wake();
   }
   function clampView() { const [cx, cy] = [view.ox, view.oy - 0.9 * view.K], m = L * CX * view.K * 0.5; view.ox = Math.max(W0 / 2 - m, Math.min(W0 / 2 + m, cx)); view.oy = Math.max(H0 / 2 - m / 2, Math.min(H0 / 2 + m / 2, cy)) + 0.9 * view.K; }
   function zoomAt(f, x = W0 / 2, y = H0 / 2) {
     const nk = Math.max(view.fitK * 0.7, Math.min(view.fitK * 4, view.K * f)), r = nk / view.K;
-    view.ox = x - (x - view.ox) * r; view.oy = y - (y - view.oy) * r; view.K = nk; clampView(); lastInteract = performance.now(); dirty = true;
+    view.ox = x - (x - view.ox) * r; view.oy = y - (y - view.oy) * r; view.K = nk; clampView(); lastInteract = performance.now(); dirty = true; if (running) wake();
   }
   const scr = (x, y, z) => { const [a, b] = P(x, y, z, view.K); return { x: view.ox + a, y: view.oy + b }; };
   const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => resize()) : null; if (ro) ro.observe(cv);
@@ -226,7 +226,7 @@ export async function createBoard2D(ctx, skin) {
   const move = (e) => {
     const p = ptrs.get(e.pointerId); if (!p) return;
     if (ptrs.size === 2 && pinch) { ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); const [a, b] = [...ptrs.values()], r = cv.getBoundingClientRect(); zoomAt(pinch.K * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d / view.K, (a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top); return; }
-    view.ox += e.clientX - p.x; view.oy += e.clientY - p.y; ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); clampView(); lastInteract = performance.now(); dirty = true;
+    view.ox += e.clientX - p.x; view.oy += e.clientY - p.y; ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); clampView(); lastInteract = performance.now(); dirty = true; if (running) wake();
   };
   const up = (e) => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null; };
   const wheel = (e) => { e.preventDefault(); const r = cv.getBoundingClientRect(); zoomAt(Math.exp(-e.deltaY * 0.0015), e.clientX - r.left, e.clientY - r.top); };
@@ -270,7 +270,7 @@ export async function createBoard2D(ctx, skin) {
     const o = tok[pid]; if (!o) return; o.moving = true; delete o.tx;
     for (const pos of path) {
       o.tile = pos; const [x, z] = spot(pid, pos, posOf), from = { x: o.x, z: o.z }, dur = 210;
-      o.anim = { from, to: { x, z }, t0: performance.now(), dur }; dirty = true;
+      o.anim = { from, to: { x, z }, t0: performance.now(), dur }; dirty = true; if (running) wake();
       await sleep(dur); o.x = x; o.z = z; o.y = 0; o.anim = null;
       if (onStep) try { onStep(pos); } catch (e) { console.error(e); }
     }
@@ -386,15 +386,31 @@ export async function createBoard2D(ctx, skin) {
     const ms = performance.now() - t0 - built0; perf.ms = perf.frames ? perf.ms * 0.9 + ms * 0.1 : ms; perf.last = ms; perf.frames++;
     if (moved && interacting) setTimeout(() => (dirty = true), 180);
   }
-  function loop(now) {
-    if (!alive || !running) return; raf = requestAnimationFrame(loop);
-    if (now - lastFrame < 1000 / q.fps - 2) return;
-    const dt = Math.min(0.1, (now - (lastT || now)) / 1000);
-    if (dirty || animating(now)) { if (q.ambient) t += dt; if (W0) render(now); dirty = false; }
-    lastFrame = now; lastT = now;
+  function scheduleFrame(delay = 0) {
+    if (!alive || !running || document.hidden) return;
+    if (delay > 1) frameTimer = setTimeout(() => { frameTimer = 0; raf = requestAnimationFrame(loop); }, delay);
+    else raf = requestAnimationFrame(loop);
   }
-  function start() { if (!alive || running) return; running = true; lastT = 0; dirty = true; raf = requestAnimationFrame(loop); }
-  function stop() { running = false; cancelAnimationFrame(raf); raf = 0; }
+  function wake() {
+    dirty = true;
+    if (!running || document.hidden) return;
+    if (frameTimer) { clearTimeout(frameTimer); frameTimer = 0; }
+    if (raf) cancelAnimationFrame(raf);
+    scheduleFrame();
+  }
+  function loop(now) {
+    raf = 0;
+    if (!alive || !running || document.hidden) return;
+    const dt = Math.min(0.1, (now - (lastT || now)) / 1000);
+    const active = dirty || animating(now);
+    if (active) { if (q.ambient) t += dt; if (W0) render(now); dirty = false; }
+    lastFrame = now; lastT = now;
+    scheduleFrame(active ? Math.max(0, 1000 / q.fps - (performance.now() - now)) : 250);
+  }
+  function start() { if (!alive || running) return; running = true; lastT = 0; wake(); }
+  function stop() { running = false; if (frameTimer) clearTimeout(frameTimer); frameTimer = 0; cancelAnimationFrame(raf); raf = 0; }
+  const visibility = () => { if (document.hidden) { if (frameTimer) clearTimeout(frameTimer); frameTimer = 0; cancelAnimationFrame(raf); raf = 0; } else if (running) wake(); };
+  document.addEventListener('visibilitychange', visibility);
 
   // nướng trước sprite tĩnh (góc, ô đặc biệt, giữa bàn, xúc xắc), nhả luồng chính giữa các lần nướng
   const pre = [() => centerSprite(), ...[1, 2, 3, 4, 5, 6].map((n) => () => dieSprite(n))];
@@ -406,8 +422,8 @@ export async function createBoard2D(ctx, skin) {
   return {
     // PR #5: app đọc thời lượng xây nhà và tên cấp nhà resort thay vì hằng của map-1
     meta: { buildMs: BUILD_MS, resortLevels: LB.resortLevels || null },
-    reset(v) { S = v; anims.length = 0; confetti.length = 0; for (const k in built) delete built[k]; for (const k in tok) delete tok[k]; syncObjects(true); placeTokens(true); highlight = null; },
-    async sync(v) { S = v; const wait = syncObjects(false); placeTokens(false); return wait; },
+    reset(v) { S = v; anims.length = 0; confetti.length = 0; for (const k in built) delete built[k]; for (const k in tok) delete tok[k]; syncObjects(true); placeTokens(true); highlight = null; if (running) wake(); },
+    async sync(v) { S = v; const wait = syncObjects(false); placeTokens(false); wake(); return wait; },
     async moveToken(pid, path, opts = {}) {
       if (opts.view) S = opts.view;
       if (!tok[pid]) placeTokens(true);
@@ -415,7 +431,7 @@ export async function createBoard2D(ctx, skin) {
       if (opts.jump) { const o = tok[pid], last = path[path.length - 1]; o.moving = true; o.tile = last; const [x, z] = spot(pid, last, posOf); Object.assign(o, { x, z, y: 0 }); delete o.tx; o.moving = false; placeTokens(false); return; }
       await hop(pid, path, opts.onStep);
     },
-    async rollDice(a, b) { Object.assign(dice, { a, b, t0: performance.now(), dur: Q === 'low' ? 650 : 1000 }); dirty = true; await sleep(dice.dur); dirty = true; },
+    async rollDice(a, b) { Object.assign(dice, { a, b, t0: performance.now(), dur: Q === 'low' ? 650 : 1000 }); wake(); await sleep(dice.dur); wake(); },
     tileScreen(i, lift = 0) { const f = frame(i), [x, z] = f.corner ? [f.x, f.z] : toWorld(i, 0, GZ); return scr(x, lift, z); },
     pick(cx, cy) {
       const r = cv.getBoundingClientRect(), a = (cx - r.left - view.ox) / (CX * view.K), b = (cy - r.top - view.oy) / (CY * view.K), x = (a + b) / 2, z = (b - a) / 2;
@@ -423,15 +439,15 @@ export async function createBoard2D(ctx, skin) {
       return null;
     },
     tokenScreen(pid) { const o = tok[pid]; return o ? scr(o.x, o.y, o.z) : null; },
-    setActive(pid, color, glow = pid) { arrow = { pid: pid || null, color: color || '' }; glowPid = glow || null; dirty = true; },
-    effect(kind, tile) { if ((kind === 'confetti' || kind === 'festival') && tile !== null && tile !== undefined) burst(tile, Q === 'low' ? 24 : kind === 'festival' ? 90 : 60); },
-    highlight(tiles) { highlight = tiles && tiles.length ? [...tiles] : null; dirty = true; },
-    setQuality(level) { if (!QUALITY[level] || level === Q) return; Q = level; q = QUALITY[level]; sprites.clear(); PARTS = null; for (const k in texCache) delete texCache[k]; for (const k in built) delete built[k]; resize(); if (S) syncObjects(true); },
+    setActive(pid, color, glow = pid) { arrow = { pid: pid || null, color: color || '' }; glowPid = glow || null; wake(); },
+    effect(kind, tile) { if ((kind === 'confetti' || kind === 'festival') && tile !== null && tile !== undefined) { burst(tile, Q === 'low' ? 24 : kind === 'festival' ? 90 : 60); wake(); } },
+    highlight(tiles) { highlight = tiles && tiles.length ? [...tiles] : null; wake(); },
+    setQuality(level) { if (!QUALITY[level] || level === Q) return; Q = level; q = QUALITY[level]; sprites.clear(); PARTS = null; for (const k in texCache) delete texCache[k]; for (const k in built) delete built[k]; resize(); if (S) syncObjects(true); wake(); },
     resize, zoomBy: (f) => zoomAt(f), fit() { view.init = false; resize(); },
     start, stop,
     stats() { return { renderer: '2d', graphicsLevel: Q, activeFps: q.fps, ms: +perf.ms.toFixed(2), lastMs: +(perf.last || 0).toFixed(2), buildMs: +perf.buildMs.toFixed(1), builds: perf.builds, frames: perf.frames, sprites: perf.sprites, cached: sprites.size, dpr, running }; },
     destroy() {
-      if (!alive) return; alive = false; stop(); if (ro) ro.disconnect();
+      if (!alive) return; alive = false; stop(); document.removeEventListener('visibilitychange', visibility); if (ro) ro.disconnect();
       cv.removeEventListener('pointerdown', down); cv.removeEventListener('pointermove', move); cv.removeEventListener('pointerup', up); cv.removeEventListener('pointercancel', up); cv.removeEventListener('wheel', wheel);
       sprites.clear(); scene.width = scene.height = 1;
     },

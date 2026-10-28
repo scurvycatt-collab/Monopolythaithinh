@@ -108,7 +108,7 @@
   const alive = (s) => s.players.filter((p) => !p.bankrupt);
   function ensureHost(s) {
     // Đồng bộ màu theo nhân vật để các room/file lưu từ phiên bản cũ cũng nhận bảng màu mới.
-    s.players.forEach((p) => { const pet = PETS.find((x) => x.id === p.pet); if (pet) p.color = pet.c; });
+    s.players.forEach((p) => { const pet = PETS.find((x) => x.id === p.pet); if (pet) p.color = pet.c; if (typeof p.ready !== 'boolean') p.ready = !!p.bot; });
     const host = s.hostId && byId(s, s.hostId);
     if (!host || host.bot) s.hostId = (s.players.find((p) => !p.bot) || {}).id || null;
     return s.hostId;
@@ -143,7 +143,7 @@
     if (s.players.some((p) => p.name.toLowerCase() === name.toLowerCase())) fail('Tên này đã có người dùng');
     if (pet && s.players.some((p) => p.pet === pet)) fail('Nhân vật này đã có người chọn');
     pet = freePet(s, pet);
-    const p = { id, token: bot ? null : token, name, pet, color: PETS.find((x) => x.id === pet).c, bot: !!bot };
+    const p = { id, token: bot ? null : token, name, pet, color: PETS.find((x) => x.id === pet).c, bot: !!bot, ready: !!bot };
     resetPlayer(p);
     s.players.push(p);
     ensureHost(s);
@@ -174,7 +174,12 @@
     if (s.phase !== 'lobby') fail('Chỉ đổi nhân vật khi chưa bắt đầu');
     const x = PETS.find((q) => q.id === pet); if (!x) fail('Nhân vật không hợp lệ');
     if (s.players.some((p) => p.id !== id && p.pet === pet)) fail('Nhân vật này đã có người chọn');
-    Object.assign(byId(s, id), { pet, color: x.c });
+    Object.assign(byId(s, id), { pet, color: x.c, ready: false });
+  }
+  function setReady(s, id, ready) {
+    if (s.phase !== 'lobby') fail('Chỉ sẵn sàng khi đang ở phòng chờ');
+    const p = byId(s, id); if (!p || p.bot) fail('Người chơi không hợp lệ');
+    p.ready = !!ready;
   }
   function renamePlayer(s, id, name) {
     if (s.phase !== 'lobby') fail('Chỉ đổi tên khi chưa bắt đầu');
@@ -184,17 +189,20 @@
   }
   function setSettings(s, o) {
     if (s.phase !== 'lobby') fail('Chỉ chỉnh khi chưa bắt đầu');
+    const before = JSON.stringify(s.settings);
     const rl = Number(o.roundLimit), as = Number(o.autoSec), tl = Number(o.timeLimitMin), ts = Number(o.turnSec);
     if (MAPS.some((map) => map.id === o.mapId)) s.settings.mapId = o.mapId;
     if ([0, ...CFG.TURN_OPTIONS].includes(ts)) s.settings.turnSec = ts;
     if ([0, 15, 20, 30, 40].includes(rl)) s.settings.roundLimit = rl;
     if ([0, 30, 60, 120].includes(as)) s.settings.autoSec = as;
     if ([0, ...CFG.TIME_OPTIONS].includes(tl)) s.settings.timeLimitMin = tl;
+    if (JSON.stringify(s.settings) !== before) s.players.forEach((p) => { p.ready = !!p.bot; });
   }
   const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   function startGame(s, now) {
     if (s.phase !== 'lobby') fail('Ván đã bắt đầu');
     if (s.players.length < 2) fail('Cần ít nhất 2 người chơi');
+    if (s.players.some((p) => !p.bot && !p.ready)) fail('Tất cả người chơi phải sẵn sàng');
     shuffle(s.players);
     s.players.forEach(resetPlayer);
     now = now || Date.now();
@@ -209,6 +217,7 @@
   }
   function resetGame(s) {
     s.players.forEach(resetPlayer);
+    s.players.forEach((p) => { p.ready = !!p.bot; });
     Object.assign(s, { phase: 'lobby', props: {}, festival: null, festLevel: 0, outage: {}, bonus: [], turn: 0, step: null, dice: null, moves: [], lastCard: null, log: [], again: false, pending: null, winner: null, winReason: null, achievements: [], milestones: {}, reaction: null, round: 1, startedAt: null, endsAt: null, stepAt: null });
     log(s, 'Quay về phòng chờ');
   }
@@ -755,7 +764,7 @@
   const api = {
     RULES: R, STATES, stepLeft, checkTurn,
     GROUPS, TILES, CFG, COLORS, PETS, MAPS, CARDS, LEVEL_NAMES, RESORTS, SIDES, GameError,
-    setRng, createState, publicView, ensureHost, isHost, byName, addPlayer, addBot, removePlayer, removeBot, setPet, renamePlayer, setSettings, startGame, resetGame, checkWin,
+    setRng, createState, publicView, ensureHost, isHost, byName, addPlayer, addBot, removePlayer, removeBot, setPet, setReady, renamePlayer, setSettings, startGame, resetGame, checkWin,
     act, autoAction, botAction, checkTime, cur, byId, value, invested, toll, upgradeCost, rentOf, rentMultiplier, takeoverPrice, canTakeover, sellValue, ownedBy, networth,
     ownsGroup, canUpgrade, nextLevel, isBuyable, maxBuild, villaLocked, taxBase, outaged, festMult, tourTargets, festivalTargets, cardTargets,
   };

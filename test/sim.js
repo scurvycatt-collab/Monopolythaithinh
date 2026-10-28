@@ -50,6 +50,7 @@ for (let g = 0; g < N; g++) {
   const s = G.createState();
   const n = 2 + (g % 3);
   for (let i = 0; i < n; i++) G.addPlayer(s, { id: 'p' + i, token: 't' + i, name: 'P' + i });
+  s.players.forEach((p) => { p.ready = true; });
   s.settings.timeLimitMin = 0; s.settings.turnSec = 0;
   if (g % 3 === 0) s.settings.roundLimit = 25; else if (g % 3 === 1) s.settings.roundLimit = 40;
   G.startGame(s);

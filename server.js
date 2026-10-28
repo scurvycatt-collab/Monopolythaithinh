@@ -208,12 +208,15 @@ async function handleApi(req, res, url) {
         case 'start': G.startGame(state); break;
         case 'reset': if (state.phase === 'lobby') throw new G.GameError('Đang ở phòng chờ rồi'); G.resetGame(state); break;
         case 'leave': G.removePlayer(state, p.id); break;
-        case 'kick': // phòng chờ: mời ra người đã mất kết nối (ghế bỏ trống)
-          if (isOnline(d.id)) throw new G.GameError('Người này đang online');
-          G.removePlayer(state, d.id); break;
+        case 'kick': { // host có quyền mời người chơi khác ra cả khi họ đang online
+          const target = G.byId(state, d.id);
+          if (!target || target.bot || target.id === p.id) throw new G.GameError('Không thể kích người chơi này');
+          G.removePlayer(state, target.id); break;
+        }
         case 'pet': G.setPet(state, p.id, d.pet); break;
+        case 'ready': G.setReady(state, p.id, d.ready); break;
         case 'rename': G.renamePlayer(state, p.id, d.name); break;
-        case 'settings': G.setSettings(state, d); break;
+        case 'settings': { const { mapId: _fixedAtCreation, ...roomSettings } = d; G.setSettings(state, roomSettings); break; }
         case 'addBot': G.addBot(state, { id: 'bot' + crypto.randomBytes(4).toString('hex') }); break;
         case 'removeBot': G.removeBot(state, d.id); break;
         case 'proxy': {

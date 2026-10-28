@@ -818,19 +818,19 @@ function renderWatchBadge() {
 const petGrid = (sel, taken, attr) => `<div class="pets">${G.PETS.map((x) => `<button type="button" class="pet${x.id === sel ? ' on' : ''}" ${attr}="${x.id}" ${taken.has(x.id) && x.id !== sel ? 'disabled' : ''} style="--c:${x.c}"><img alt="" src="${petImg(x.id)}"><span>${x.n}</span></button>`).join('')}</div>`;
 const timeRow = (cur, attr) => `<div class="times">${CFG.TIME_OPTIONS.map((m) => `<button type="button" class="pill ${m === cur ? '' : 'ghost'}" ${attr}="${m}">${timeLabel(m)}</button>`).join('')}</div>`;
 const turnRow = (cur, attr) => `<div class="times">${CFG.TURN_OPTIONS.map((v) => `<button type="button" class="pill ${v === cur ? '' : 'ghost'}" ${attr}="${v}">${v} giây</button>`).join('')}</div>`;
-const mapRow = (cur) => `<div class="map-options">${MAPS.map((map) => `<button type="button" class="map-option${map.id === cur ? ' on' : ''}" data-map="${map.id}"><span class="map-thumb"><img alt="Xem trước ${esc(map.name)}" src="${esc(map.preview)}"></span><span><b>${esc(map.name)}</b><small>${esc(map.description)}${map.default ? ' · Mặc định' : ''}</small></span></button>`).join('')}</div>`;
 function renderGateMapPreview() {
   const map = MAPS.find((item) => item.id === $('#gmap').value) || MAPS[0];
   $('#gmap-preview').innerHTML = `<img src="${esc(map.preview)}" alt="Ảnh xem trước ${esc(map.name)}"><span><b>${esc(map.name)}${map.default ? ' (Mặc định)' : ''}</b><small>${esc(map.description)}</small></span>`;
 }
 function lobbyNet(el) {
   const mine = me && G.byId(S, me.id), amHost = !!mine && S.hostId === mine.id, taken = new Set(S.players.map((p) => p.pet));
-  const currentMap = MAPS.find((map) => map.id === S.settings.mapId) || MAPS[0];
+  const allReady = S.players.length >= 2 && S.players.every((p) => p.bot || p.ready);
   const list = S.players.map((p) => {
     const on = !!p.bot || !!(presence[p.id] && presence[p.id].on);
     const remove = amHost && p.bot ? `<button type="button" class="kick" data-remove-bot="${p.id}" aria-label="Xóa ${esc(p.name)}">×</button>`
-      : amHost && !isMe(p.id) && !on ? `<button type="button" class="kick" data-kick="${p.id}" aria-label="Mời ${esc(p.name)} ra khỏi phòng">×</button>` : '';
-    return `<li style="--c:${p.color}"><img alt="" src="${petImg(p.pet)}"><b>${esc(p.name)}</b>${p.id === S.hostId ? '<em class="host">HOST</em>' : ''}${p.bot ? '<em class="bot">BOT</em>' : isMe(p.id) ? '<em>bạn</em>' : ''}<i class="dot${on ? ' on' : ''}" title="${p.bot ? 'Bot tự động' : on ? 'Đang online' : 'Mất kết nối'}"></i>${remove}</li>`;
+      : amHost && !isMe(p.id) ? `<button type="button" class="kick" data-kick="${p.id}" aria-label="Kích ${esc(p.name)} khỏi phòng" title="Kích người chơi">×</button>` : '';
+    const ready = p.bot || p.ready;
+    return `<li style="--c:${p.color}"><img alt="" src="${petImg(p.pet)}"><b>${esc(p.name)}</b>${p.id === S.hostId ? '<em class="host">HOST</em>' : ''}${p.bot ? '<em class="bot">BOT</em>' : isMe(p.id) ? '<em>bạn</em>' : ''}<em class="ready ${ready ? 'on' : ''}">${ready ? 'SẴN SÀNG' : 'CHƯA SẴN SÀNG'}</em><i class="dot${on ? ' on' : ''}" title="${p.bot ? 'Bot tự động' : on ? 'Đang online' : 'Mất kết nối'}"></i>${remove}</li>`;
   }).join('');
   if (!mine) {
     const pet = (S.players.length < CFG.MAX_PLAYERS) && (lobbyNet.pick && !taken.has(lobbyNet.pick) ? lobbyNet.pick : (G.PETS.find((x) => !taken.has(x.id)) || {}).id);
@@ -850,19 +850,19 @@ function lobbyNet(el) {
   }
   el.innerHTML = sheet('#2c8ff0', 'Thái Thịnh Monopoly', 'Phòng chờ', `<ul class="who">${list}</ul>
     <div class="fld">Đổi nhân vật</div>${petGrid(mine.pet, taken, 'data-pet')}
-    ${amHost ? `${S.players.length < CFG.MAX_PLAYERS ? '<button class="add-bot" type="button" id="lbot">🤖 + Thêm bot</button>' : ''}<div class="fld">Bản đồ</div>${mapRow(S.settings.mapId || MAPS[0].id)}
+    ${amHost ? `${S.players.length < CFG.MAX_PLAYERS ? '<button class="add-bot" type="button" id="lbot">🤖 + Thêm bot</button>' : ''}
     <div class="fld">Thời lượng ván</div>${timeRow(S.settings.timeLimitMin, 'data-t')}
-    <div class="fld">Thời gian mỗi lượt</div>${turnRow(S.settings.turnSec || CFG.TURN_SEC, 'data-ts')}` : `<div class="room-readonly"><b>Host đang cài đặt phòng</b><span>${esc(currentMap.name)} · ${timeLabel(S.settings.timeLimitMin)} · ${S.settings.turnSec || CFG.TURN_SEC} giây/lượt</span></div>`}
+    <div class="fld">Thời gian mỗi lượt</div>${turnRow(S.settings.turnSec || CFG.TURN_SEC, 'data-ts')}` : `<div class="room-readonly"><b>Host đang cài đặt phòng</b><span>${timeLabel(S.settings.timeLimitMin)} · ${S.settings.turnSec || CFG.TURN_SEC} giây/lượt</span></div>`}
     ${inviteBox()}`,
-    `<button class="pill ghost" type="button" id="lleave">Rời phòng</button>${amHost ? `<button class="pill big" type="button" id="lstart" ${S.players.length < 2 ? 'disabled' : ''}>Bắt đầu</button>` : '<span class="host-wait">Chờ host bắt đầu…</span>'}`);
+    `<button class="pill ghost" type="button" id="lleave">Rời phòng</button><button class="pill ${mine.ready ? 'ghost' : ''}" type="button" id="lready">${mine.ready ? 'Huỷ sẵn sàng' : 'Sẵn sàng'}</button>${amHost ? `<button class="pill big" type="button" id="lstart" ${allReady ? '' : 'disabled'}>Bắt đầu</button>` : '<span class="host-wait">Chờ host bắt đầu…</span>'}`);
   const send = (type, data) => api('api/act', { token: me.token, type, data }).then((result) => { if (result.state) onState(result.state); return result; }).catch((e) => { toast(e.message); return null; });
   el.querySelectorAll('[data-pet]').forEach((b) => { b.onclick = () => send('pet', { pet: b.dataset.pet }); });
   el.querySelectorAll('[data-kick]').forEach((b) => { b.onclick = () => send('kick', { id: b.dataset.kick }); });
   el.querySelectorAll('[data-remove-bot]').forEach((b) => { b.onclick = () => send('removeBot', { id: b.dataset.removeBot }); });
-  el.querySelectorAll('[data-map]').forEach((b) => { b.onclick = () => send('settings', { mapId: b.dataset.map }); });
   el.querySelectorAll('[data-t]').forEach((b) => { b.onclick = () => send('settings', { timeLimitMin: Number(b.dataset.t) }); });
   el.querySelectorAll('[data-ts]').forEach((b) => { b.onclick = () => send('settings', { turnSec: Number(b.dataset.ts) }); });
   $('#lleave').onclick = () => send('leave').then((result) => { if (result) exitRoom(); });
+  $('#lready').onclick = () => send('ready', { ready: !mine.ready });
   if ($('#lbot')) $('#lbot').onclick = () => send('addBot');
   if ($('#lstart')) $('#lstart').onclick = () => send('start');
 }
@@ -903,6 +903,7 @@ function lobbyLocal(el) {
     const ns = G.createState(); ns.settings.timeLimitMin = lobbyLocal.time; ns.settings.turnSec = lobbyLocal.turn;
     try {
       localDraft.forEach((d, k) => G.addPlayer(ns, { id: 'p' + k, token: 't' + k, name: d.name.trim() || `Người chơi ${k + 1}`, pet: d.pet }));
+      ns.players.forEach((p) => { p.ready = true; });
       G.startGame(ns);
     } catch (e) { return toast(e.message); }
     S = ns; lobbyOpen = false; localDraft = null; resetView(); save();

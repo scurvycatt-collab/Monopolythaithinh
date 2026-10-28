@@ -69,6 +69,11 @@ async function snapshot(token, viewer) {
   assert.strictEqual((await post('api/act', { token: b.token, type: 'removeBot', data: { id: bot.id } })).status, 403, 'khách không được xóa bot');
   ok(await post('api/act', { token: a.token, type: 'removeBot', data: { id: bot.id } }));
   ok(await post('api/act', { token: a.token, type: 'settings', data: { mapId: 'map-1', timeLimitMin: 90 } }));
+  ok(await post('api/act', { token: a.token, type: 'settings', data: { mapId: 'four-seasons' } }));
+  assert.strictEqual((await snapshot()).state.settings.mapId, 'map-1', 'bản đồ phải cố định từ lúc tạo phòng, không đổi được trong lobby');
+  assert.strictEqual((await post('api/act', { token: a.token, type: 'start' })).status, 400, 'host không được bắt đầu khi còn người chưa sẵn sàng');
+  ok(await post('api/act', { token: a.token, type: 'ready', data: { ready: true } }));
+  ok(await post('api/act', { token: b.token, type: 'ready', data: { ready: true } }));
   let d = await snapshot();
   assert.strictEqual(d.state.hostId, a.id, 'người đầu tiên phải là host');
   assert.strictEqual(d.state.settings.mapId, 'map-1', 'Map 1 phải là map mặc định');

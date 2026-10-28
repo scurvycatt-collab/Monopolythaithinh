@@ -68,6 +68,9 @@ for (const [i, entry] of (Array.isArray(MAPS) ? MAPS : []).entries()) {
   const src = readFileSync(path.join(PUBLIC, BOARD2D), 'utf8');
   const missing = REQUIRED_FNS.filter((fn) => !new RegExp(`\\b${fn}\\s*(\\(|:|=)`).test(src));
   if (missing.length) errors.push(`Khung xương public/${BOARD2D} thiếu hàm bắt buộc (★): ${missing.join(', ')}.`);
+  if (!/scheduleFrame\(active \?[^:]+: 250\)/.test(src)) errors.push('Khung 2D phải giảm nhịp đánh thức khi cảnh đứng yên.');
+  if (!/document\.hidden/.test(src) || !/visibilitychange/.test(src)) errors.push('Khung 2D phải dừng render khi tab bị ẩn như Map 1.');
+  if (!/const sprites = new Map\(\)/.test(src) || !/function cached\(key, fn\)/.test(src)) errors.push('Khung 2D phải cache sprite đã nướng thay vì tạo lại mỗi frame.');
   for (const doc of ['PEN.md', 'KINDS.md']) if (!isFile(path.join(PUBLIC, path.dirname(BOARD2D), doc))) errors.push(`Khung xương thiếu ${doc}.`);
   // defineSkin phải bắt lỗi: thiếu slot bắt buộc
   const { defineSkin } = await import(pathToFileURL(path.join(PUBLIC, 'js/render-common/board2d/skin.js')).href);

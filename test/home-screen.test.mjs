@@ -139,6 +139,10 @@ assert.match(css, /#watchbadge\{[^}]*left:calc\(12px[^}]*top:50%/, 'spectator ca
 assert.match(css, /#watchbadge\.show\{display:flex\}/, 'the spectator rail must support multiple stacked names');
 assert.match(app, /id="lbot">🤖 \+ Thêm bot/, 'the host lobby must offer an add-bot control');
 assert.match(app, /data-remove-bot=/, 'bot seats must expose a host-only remove control');
+assert.match(app, /amHost && !isMe\(p\.id\)[\s\S]*data-kick=/, 'host must be able to kick another human whether online or offline');
+assert.match(app, /id="lready"/, 'every human player must have a ready toggle');
+assert.match(app, /const allReady = S\.players\.length >= 2 && S\.players\.every\(\(p\) => p\.bot \|\| p\.ready\)/, 'start button must require every human player to be ready');
+assert.doesNotMatch(app, /const mapRow|data-map=/, 'map selection must not be rendered inside the lobby');
 assert.match(app, /p\.bot \? '<em class="bot">BOT<\/em>'/, 'bot seats must be visibly labelled');
 assert.match(app, /const online = \(pid\) => MODE === 'local' \|\| !!\(G\.byId\(S, pid\) \|\| \{\}\)\.bot/, 'bots must not be shown as disconnected players');
 assert.match(app, /MODE === 'net' \? isMe\(p\.id\)/, 'network mode must highlight only the local player token');
@@ -188,6 +192,9 @@ assert.match(worker, /viewers: this\.viewers\(\)/, 'Cloudflare SSE must publish 
 assert.match(server, /G\.botAction\(state\)/, 'Node hosting must execute bot turns immediately');
 assert.match(worker, /G\.botAction\(s\)/, 'Cloudflare hosting must execute bot turns immediately');
 assert.match(worker, /'addBot', 'removeBot'/, 'Cloudflare must protect bot management with host authorization');
+assert.match(worker, /case 'ready': G\.setReady\(s, p\.id, d\.ready\)/, 'Cloudflare must persist each player ready state');
+assert.match(worker, /mapId: _fixedAtCreation/, 'Cloudflare must keep the creation-time map immutable in the lobby');
+assert.doesNotMatch(worker, /this\.isOnline\(d\.id\).*Người này đang online/, 'Cloudflare host kick must also work for online players');
 assert.match(server, /const EMPTY_ROOM_TTL_MS = 2 \* 60 \* 1000/);
 assert.match(server, /if \(!hasOnlinePlayers\(\)\) emptyTimer = setTimeout\(deleteEmptyRoom, EMPTY_ROOM_TTL_MS\)/);
 assert.match(worker, /const EMPTY_ROOM_TTL_MS = 2 \* 60 \* 1000/);

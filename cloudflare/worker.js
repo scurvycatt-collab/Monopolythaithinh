@@ -245,12 +245,15 @@ export class GameRoom extends DurableObject {
           case 'start': G.startGame(s); break;
           case 'reset': if (s.phase === 'lobby') throw new G.GameError('Đang ở phòng chờ rồi'); G.resetGame(s); break;
           case 'leave': G.removePlayer(s, p.id); break;
-          case 'kick': // phòng chờ: mời ra người đã mất kết nối (ghế bỏ trống)
-            if (this.isOnline(d.id)) throw new G.GameError('Người này đang online');
-            G.removePlayer(s, d.id); break;
+          case 'kick': { // host có quyền mời người chơi khác ra cả khi họ đang online
+            const target = G.byId(s, d.id);
+            if (!target || target.bot || target.id === p.id) throw new G.GameError('Không thể kích người chơi này');
+            G.removePlayer(s, target.id); break;
+          }
           case 'pet': G.setPet(s, p.id, d.pet); break;
+          case 'ready': G.setReady(s, p.id, d.ready); break;
           case 'rename': G.renamePlayer(s, p.id, d.name); break;
-          case 'settings': G.setSettings(s, d); break;
+          case 'settings': { const { mapId: _fixedAtCreation, ...roomSettings } = d; G.setSettings(s, roomSettings); break; }
           case 'addBot': G.addBot(s, { id: 'bot' + hex(4) }); break;
           case 'removeBot': G.removeBot(s, d.id); break;
           case 'proxy': {
