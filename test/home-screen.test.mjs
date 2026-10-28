@@ -33,6 +33,9 @@ assert.match(html, /id="achievement"/);
 assert.doesNotMatch(html, /id="credit"/, '3D model credit must not remain as a fixed UI note');
 assert.match(css, /body\[data-screen="gate"\][^{]*:is\([^)]*#stage/);
 assert.match(css, /#gate\{[^}]*box-sizing:border-box/);
+assert.match(css, /#gate\{[^}]*height:100dvh[^}]*overflow:hidden/, 'desktop home screen must stay within the viewport without extra scroll area');
+assert.match(css, /\.gate-pattern\{position:fixed/, 'decorative background must not enlarge the home screen scroll area');
+assert.match(css, /@media \(max-width:850px\)\{#gate\{[^}]*overflow-x:hidden;overflow-y:auto/, 'small screens may scroll vertically but must never scroll horizontally');
 
 const gateFirst = app.indexOf("if (MODE === 'net' && ROOM_GATE) { showRoomGate(); return; }");
 const prepareAfterGate = app.indexOf('await prepareBoard();', gateFirst);

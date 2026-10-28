@@ -192,9 +192,9 @@ table.lvl tr.cur .ck{color:#fff}
 @media (prefers-reduced-motion: reduce){ *{animation:none!important;transition:none!important} }
 
 /* phòng chờ */
-#gate{position:fixed;inset:0;z-index:26;display:none;place-items:center;box-sizing:border-box;padding:clamp(18px,4vw,56px);overflow:auto;background:linear-gradient(145deg,#75c4d8 0%,#56adca 48%,#8bd2df 100%)}
+#gate{position:fixed;inset:0;z-index:26;display:none;place-items:center;box-sizing:border-box;width:100%;height:100dvh;padding:clamp(18px,4vw,56px);overflow:hidden;background:linear-gradient(145deg,#75c4d8 0%,#56adca 48%,#8bd2df 100%)}
 #gate.show{display:grid}
-.gate-pattern{position:absolute;inset:-25%;opacity:.14;transform:rotate(-18deg);background-image:radial-gradient(circle at center,#fff 0 7px,transparent 8px),linear-gradient(45deg,transparent 46%,#fff 47% 53%,transparent 54%);background-size:90px 90px;animation:gateDrift 30s linear infinite;pointer-events:none}
+.gate-pattern{position:fixed;inset:-25%;opacity:.14;transform:rotate(-18deg);background-image:radial-gradient(circle at center,#fff 0 7px,transparent 8px),linear-gradient(45deg,transparent 46%,#fff 47% 53%,transparent 54%);background-size:90px 90px;animation:gateDrift 30s linear infinite;pointer-events:none}
 @keyframes gateDrift{to{transform:rotate(-18deg) translate3d(90px,90px,0)}}
 .gate-layout{position:relative;z-index:1;width:min(1120px,100%);display:grid;grid-template-columns:minmax(390px,1.05fr) minmax(390px,.95fr);gap:clamp(36px,7vw,92px);align-items:center}
 .gate-brand{display:flex;align-items:center;justify-content:center}
@@ -216,7 +216,7 @@ table.lvl tr.cur .ck{color:#fff}
 #gwatch{grid-column:1/-1;background:linear-gradient(#8d82d8,#6c60bd);box-shadow:0 6px 0 #50449b,0 12px 22px rgba(80,68,155,.22)}
 .gate-idle{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:20px;color:#71858d;font-size:12px;font-weight:700}.gate-idle i{width:8px;height:8px;border-radius:50%;background:#8daf17;box-shadow:0 0 0 4px rgba(141,175,23,.16)}
 body[data-screen="gate"] :is(#stage,#cards,#hub,#zoom,#soundpanel,#banner,#modal,#rulebook,#info,#status,#achievement,#watchbadge,#sellbox,#selltags,#lobby,#conn,#newgame,#bigclock,#dicesum){display:none!important}
-@media (max-width:850px){#gate{align-items:start}.gate-layout{grid-template-columns:1fr;gap:28px}.gate-logo{width:min(460px,88vw)}.gate-card{width:min(520px,100%);box-sizing:border-box;justify-self:center;padding:26px 24px}}
+@media (max-width:850px){#gate{align-items:start;overflow-x:hidden;overflow-y:auto}.gate-layout{grid-template-columns:1fr;gap:28px}.gate-logo{width:min(460px,88vw)}.gate-card{width:min(520px,100%);box-sizing:border-box;justify-self:center;padding:26px 24px}}
 @media (max-width:480px){.gate-layout{gap:14px}.gate-logo{width:min(330px,88vw);border-radius:18px}.gate-card{padding:22px 18px;border-width:3px;border-radius:18px}.gate-actions{grid-template-columns:1fr}.gate-card h1{font-size:27px}.gate-idle{font-size:11px}#gwatch{grid-column:auto}.gate-map-preview{grid-template-columns:100px 1fr}.gate-map-preview img{width:100px;height:66px}}
 @media (prefers-reduced-motion:reduce){.gate-pattern{animation:none}}
 #lobby{position:fixed;inset:0;z-index:24;display:none;place-items:center;padding:16px;background:rgba(18,44,70,.38);overflow:auto}
