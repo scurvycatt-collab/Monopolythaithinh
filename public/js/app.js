@@ -26,7 +26,7 @@ const outageRounds = (i) => Math.max(0, Number(S.outage && S.outage[i] || 0) - N
 
 /* ---------------- âm thanh ---------------- */
 const SOUND_KEY = 'tt-monopoly-sound-v1';
-const soundPrefs = { music: true, musicVolume: 20, turn: true, turnVolume: 75 };
+const soundPrefs = { music: true, musicVolume: 15, turn: true, turnVolume: 75 };
 try { Object.assign(soundPrefs, JSON.parse(localStorage.getItem(SOUND_KEY) || '{}')); } catch (e) { /* dùng mặc định */ }
 let audioCtx = null, backgroundMusic = null;
 function saveSoundPrefs() { try { localStorage.setItem(SOUND_KEY, JSON.stringify(soundPrefs)); } catch (e) { /* trình duyệt chặn lưu */ } }

@@ -63,6 +63,7 @@ assert.match(houses, /cloth\.scale\.set\(2\.9, 2\.9, 1\)/, 'property pennant clo
 assert.match(app, /turnArrow\.userData\.material\.color\.set\(color\)/, 'turn arrow must use the current player color');
 assert.match(app, /turnArrow\.userData\.material\.emissive\.set\(color\)/, 'turn arrow glow must use the current player color');
 assert.match(app, /const SOUND_KEY = 'tt-monopoly-sound-v1'/);
+assert.match(app, /musicVolume: 15/, 'default background music must resolve to 30% after the 2x gain');
 assert.match(app, /turnVolume: 75/, 'effect volume must default to an audible level');
 assert.match(app, /background-loop\.wav\?v=1/, 'background music must use the pre-rendered one-minute loop');
 assert.match(app, /backgroundMusic\.loop = true/, 'background music must loop continuously');
