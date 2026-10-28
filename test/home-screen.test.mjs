@@ -11,6 +11,9 @@ const world = fs.readFileSync(new URL('../public/js/world.js', import.meta.url),
 assert.match(html, /<body data-screen="boot">/);
 assert.match(html, /class="gate-layout"/);
 assert.match(html, /class="gate-brand"/);
+assert.match(html, /class="gate-logo" src="assets\/avatar-map-style-v2\.png"/, 'home screen must use the complete generated logo image');
+assert.doesNotMatch(html, /gate-world|gate-ribbon|gate-edition/, 'home logo must not be assembled from separate HTML elements');
+assert.doesNotMatch(html, /Chơi cùng gia đình với một room code duy nhất/, 'obsolete room-code tagline must be removed');
 assert.match(html, /class="gate-card"/);
 assert.match(html, /id="gmap"/, 'room creation screen must include map selection');
 assert.match(html, /id="gmap-preview"/, 'map selector must include an image preview area');
