@@ -199,12 +199,12 @@ async function handleApi(req, res, url) {
           if (c.id === p.id) throw new G.GameError('Đang là lượt của bạn');
           if (offlineSec(c.id) < MANUAL_PROXY_SEC) throw new G.GameError(`${c.name} vẫn đang online`);
           runAuto(`${p.name} đi hộ`);
-          return sendJSON(res, 200, { ok: true, v: state.version });
+          break;
         }
         default: G.act(state, p.id, body.type, d);
       }
       commit();
-      return sendJSON(res, 200, { ok: true, v: state.version });
+      return sendJSON(res, 200, { ok: true, v: state.version, state: G.publicView(state) });
     }
     sendJSON(res, 404, { error: 'Không có API này' });
   } catch (e) {

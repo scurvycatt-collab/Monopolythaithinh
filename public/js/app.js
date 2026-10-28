@@ -833,6 +833,30 @@ function snapshot(key, obj) {
   snapDisposeTimer = setTimeout(releaseSnapshotRenderer, 2000);
   return (snapCache[key] = url);
 }
+// Ảnh công trình dùng WebGL + toDataURL, khá nặng trên điện thoại yếu. Modal phải gắn
+// nút bấm trước, sau đó mới tạo từng thumbnail lúc main thread rảnh để nút không bị "đơ".
+const SNAP_PLACEHOLDER = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="220" height="220" viewBox="0 0 220 220"%3E%3Crect width="220" height="220" rx="24" fill="%23eef6ff"/%3E%3Cpath d="M55 112 110 68l55 44v48H55z" fill="%23fff" stroke="%239dc6df" stroke-width="8"/%3E%3Cpath d="m48 116 62-50 62 50" fill="none" stroke="%232eaee5" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/%3E%3C/svg%3E';
+const snapJobs = new Map();
+let snapJobTimer = 0;
+function updateDeferredSnapshots(key, url) {
+  document.querySelectorAll('img[data-snapshot]').forEach((img) => { if (img.dataset.snapshot === key) img.src = url; });
+}
+function runSnapshotJob() {
+  snapJobTimer = 0;
+  if (busy || anims.length) { snapJobTimer = setTimeout(runSnapshotJob, 300); return; }
+  const entry = snapJobs.entries().next();
+  if (entry.done) return;
+  const [key, make] = entry.value; snapJobs.delete(key);
+  try { updateDeferredSnapshots(key, snapshot(key, make())); } catch (e) { console.warn('Không tạo được thumbnail 3D:', e); }
+  if (snapJobs.size) snapJobTimer = setTimeout(runSnapshotJob, 50);
+}
+function deferredSnapshotAttrs(key, make) {
+  if (!snapCache[key] && !snapJobs.has(key)) {
+    snapJobs.set(key, make);
+    if (!snapJobTimer) snapJobTimer = setTimeout(runSnapshotJob, 250);
+  }
+  return `src="${snapCache[key] || SNAP_PLACEHOLDER}" data-snapshot="${esc(key)}"`;
+}
 
 /* ---------------- khung hình, zoom & kéo ---------------- */
 const CAM_OFF = new THREE.Vector3(20, 16.5, 20);
@@ -1159,7 +1183,7 @@ function renderHub() {
       ${p.escapeCards ? '<button class="pill ghost" type="button" data-a="useCard">Dùng thẻ thoát đảo</button>' : ''}`;
   }
   hub.innerHTML = h; renderClock();
-  hub.querySelectorAll('[data-a]').forEach((b) => { b.onclick = () => act(b.dataset.a); });
+  hub.querySelectorAll('[data-a]').forEach((b) => { b.onclick = () => act(b.dataset.a, null, b); });
   if (st.kind === 'tour') {
     const ok = p.money >= CFG.TOUR_FEE;
     const targets = G.tourTargets(S, p), hasFreeCity = TILES.some((t) => t.type === 'city' && !S.props[t.i]);
@@ -1204,7 +1228,7 @@ function renderModal() {
   if (!busy && st && st.kind === 'flight') {
     const card = G.CARDS.find((x) => x.id === 'FLIGHT_TICKET');
     m.innerHTML = sheet('#f5a20a', esc(card.title), 'Chance', `<div class="chance"><p>${esc(card.text)}</p></div>`, '<button class="pill" type="button" id="ok">OK</button>');
-    m.classList.remove('peek'); m.classList.add('show'); $('#ok').onclick = () => act('flight'); return;
+    m.classList.remove('peek'); m.classList.add('show'); $('#ok').onclick = (e) => act('flight', null, e.currentTarget); return;
   }
   if (busy || !st || !['buy', 'upgrade', 'takeover'].includes(st.kind)) { m.classList.remove('show'); m.innerHTML = ''; return; }
   const col = seatOf[p.id].color;
@@ -1224,14 +1248,17 @@ function renderModal() {
     if (!choosable.includes(pickLevel) || !can(pickLevel)) pickLevel = choosable.filter(can).pop() ?? choosable[0];
     const NAMES = G.LEVEL_NAMES;
     const bl = resort ? Math.min(4, beachLevel(p.id) + 1) : 0;
-    const img = (l) => snapshot(resort ? `hb${bl}${col}` : `h${t.type}${l}${col}`, resort ? HK.beachHouse(bl, col) : HK.building('suburb', l, col));
+    const imageAttrs = (l) => {
+      const key = resort ? `hb${bl}${col}` : `h${t.type}${l}${col}`;
+      return deferredSnapshotAttrs(key, () => (resort ? HK.beachHouse(bl, col) : HK.building('suburb', l, col)));
+    };
     const rentAt = (l) => (resort ? CFG.RESORT_TOLL[bl] : G.toll(i, l));
     const card = (l) => {
       const built = st.kind === 'upgrade' && l <= cur, on = built || (l <= pickLevel && (choosable.includes(l) || l === 0 || (st.kind === 'buy'))), lock = built || !can(l);
       const lapLock = !built && l <= 3 && l > cap;
       const note = built ? 'Đã xây' : lapLock ? `🔒 Vòng ${CFG.LAP_CAP.indexOf(l) + 1}` : choosable.includes(l) ? money(costOf(l)) : '';
       return `<button type="button" data-l="${l}" class="${on ? 'on' : ''}" ${lock ? 'disabled' : ''} style="${!built && !can(l) ? 'opacity:.45' : ''}">
-        <img alt="" src="${img(l)}"><b>${resort ? HK.BEACH_LEVELS[bl - 1] : NAMES[l]}</b><span>${note}</span><i class="tick${on ? ' y' : ''}" aria-hidden="true"></i></button>`;
+        <img alt="" ${imageAttrs(l)}><b>${resort ? HK.BEACH_LEVELS[bl - 1] : NAMES[l]}</b><span>${note}</span><i class="tick${on ? ' y' : ''}" aria-hidden="true"></i></button>`;
     };
     const price = costOf(pickLevel);
     const body = `<div class="lv" style="--n:${shown.length}">${shown.map(card).join('')}</div>
@@ -1241,17 +1268,17 @@ function renderModal() {
     m.innerHTML = sheet(t.group ? GROUPS[t.group].color : RESORT_COLOR, esc(t.name), esc(t.group ? GROUPS[t.group].name : 'Bãi biển'), body,
       `<button class="pill ghost" type="button" id="no">${st.kind === 'buy' ? 'Không mua' : 'Để sau'}</button><button class="pill" type="button" id="yes" ${can(pickLevel) ? '' : 'disabled'}>${verb} ${money(price)}</button>`);
     m.querySelectorAll('[data-l]').forEach((b) => { b.onclick = () => { const l = Number(b.dataset.l); if (can(l)) { pickLevel = l; renderModal(); } }; });
-    $('#no').onclick = () => act('skip');
-    $('#yes').onclick = () => act(st.kind, { level: pickLevel });
+    $('#no').onclick = (e) => act('skip', null, e.currentTarget);
+    $('#yes').onclick = (e) => act(st.kind, { level: pickLevel }, e.currentTarget);
   } else if (st.kind === 'takeover') {
     const pr = S.props[st.tile], owner = G.byId(S, pr.owner);
-    const img = snapshot(`h${pr.level}${col}`, HK.building('suburb', pr.level, col));
-    m.innerHTML = sheet('#f5a20a', 'Mua lại?', `${esc(TILES[st.tile].name)} của ${esc(owner.name)}`, `<div class="tinfo"><div class="pic"><img alt="" src="${img}"></div><div>
+    const imageAttrs = deferredSnapshotAttrs(`h${pr.level}${col}`, () => HK.building('suburb', pr.level, col));
+    m.innerHTML = sheet('#f5a20a', 'Mua lại?', `${esc(TILES[st.tile].name)} của ${esc(owner.name)}`, `<div class="tinfo"><div class="pic"><img alt="" ${imageAttrs}></div><div>
       <p style="margin:2px 0 6px">Nhận luôn <b>${G.LEVEL_NAMES[pr.level]}</b></p>
       <div class="kv"><span>Giá mua lại</span><b>${money(st.price)}</b></div><div class="kv"><span>Bạn có</span><b>${money(p.money)}</b></div>
       </div></div>`,
       `<button class="pill ghost" type="button" id="no">Thôi</button><button class="pill" type="button" id="yes">Mua lại</button>`);
-    $('#no').onclick = () => act('skip'); $('#yes').onclick = () => act('takeover');
+    $('#no').onclick = (e) => act('skip', null, e.currentTarget); $('#yes').onclick = (e) => act('takeover', null, e.currentTarget);
   }
   m.classList.add('show');
 }
@@ -1379,7 +1406,8 @@ function showInfo(i) {
     const rows = [0, 1, 2, 3, 4].map((l) => `<tr class="${l === lv ? 'cur' : ''}"><td><span class="ck">${l <= lv ? '✓' : ''}</span>${G.LEVEL_NAMES[l]}</td>
       <td>${money(G.value(i, l))}</td><td>${money(G.toll(i, l))}</td><td>${money(G.value(i, l) * CFG.SELL_MULT)}</td></tr>`).join('');
     if (pr && G.ownsGroup(S, pr.owner, t.group)) notes.push(`Độc quyền nhóm ${GROUPS[t.group].name}: tiền thuê x${CFG.MONOPOLY_MULT}`);
-    body = `<div class="tinfo"><div class="pic"><img alt="" src="${snapshot(`h${Math.max(0, lv)}${hex}`, HK.building('suburb', Math.max(0, lv), hex))}"></div><div>
+    const citySnapshot = deferredSnapshotAttrs(`h${Math.max(0, lv)}${hex}`, () => HK.building('suburb', Math.max(0, lv), hex));
+    body = `<div class="tinfo"><div class="pic"><img alt="" ${citySnapshot}></div><div>
       <table class="lvl"><thead><tr><th>Công trình</th><th>Giá theo cấp</th><th>Tiền thuê</th><th>Bán ngân hàng</th></tr></thead><tbody>${rows}</tbody></table>
       ${pr ? `<div class="kv"><span>Tiền thuê hiện tại</span><b>${money(G.rentOf(S, i))}</b></div>
         <div class="kv"><span>Giá mua lại</span><b>${G.canTakeover(S, i) ? money(G.takeoverPrice(S, i)) : 'Không thể mua lại'}</b></div>` : ''}
@@ -1388,7 +1416,8 @@ function showInfo(i) {
     color = RESORT_COLOR; sub = `Bãi biển · ${owner ? 'của ' + esc(owner.name) : 'chưa có chủ'}`;
     const n = pr ? beachLevel(pr.owner) : 0;
     const rows = [1, 2, 3, 4].map((k) => `<tr class="${k === n ? 'cur' : ''}"><td><span class="ck">${k <= n ? '✓' : ''}</span>${k} bãi biển · ${HK.BEACH_LEVELS[k - 1]}</td><td>${money(CFG.RESORT_TOLL[k])}</td></tr>`).join('');
-    body = `<div class="tinfo"><div class="pic"><img alt="" src="${snapshot(`hb${Math.max(1, n)}${hex}`, HK.beachHouse(Math.max(1, n), hex))}"></div><div>
+    const resortSnapshot = deferredSnapshotAttrs(`hb${Math.max(1, n)}${hex}`, () => HK.beachHouse(Math.max(1, n), hex));
+    body = `<div class="tinfo"><div class="pic"><img alt="" ${resortSnapshot}></div><div>
       <table class="lvl"><thead><tr><th>Số bãi cùng chủ</th><th>Tiền thuê</th></tr></thead><tbody>${rows}</tbody></table>
       <div class="kv"><span>Giá mua</span><b>${money(t.price)}</b></div>
       <div class="kv"><span>Bán ngân hàng</span><b>${money(t.price * CFG.SELL_MULT)}</b></div>
@@ -1427,11 +1456,22 @@ addEventListener('keydown', (e) => { if (e.key === 'Escape') { hideInfo(); hideR
 const seen = { dice: null, move: -1, card: null, notice: null, reaction: null, achievement: -1 };
 function markSeen() { seen.dice = S.dice && S.dice.seq; seen.move = S.moves.reduce((a, m) => Math.max(a, m.seq), -1); seen.card = S.lastCard && S.lastCard.seq; seen.notice = S.notice && S.notice.seq; seen.reaction = S.reaction && S.reaction.seq; seen.achievement = (S.achievements || []).reduce((a, x) => Math.max(a, x.seq), -1); }
 let sending = false;
-async function act(type, data) {
+async function act(type, data, sourceButton = null) {
   if (busy || sending) return;
-  if (MODE === 'net') { // gửi lên server; trạng thái mới tới qua SSE rồi mới chạy hoạt ảnh
+  if (MODE === 'net') { // gửi server; phản hồi mang state mới, SSE vẫn là kênh đồng bộ dự phòng
     sending = true;
-    try { await api('api/act', { token: me && me.token, type, data: data || {} }); } catch (e) { toast(e.message); } finally { sending = false; }
+    const oldButtonHtml = sourceButton && sourceButton.innerHTML;
+    if (sourceButton) { sourceButton.disabled = true; sourceButton.classList.add('pending'); sourceButton.textContent = 'Đang xử lý…'; }
+    try {
+      const result = await api('api/act', { token: me && me.token, type, data: data || {} });
+      // Không phụ thuộc hoàn toàn vào SSE: phản hồi hành động mang luôn state mới để
+      // nút Mua/Nâng cấp đóng ngay cả khi luồng sự kiện trên mạng di động tới chậm.
+      if (result.state) onState(result.state);
+      else if (sourceButton && sourceButton.isConnected) { sourceButton.disabled = false; sourceButton.classList.remove('pending'); sourceButton.innerHTML = oldButtonHtml; }
+    } catch (e) {
+      toast(e.message);
+      if (sourceButton && sourceButton.isConnected) { sourceButton.disabled = false; sourceButton.classList.remove('pending'); sourceButton.innerHTML = oldButtonHtml; }
+    } finally { sending = false; }
     return;
   }
   const p = S.players[S.turn];
@@ -1493,10 +1533,17 @@ function resetView() {
 
 /* ---------------- chế độ mạng: API + SSE ---------------- */
 async function api(path, body) {
-  const r = await fetch(roomEndpoint(location.href, path, ROOM), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) });
-  const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(j.error || 'Mất kết nối tới server');
-  return j;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 12000);
+  try {
+    const r = await fetch(roomEndpoint(location.href, path, ROOM), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}), signal: controller.signal });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || 'Mất kết nối tới server');
+    return j;
+  } catch (e) {
+    if (e.name === 'AbortError') throw new Error('Mạng phản hồi quá chậm, hãy bấm lại');
+    throw e;
+  } finally { clearTimeout(timeout); }
 }
 const ME_KEY = 'tt-monopoly-me';
 const NAME_KEY = 'tt-monopoly-name';

@@ -247,7 +247,7 @@ export class GameRoom extends DurableObject {
           default: G.act(s, p.id, body.type, d);
         }
         await this.commit();
-        return json(200, { ok: true, v: s.version });
+        return json(200, { ok: true, v: s.version, state: G.publicView(s) });
       }
       return json(404, { error: 'Không có API này' });
     } catch (e) {

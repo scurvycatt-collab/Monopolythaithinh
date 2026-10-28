@@ -65,13 +65,16 @@ async function snapshot(token, viewer) {
   assert.strictEqual(d.state.settings.mapId, 'map-1', 'Map 1 phải là map mặc định');
   assert.deepStrictEqual(d.state.players.map((p) => p.pet), ['animal-dog', 'animal-fox']);
   assert.ok(d.state.players.every((p) => !p.token), 'token không được lộ ra ngoài');
-  ok(await post('api/act', { token: a.token, type: 'start' }));
+  const startResult = ok(await post('api/act', { token: a.token, type: 'start' }));
+  assert.strictEqual(startResult.state.phase, 'play', 'phản hồi hành động phải mang state mới để UI không phải chờ SSE');
+  assert.ok(startResult.state.players.every((p) => !p.token), 'state trong phản hồi hành động không được lộ token');
   d = await snapshot();
   assert.strictEqual(d.state.phase, 'play');
   assert.ok(d.state.endsAt - d.state.startedAt === 90 * 60000, 'thời lượng 90 phút');
   const cur = d.state.players[d.state.turn].id, curTok = cur === a.id ? a.token : b.token, other = cur === a.id ? b.token : a.token;
   assert.strictEqual((await post('api/act', { token: other, type: 'roll' })).status, 400, 'sai lượt phải bị từ chối');
-  ok(await post('api/act', { token: curTok, type: 'roll' }));
+  const rollResult = ok(await post('api/act', { token: curTok, type: 'roll' }));
+  assert.ok(rollResult.state.dice && rollResult.state.moves.length, 'phản hồi roll phải có ngay kết quả mới');
   const v1 = (await snapshot()).state;
   assert.ok(v1.dice && v1.moves.length, 'đã đổ xúc xắc');
 

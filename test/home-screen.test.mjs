@@ -70,6 +70,11 @@ assert.match(app, /navigator\.deviceMemory/, 'first launch must choose a safe gr
 assert.match(app, /replaceMainRenderer\(wantsAntialias\)/, 'changing to or from low graphics must recreate the WebGL context with the requested antialias setting');
 assert.match(app, /old\.dispose\(\); old\.forceContextLoss\(\)/, 'replaced WebGL contexts must be released');
 assert.match(app, /setTimeout\(releaseSnapshotRenderer, 2000\)/, 'the snapshot WebGL context must be released after its burst of work');
+assert.match(app, /function deferredSnapshotAttrs\(key, make\)/, '3D property thumbnails must be deferred so modal controls bind before WebGL capture');
+assert.match(app, /if \(busy \|\| anims\.length\)/, 'deferred thumbnails must not compete with gameplay animations');
+assert.match(app, /sourceButton\.textContent = 'Đang xử lý…'/, 'network actions must show immediate button feedback');
+assert.match(app, /if \(result\.state\) onState\(result\.state\)/, 'actions must apply the state returned by HTTP instead of depending only on SSE');
+assert.match(app, /controller\.abort\(\), 12000/, 'stalled action requests must time out and restore the UI');
 assert.equal((app.match(/fetch\('models\/bundle\.json'\)/g) || []).length, 1, 'the model bundle must be fetched and parsed only once');
 assert.match(houses, /suppliedBundle \|\| await/, 'house loader must reuse the already parsed model bundle');
 const festivalFlagSource = specials.slice(specials.indexOf('export function festivalFlag'), specials.indexOf('export function festivalPlaque'));
