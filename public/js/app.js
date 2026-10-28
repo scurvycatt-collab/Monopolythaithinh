@@ -141,6 +141,7 @@ const online = (pid) => MODE === 'local' || !!(G.byId(S, pid) || {}).bot || !pre
 const DEFAULT_RENDERER = 'maps/map-1/renderer.js';
 let board = null, boardMapId = '';
 // Thông số hiển thị do renderer của map khai báo (board.meta); giá trị dưới chỉ là dự phòng khi map chưa tải.
+const RESORT_COLOR = '#7fd3dd'; // màu thẻ thông tin ô resort (UI, không phụ thuộc map)
 const META_DEFAULT = { buildMs: 2400, resortLevels: ['Cấp 1', 'Cấp 2', 'Cấp 3', 'Cấp 4'] };
 const boardMeta = () => Object.assign({}, META_DEFAULT, board && board.meta);
 const beachLevel = (owner) => Math.min(4, G.ownedBy(S, owner).filter((j) => TILES[j].type === 'resort').length);
