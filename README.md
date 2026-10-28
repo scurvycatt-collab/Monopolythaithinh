@@ -65,9 +65,9 @@ Toàn bộ luật nằm ở **một file duy nhất: `public/rules.js`**, gồm 
 
 Quy trình đổi luật: sửa `rules.js` (thông số + dòng bảng quyết định liên quan) → `npm run rules:doc` → `npm run verify` → sửa engine nếu có dòng báo lệch → commit.
 
-Quy tắc thumbnail công trình: khi thêm/sửa mẫu nhà, resort, màu người chơi hoặc số cấp công trình, phải chạy `npm run thumbnails` để sinh lại toàn bộ PNG trong `public/thumbnails/property/`. Không sửa các PNG hay `manifest.json` bằng tay. `npm run verify`, hook commit, build exe và deploy đều kiểm tra hash nguồn, đủ màu/cấp và phiên bản cache; ảnh chưa đồng bộ sẽ làm quy trình dừng.
+Quy tắc asset sinh sẵn: khi thêm/sửa model nhà hoặc nhân vật, resort, màu người chơi, số cấp công trình, nền thế giới, hoa văn nhóm đất hay texture môi trường, phải chạy `npm run thumbnails`. Lệnh này sinh lại PNG trong `public/thumbnails/property/` và `public/thumbnails/static/` (avatar, xúc xắc, nền/texture và biến thể màu model). Model 3D gốc vẫn là nguồn chuẩn và vẫn dùng trên bàn cờ; không sửa PNG hoặc manifest bằng tay. `npm run verify`, hook commit, build exe và deploy đều kiểm tra hash nguồn, đủ biến thể và phiên bản cache; asset chưa đồng bộ sẽ làm quy trình dừng.
 
-`npm run verify` = tài liệu khớp luật + thumbnail khớp model/màu/cấp + bảng quyết định + giả lập 300 ván + thử server thật. Chặn ở ba chỗ:
+`npm run verify` = tài liệu khớp luật + toàn bộ asset sinh sẵn khớp nguồn 3D/màu/cấp + bảng quyết định + giả lập 300 ván + thử server thật. Chặn ở ba chỗ:
 - **commit**: chạy `npm run setup` một lần để bật hook `.githooks/pre-commit`;
 - **GitHub**: `.github/workflows/verify.yml` chạy mỗi lần push / pull request;
 - **đóng gói**: `npm run build:exe` chạy verify trước.

@@ -6,6 +6,22 @@
    Quy ước như houses.js: đáy y=0, tâm (0,0), mặt chính nhìn về +z. */
 import * as THREE from 'three';
 import { get, at, mat, box, cyl, sign, shade } from './houses.js';
+import { PROPERTY_THUMBNAIL_VERSION } from '../thumbnails/property/version.js';
+
+const generatedTextures = new Map();
+export async function preloadSpecialAssets(mult = 2) {
+  const names = ['firework-dot', 'chance-card', `festival-banner-${mult}`, 'championship-plaque-near', 'championship-plaque-far'];
+  const loader = new THREE.TextureLoader();
+  await Promise.all(names.map(async (name) => {
+    const tex = await loader.loadAsync(`thumbnails/static/${name}.png?v=${PROPERTY_THUMBNAIL_VERSION.slice(0, 12)}`);
+    tex.colorSpace = THREE.SRGBColorSpace; generatedTextures.set(name, tex);
+  }));
+}
+const generatedTexture = (name) => {
+  const tex = generatedTextures.get(name);
+  if (!tex) throw new Error(`Thiếu texture đặc biệt sinh sẵn: ${name}`);
+  return tex;
+};
 
 export const BEACH_LEVELS = ['Chòi dù', 'Bungalow', 'Villa biển', 'Resort'];
 const STONE = '#f1e2c4', STONE2 = '#e3cfa8', STONE3 = '#cbb38a', SAND = '#f3dcaa', WOOD = '#b98556', WOOD2 = '#946541', WHITE = '#fbf8f1', GLASS = '#8fd0f0', POOL = '#5fcbe8';
@@ -173,11 +189,14 @@ export function colosseum() {
 
 /* pháo hoa: mỗi quả bay lên kéo vệt rồi nổ thành chùm hạt rơi theo trọng lực */
 let dotTex;
-function dot() {
-  if (dotTex) return dotTex;
+export function fireworkDotCanvas() {
   const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
   const g = x.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.35, 'rgba(255,255,255,.9)'); g.addColorStop(1, 'rgba(255,255,255,0)');
-  x.fillStyle = g; x.fillRect(0, 0, 64, 64); dotTex = new THREE.CanvasTexture(c); return dotTex;
+  x.fillStyle = g; x.fillRect(0, 0, 64, 64); return c;
+}
+function dot() {
+  if (dotTex) return dotTex;
+  dotTex = generatedTexture('firework-dot'); return dotTex;
 }
 function fireworks(spots) {
   const root = new THREE.Group(), N = 130, PAL = [...PLAYERS, '#ffc531', '#ff6fb5'];
@@ -574,12 +593,14 @@ function questionMark(col = '#f2a33c') {
   return g;
 }
 let cardTex;
+export function chanceCardCanvas() {
+  const c = document.createElement('canvas'); c.width = 128; c.height = 180; const x = c.getContext('2d');
+  x.fillStyle = '#fff6e3'; x.fillRect(0, 0, 128, 180); x.strokeStyle = '#f2a33c'; x.lineWidth = 10; x.strokeRect(8, 8, 112, 164);
+  x.fillStyle = '#f2a33c'; x.font = '900 110px Rubik, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('?', 64, 96); return c;
+}
 function chanceCardMat() {
   if (!cardTex) {
-    const c = document.createElement('canvas'); c.width = 128; c.height = 180; const x = c.getContext('2d');
-    x.fillStyle = '#fff6e3'; x.fillRect(0, 0, 128, 180); x.strokeStyle = '#f2a33c'; x.lineWidth = 10; x.strokeRect(8, 8, 112, 164);
-    x.fillStyle = '#f2a33c'; x.font = '900 110px Rubik, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('?', 64, 96);
-    cardTex = new THREE.CanvasTexture(c); cardTex.colorSpace = THREE.SRGBColorSpace;
+    cardTex = generatedTexture('chance-card');
   }
   const face = new THREE.MeshStandardMaterial({ map: cardTex, roughness: 0.6 }), edge = mat('#f2a33c');
   return [edge, edge, edge, edge, face, face];
@@ -678,6 +699,12 @@ export function startGate() {
 
 /* ===================== BĂNG RÔN CỜ LỄ HỘI ===================== */
 // Một băng rôn đậm màu căng giữa hai cọc, đặt dọc cạnh sau của ô để không bị công trình che khuất.
+export function festivalBannerCanvas(mult) {
+  const cv = document.createElement('canvas'); cv.width = 512; cv.height = 160; const c = cv.getContext('2d');
+  const grad = c.createLinearGradient(0, 0, 0, cv.height); grad.addColorStop(0, '#ff9a3c'); grad.addColorStop(1, '#ec5f31');
+  c.fillStyle = grad; c.fillRect(0, 0, cv.width, cv.height); c.strokeStyle = '#ffd45c'; c.lineWidth = 12; c.strokeRect(6, 6, cv.width - 12, cv.height - 12);
+  c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = '900 72px Rubik, sans-serif'; c.fillStyle = 'rgba(116,42,16,.32)'; c.fillText(`LỄ HỘI ×${mult}`, cv.width / 2, cv.height / 2 + 7); c.fillStyle = '#ffffff'; c.fillText(`LỄ HỘI ×${mult}`, cv.width / 2, cv.height / 2); return cv;
+}
 export function festivalFlag(mult) {
   const g = new THREE.Group();
   const postX = 0.54, postH = 1.02;
@@ -694,14 +721,7 @@ export function festivalFlag(mult) {
     pos.setY(i, pos.getY(i) - Math.sin(u * Math.PI) * 0.055);
   }
   const base = pos.array.slice();
-  const cv = document.createElement('canvas'); cv.width = 512; cv.height = 160; const c = cv.getContext('2d');
-  const grad = c.createLinearGradient(0, 0, 0, cv.height); grad.addColorStop(0, '#ff9a3c'); grad.addColorStop(1, '#ec5f31');
-  c.fillStyle = grad; c.fillRect(0, 0, cv.width, cv.height);
-  c.strokeStyle = '#ffd45c'; c.lineWidth = 12; c.strokeRect(6, 6, cv.width - 12, cv.height - 12);
-  c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = '900 72px Rubik, sans-serif';
-  c.fillStyle = 'rgba(116,42,16,.32)'; c.fillText(`LỄ HỘI ×${mult}`, cv.width / 2, cv.height / 2 + 7);
-  c.fillStyle = '#ffffff'; c.fillText(`LỄ HỘI ×${mult}`, cv.width / 2, cv.height / 2);
-  const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
+  const tex = generatedTexture(`festival-banner-${mult}`);
   const banner = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: tex, roughness: 0.62, side: THREE.DoubleSide }));
   banner.position.y = 0.83; banner.position.z = 0.012; banner.castShadow = true; g.add(banner);
   // Dây ngang giúp hai đầu băng rôn đọc rõ là đang được căng giữa hai cọc.
@@ -716,7 +736,7 @@ export function festivalFlag(mult) {
   };
   g.userData.dispose = () => {
     g.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
-    tex.dispose(); banner.material.dispose();
+    banner.material.dispose();
   };
   g.userData.update(0);
   return g;
@@ -725,7 +745,7 @@ export function festivalFlag(mult) {
 /* ===================== BIỂU TƯỢNG CHAMPIONSHIPS ===================== */
 // Huy hiệu cúp vàng, gắn phẳng lên mặt đất phía dưới dải giá của ô.
 // w, h: kích thước mặt nâu còn trống (đơn vị bàn cờ); mặt bảng nhìn về +z, đáy ở y = 0.
-export function festivalPlaque(w, h) {
+export function festivalPlaqueCanvas(w, h) {
   const PXU = 480, cw = Math.round(w * PXU), ch = Math.round(h * PXU);
   const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch; const c = cv.getContext('2d');
   const r = ch * 0.16;
@@ -740,11 +760,14 @@ export function festivalPlaque(w, h) {
   c.beginPath(); c.arc(tx + tw * 0.18, ty + th * 0.2, th * 0.15, Math.PI * 0.5, Math.PI * 1.5); c.stroke();
   c.beginPath(); c.arc(tx + tw * 0.82, ty + th * 0.2, th * 0.15, -Math.PI * 0.5, Math.PI * 0.5); c.stroke();
   c.fillRect(tx + tw * 0.43, ty + th * 0.64, tw * 0.14, th * 0.18); c.fillRect(tx + tw * 0.25, ty + th * 0.82, tw * 0.5, th * 0.18);
-  const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  return cv;
+}
+export function festivalPlaque(w, h) {
+  const tex = generatedTexture(h < 0.35 ? 'championship-plaque-far' : 'championship-plaque-near'); tex.anisotropy = 4;
   const face = new THREE.MeshBasicMaterial({ map: tex }), edge = mat('#c68f08');
   const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.04), [edge, edge, edge, edge, face, edge]);
   m.position.y = h / 2; m.castShadow = true;
   const g = new THREE.Group(); g.add(m);
-  g.userData.dispose = () => { m.geometry.dispose(); tex.dispose(); face.dispose(); };
+  g.userData.dispose = () => { m.geometry.dispose(); face.dispose(); };
   return g;
 }

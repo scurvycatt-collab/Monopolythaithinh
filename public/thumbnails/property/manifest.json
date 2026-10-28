@@ -1,10 +1,23 @@
 {
   "version": 1,
-  "sourceHash": "a4c97a6077864fd5acf740d7be1063ae4d99e65d2c9a463fb232e00bb7986494",
+  "sourceHash": "e0fe74ae0b6d37d94ed03e69f8cbfb8a2903c73d849383e403422b43a02580ba",
   "sources": [
     "public/js/houses.js",
     "public/js/specials.js",
-    "public/models/bundle.json"
+    "public/js/world.js",
+    "public/models/bundle.json",
+    "public/patterns/pattern_18.png",
+    "public/patterns/pattern_72.png",
+    "public/patterns/pattern_79.png",
+    "public/patterns/pattern_17.png",
+    "public/patterns/pattern_22.png",
+    "public/patterns/pattern_14.png",
+    "public/patterns/pattern_60.png",
+    "public/patterns/pattern_59.png",
+    "public/models/suburban/Textures/colormap.png",
+    "public/models/suburban/Textures/variation-a.png",
+    "public/models/commercial/Textures/colormap.png",
+    "public/models/commercial/Textures/variation-a.png"
   ],
   "colors": [
     "#ec3f78",

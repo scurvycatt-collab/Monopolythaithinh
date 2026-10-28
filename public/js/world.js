@@ -11,6 +11,7 @@
      giữa, phía trước : đồng cỏ trống cho xúc xắc lăn (xúc xắc đè lên cũng không sao) */
 import * as THREE from 'three';
 import { get, at, mat, box, cyl, building } from './houses.js';
+import { PROPERTY_THUMBNAIL_VERSION } from '../thumbnails/property/version.js';
 
 const S = 11.9, HALF = S / 2;
 const C = {
@@ -19,9 +20,24 @@ const C = {
 };
 const rng = (seed) => { let s = seed * 9301 + 49297; return () => ((s = (s * 9301 + 49297) % 233280) / 233280); };
 const shadowAll = (g) => { g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); return g; };
+const generated = new Map();
+const generatedLoader = new THREE.TextureLoader();
+const generatedUrl = (name) => `thumbnails/static/${name}.png?v=${PROPERTY_THUMBNAIL_VERSION.slice(0, 12)}`;
+export async function preloadWorldAssets() {
+  const names = ['world-ground', 'water-horizontal', 'water-vertical', 'balloon-ef5a3c-ffd23a', 'balloon-2c8ff0-ffffff', 'balloon-8a63e8-7fe3d2'];
+  await Promise.all(names.map(async (name) => {
+    const tex = await generatedLoader.loadAsync(generatedUrl(name));
+    tex.colorSpace = THREE.SRGBColorSpace; generated.set(name, tex);
+  }));
+}
+const generatedTexture = (name) => {
+  const source = generated.get(name);
+  if (!source) throw new Error(`Texture sinh sẵn chưa được tải: ${name}`);
+  return source.clone();
+};
 
 /* ---------- mặt đất: cỏ, ruộng ô bàn cờ, lối mòn (vẽ canvas) ---------- */
-function ground() {
+export function worldGroundCanvas() {
   const N = 1536, cv = document.createElement('canvas'); cv.width = cv.height = N; const c = cv.getContext('2d');
   const P = (x, z) => [((x + HALF) / S) * N, ((z + HALF) / S) * N];   // toạ độ thế giới → điểm ảnh
   const k = N / S;
@@ -47,7 +63,10 @@ function ground() {
   c.strokeStyle = 'rgba(255,255,255,.35)'; c.lineWidth = 0.06 * k; c.setLineDash([0.12 * k, 0.12 * k]); c.stroke(); c.setLineDash([]);
   // bãi phóng tên lửa: sân bê tông tròn
   { const [px, pz] = P(4.4, -0.35); c.fillStyle = '#d9dde3'; c.beginPath(); c.arc(px, pz, 0.85 * k, 0, 7); c.fill(); c.strokeStyle = '#f2b632'; c.lineWidth = 8; c.beginPath(); c.arc(px, pz, 0.62 * k, 0, 7); c.stroke(); }
-  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+  return cv;
+}
+function ground() {
+  const t = generatedTexture('world-ground'); t.anisotropy = 8; t.needsUpdate = true;
   const m = new THREE.Mesh(new THREE.PlaneGeometry(S, S), new THREE.MeshStandardMaterial({ map: t, roughness: .95 }));
   m.rotation.x = -Math.PI / 2; m.receiveShadow = true; return m;
 }
@@ -67,13 +86,17 @@ function mountain(h, r, seed, snowAt = 0.62) {
 }
 
 /* ---------- dải nước theo đường cong (sông, thác) ---------- */
-function waterTex(vertical) {
+export function worldWaterCanvas(vertical) {
   const cv = document.createElement('canvas'); cv.width = 64; cv.height = 256; const c = cv.getContext('2d');
   c.fillStyle = vertical ? '#bfeaf8' : C.water; c.fillRect(0, 0, 64, 256);
   c.strokeStyle = vertical ? 'rgba(255,255,255,.9)' : 'rgba(255,255,255,.55)'; c.lineWidth = vertical ? 5 : 3;
   const r = rng(vertical ? 3 : 8);
   for (let i = 0; i < (vertical ? 14 : 9); i++) { const x = 6 + r() * 52, y = r() * 256, l = vertical ? 30 + r() * 50 : 14 + r() * 18; c.beginPath(); c.moveTo(x, y); c.lineTo(vertical ? x : x + (r() - .5) * 8, y + l); c.stroke(); }
-  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; return t;
+  return cv;
+}
+function waterTex(vertical) {
+  const t = generatedTexture(vertical ? 'water-vertical' : 'water-horizontal');
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.needsUpdate = true; return t;
 }
 function ribbon(curve, width, y, matl, repeat, widthFn) {
   const n = 120, pos = [], uv = [], idx = [];
@@ -167,11 +190,14 @@ function coaster() {
 }
 
 /* ---------- khinh khí cầu ---------- */
-function balloon(c1, c2) {
-  const g = new THREE.Group();
+export function balloonStripeCanvas(c1, c2) {
   const cv = document.createElement('canvas'); cv.width = 128; cv.height = 8; const x = cv.getContext('2d');
   for (let i = 0; i < 8; i++) { x.fillStyle = i % 2 ? c1 : c2; x.fillRect(i * 16, 0, 16, 8); }
-  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace;
+  return cv;
+}
+function balloon(c1, c2) {
+  const g = new THREE.Group();
+  const t = generatedTexture(`balloon-${c1.slice(1)}-${c2.slice(1)}`); t.needsUpdate = true;
   const env = new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 12), new THREE.MeshStandardMaterial({ map: t, roughness: .6, flatShading: true }));
   env.scale.y = 1.15; env.position.y = 0.55; g.add(env);
   const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.07, 0.16, 12), new THREE.MeshStandardMaterial({ map: t, roughness: .6 })); neck.position.y = 0.2; g.add(neck);

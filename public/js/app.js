@@ -2,12 +2,12 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { loadKit, building as houseBuilding } from './houses.js';
-import { colosseum, worldTour, lostIsland, startGate, chanceBox, beachHouse, festivalFlag, festivalPlaque, BEACH_LEVELS } from './specials.js';
-import { centerWorld } from './world.js';
+import { colosseum, worldTour, lostIsland, startGate, chanceBox, beachHouse, festivalFlag, festivalPlaque, preloadSpecialAssets, BEACH_LEVELS } from './specials.js';
+import { centerWorld, preloadWorldAssets } from './world.js';
 import qrcode from '../vendor/qrcode.mjs';
 import { normalizeRoom, roomEndpoint, selectRoomCode, validRoom } from './room-session.mjs';
 import { PROPERTY_THUMBNAIL_VERSION } from '../thumbnails/property/version.js';
-const HK = { loadKit, building: houseBuilding, colosseum, worldTour, lostIsland, startGate, chanceBox, beachHouse, festivalFlag, festivalPlaque, BEACH_LEVELS };
+const HK = { loadKit, building: houseBuilding, colosseum, worldTour, lostIsland, startGate, chanceBox, beachHouse, festivalFlag, festivalPlaque, preloadSpecialAssets, BEACH_LEVELS };
 
 const G = window.Game;
 const { TILES, GROUPS, CFG, MAPS } = G;
@@ -17,9 +17,9 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const GRAPHICS_KEY = 'tt-monopoly-graphics-v1';
 const GRAPHICS = {
-  low: { ratio: 1, shadows: false, shadowSize: 512, fps: 30, idleFps: 4, motionFps: 4, worldMotion: false, confetti: 30 },
-  medium: { ratio: 1.5, shadows: true, shadowSize: 1024, fps: 40, idleFps: 12, motionFps: 30, worldMotion: true, confetti: 50 },
-  high: { ratio: 2, shadows: true, shadowSize: 2048, fps: 60, idleFps: 15, motionFps: 45, worldMotion: true, confetti: 70 },
+  low: { ratio: 1, shadows: false, shadowSize: 512, fps: 30, idleFps: 30, motionFps: 30, worldMotion: false, confetti: 30 },
+  medium: { ratio: 1.5, shadows: true, shadowSize: 1024, fps: 40, idleFps: 40, motionFps: 40, worldMotion: true, confetti: 50 },
+  high: { ratio: 2, shadows: true, shadowSize: 2048, fps: 60, idleFps: 60, motionFps: 60, worldMotion: true, confetti: 70 },
 };
 let graphicsLevel = 'high';
 try {
@@ -303,18 +303,13 @@ const GROUND_PATTERN_ALPHA = 0.45; // độ đậm của hoa văn phủ lên mà
 const groundImg = {}, groundCv = {};
 function loadGroundPatterns() {
   return Promise.all(Object.entries(GROUPS).map(([g, x]) => new Promise((res) => {
-    const im = new Image(); im.onload = () => { groundImg[g] = im; res(); }; im.onerror = () => res(); im.src = `patterns/pattern_${x.pattern}.png`;
+    const im = new Image(); im.onload = () => { groundImg[g] = im; res(); }; im.onerror = () => res(); im.src = `thumbnails/static/ground-pattern-${g}.png?v=${PROPERTY_THUMBNAIL_VERSION.slice(0, 12)}`;
   })));
 }
 function groundTile(g) {
   if (groundCv[g] !== undefined) return groundCv[g];
   const im = groundImg[g]; if (!im) return (groundCv[g] = null);
-  const N = im.width, cv = document.createElement('canvas'); cv.width = cv.height = N; const c = cv.getContext('2d');
-  c.drawImage(im, 0, 0); const d = c.getImageData(0, 0, N, N), px = d.data;
-  let sum = 0; for (let k = 0; k < px.length; k += 4) sum += px[k]; const inv = sum / (px.length / 4) < 128;
-  const hex = GROUPS[g].ground, n = parseInt(hex.slice(1), 16), L = [n >> 16, (n >> 8) & 255, n & 255], Dk = L.map((v) => Math.round(v * 0.86));
-  for (let k = 0; k < px.length; k += 4) { let t = px[k] / 255; if (inv) t = 1 - t; for (let j = 0; j < 3; j++) px[k + j] = Math.round(Dk[j] + (L[j] - Dk[j]) * t); px[k + 3] = 255; }
-  c.putImageData(d, 0, 0); return (groundCv[g] = cv);
+  return (groundCv[g] = im);
 }
 function paintGround(ctx, x, y, w, h, group) {
   ctx.fillStyle = GROUPS[group].ground; ctx.fillRect(x, y, w, h);
@@ -657,6 +652,7 @@ const dyingObjs = new Set();
 // trả về thời điểm (ms) nhà mới bắt đầu xây, để tiền chạy cùng lúc
 function syncBuildings(instant) {
   let startAt = 0;
+  let geometryChanged = false;
   for (let i = 0; i < 32; i++) {
     const pr = S.props[i], t = TILES[i];
     const tsig = pr ? `${pr.owner}:${pr.level}:${S.festival === i}:${S.festLevel}:${outageRounds(i)}:${G.rentOf(S, i)}` : '';
@@ -664,21 +660,25 @@ function syncBuildings(instant) {
     const msig = pr ? `${graphicsLevel}:${pr.owner}:${t.type === 'resort' ? 'b' + beachLevel(pr.owner) : pr.level}` : '';
     if ((buildObjs[i] ? buildObjs[i].sig : '') === msig) continue;
     let wait = 0;
-    if (buildObjs[i] && instant) { board.remove(buildObjs[i].obj); delete buildObjs[i]; }
+    if (buildObjs[i] && instant) { board.remove(buildObjs[i].obj); delete buildObjs[i]; geometryChanged = true; }
     if (buildObjs[i]) { // bán / bị mua lại / đổi cấp: nhà cũ bốc lên biến mất trước
       const old = buildObjs[i].obj; delete buildObjs[i];
       dyingObjs.add(old);
       wait = animate(old, 'sell', 0, () => { board.remove(old); dyingObjs.delete(old); });
+      geometryChanged = true;
       if (wait) wait += 120;
     }
     if (!pr) continue;
     const grp = makeBuilding(i);
     board.add(grp);
+    geometryChanged = true;
     if (!instant) { animate(grp, 'build', wait); startAt = Math.max(startAt, wait); }
     buildObjs[i] = { obj: grp, sig: msig };
   }
   syncFestival();
-  requestShadowUpdate();
+  // Đổi tiền thuê/mất điện chỉ vẽ lại texture ô đất, không ảnh hưởng bóng.
+  // Shadow map chỉ cần dựng lại nếu thực sự thêm, xoá hoặc đổi model công trình.
+  if (geometryChanged) requestShadowUpdate();
   return startAt;
 }
 
@@ -743,7 +743,6 @@ async function hop(pid, path, onTile) {
       const step = () => {
         const k = Math.min(1, (performance.now() - t0) / dur);
         t.position.lerpVectors(from, to, k); t.position.y = TOPY + Math.sin(k * Math.PI) * 0.6;
-        requestShadowUpdate();
         if (k < 1) requestAnimationFrame(step); else res();
       };
       step();
@@ -757,20 +756,20 @@ async function hop(pid, path, onTile) {
 }
 
 /* xúc xắc 3D */
-const PIPS = { 1: [[.5, .5]], 2: [[.27, .27], [.73, .73]], 3: [[.25, .25], [.5, .5], [.75, .75]], 4: [[.27, .27], [.73, .27], [.27, .73], [.73, .73]], 5: [[.25, .25], [.75, .25], [.5, .5], [.25, .75], [.75, .75]], 6: [[.28, .22], [.72, .22], [.28, .5], [.72, .5], [.28, .78], [.72, .78]] };
-function dieFace(v) {
-  const cv = document.createElement('canvas'); cv.width = cv.height = 128; const c = cv.getContext('2d');
-  c.fillStyle = '#ffffff'; c.fillRect(0, 0, 128, 128);
-  PIPS[v].forEach(([x, y]) => { c.fillStyle = v === 1 ? '#ec3f78' : '#26364a'; c.beginPath(); c.arc(x * 128, y * 128, v === 1 ? 17 : 12, 0, 7); c.fill(); });
-  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; return new THREE.MeshStandardMaterial({ map: t, roughness: .45 });
-}
 const FACE_VALUES = [3, 4, 1, 6, 2, 5]; // +x -x +y -y +z -z
 const FACE_UP = { 1: new THREE.Euler(0, 0, 0), 6: new THREE.Euler(Math.PI, 0, 0), 3: new THREE.Euler(0, 0, Math.PI / 2), 4: new THREE.Euler(0, 0, -Math.PI / 2), 2: new THREE.Euler(-Math.PI / 2, 0, 0), 5: new THREE.Euler(Math.PI / 2, 0, 0) };
-const dice = [0, 1].map(() => {
-  const m = new THREE.Mesh(new RoundedBoxGeometry(0.8, 0.8, 0.8, 4, 0.13), FACE_VALUES.map(dieFace));
-  m.castShadow = true; m.position.set(0, 0.8, 0); scene.add(m); return m;
-});
-dice[0].position.set(-0.4, DIE_Y, 1.9); dice[1].position.set(0.9, DIE_Y, 2.3);
+const dice = [];
+async function loadDice() {
+  const loader = new THREE.TextureLoader();
+  const faces = await Promise.all(FACE_VALUES.map(async (v) => {
+    const map = await loader.loadAsync(`thumbnails/static/dice-${v}.png?v=${PROPERTY_THUMBNAIL_VERSION.slice(0, 12)}`);
+    map.colorSpace = THREE.SRGBColorSpace; return new THREE.MeshStandardMaterial({ map, roughness: .45 });
+  }));
+  [0, 1].forEach((n) => {
+    const m = new THREE.Mesh(new RoundedBoxGeometry(0.8, 0.8, 0.8, 4, 0.13), faces);
+    m.castShadow = true; m.position.set(n ? 0.9 : -0.4, DIE_Y, n ? 2.3 : 1.9); scene.add(m); dice.push(m);
+  });
+}
 async function rollDice(a, b) {
   const land = [new THREE.Vector3(-0.4, DIE_Y, 1.9), new THREE.Vector3(0.9, DIE_Y, 2.3)];
   const startP = [new THREE.Vector3(-3.2, 4.5, -2.4), new THREE.Vector3(-2.4, 5, -3.1)];
@@ -788,7 +787,6 @@ async function rollDice(a, b) {
         const spin = new THREE.Quaternion().setFromAxisAngle(axes[n], Math.pow(1 - k, 2) * Math.PI * 7);
         d.quaternion.copy(finalQ[n]).multiply(spin);
       });
-      requestShadowUpdate();
       if (k < 1) requestAnimationFrame(step); else res();
     };
     step();
@@ -804,39 +802,6 @@ function showDiceSum(n, dbl) {
   clearTimeout(showDiceSum.t); showDiceSum.t = setTimeout(() => el.classList.remove('show'), 1000);
 }
 
-/* ảnh chụp mô hình cho avatar & hộp thoại */
-let snapR = null, snapDisposeTimer = 0;
-function getSnapshotRenderer() {
-  if (!snapR) {
-    snapR = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
-    snapR.setSize(220, 220); snapR.outputColorSpace = THREE.SRGBColorSpace;
-  }
-  clearTimeout(snapDisposeTimer);
-  return snapR;
-}
-function releaseSnapshotRenderer() {
-  if (!snapR) return;
-  snapR.dispose(); snapR.forceContextLoss(); snapR = null;
-}
-const snapScene = new THREE.Scene();
-snapScene.add(new THREE.HemisphereLight(0xffffff, 0xb0c0d0, 1.5));
-const sl = new THREE.DirectionalLight(0xffffff, 1.4); sl.position.set(3, 5, 4); snapScene.add(sl);
-const snapCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 50);
-const snapCache = {};
-function snapshot(key, obj) {
-  if (snapCache[key]) return snapCache[key];
-  const snapshotRenderer = getSnapshotRenderer();
-  snapScene.add(obj);
-  const box = new THREE.Box3().setFromObject(obj), size = box.getSize(new THREE.Vector3()), ctr = box.getCenter(new THREE.Vector3());
-  const r = Math.max(size.x, size.y, size.z) * 0.78;
-  Object.assign(snapCam, { left: -r, right: r, top: r, bottom: -r });
-  snapCam.position.set(ctr.x + 6, ctr.y + 4.5, ctr.z + 6); snapCam.lookAt(ctr); snapCam.updateProjectionMatrix();
-  snapshotRenderer.render(snapScene, snapCam);
-  const url = snapshotRenderer.domElement.toDataURL('image/png');
-  snapScene.remove(obj);
-  snapDisposeTimer = setTimeout(releaseSnapshotRenderer, 2000);
-  return (snapCache[key] = url);
-}
 // Thumbnail công trình được sinh sẵn khi build và phục vụ như asset tĩnh. Không dựng
 // WebGL/toDataURL mỗi lần vào game; browser/CDN có thể cache trực tiếp các PNG này.
 const propertyThumbnail = (kind, level, color) => `thumbnails/property/${kind}-${String(color || '#9aa4b1').replace('#', '').toLowerCase()}-${level}.png?v=${PROPERTY_THUMBNAIL_VERSION.slice(0, 12)}`;
@@ -973,15 +938,9 @@ function placeOverlays(nowMs, updateDom) {
 }
 
 /* vòng lặp vẽ */
-let clockT = 0, frameRequest = 0, frameTimer = 0, lastRenderedAt = 0, renderActiveUntil = 0;
-function requestActiveRender(ms = 1000) {
-  renderActiveUntil = Math.max(renderActiveUntil, performance.now() + ms);
+let clockT = 0, frameRequest = 0, frameTimer = 0, lastRenderedAt = 0;
+function requestActiveRender() {
   if (frameRunning && !document.hidden && frameTimer) { clearTimeout(frameTimer); frameTimer = 0; queueFrame(); }
-}
-function renderIsActive(nowMs) {
-  if (nowMs < renderActiveUntil || anims.length > 0 || confetti.length > 0) return true;
-  for (const pid in dispPos) return true;
-  return false;
 }
 function queueFrame(delay = 0) {
   if (!frameRunning || document.hidden || frameRequest || frameTimer) return;
@@ -991,8 +950,9 @@ function queueFrame(delay = 0) {
 function frame(now) {
   frameRequest = 0;
   if (!frameRunning || document.hidden) return;
-  const profile = GRAPHICS[graphicsLevel], continuousMotion = !REDUCED && profile.worldMotion;
-  const targetFps = renderIsActive(now) ? profile.fps : (continuousMotion ? profile.motionFps : profile.idleFps);
+  const profile = GRAPHICS[graphicsLevel];
+  // Giữ cùng FPS trước, trong và sau lượt; không đổi nhịp render khi bắt đầu roll.
+  const targetFps = profile.fps;
   const frameInterval = 1000 / targetFps;
   if (lastRenderedAt && now - lastRenderedAt < frameInterval - 1) { queueFrame(frameInterval - (now - lastRenderedAt)); return; }
   clockT = now / 1000;
@@ -1000,7 +960,6 @@ function frame(now) {
   const dt = Math.min(0.1, Math.max(0, clockT - (frame.last || clockT))); frame.last = clockT;
   lastRenderedAt = lastRenderedAt ? lastRenderedAt + frameInterval * Math.max(1, Math.floor((now - lastRenderedAt) / frameInterval)) : now;
   stepAnims(now);
-  if (anims.length) requestShadowUpdate();
   if (!REDUCED && GRAPHICS[graphicsLevel].worldMotion) { specials.forEach((o) => o.userData.update && o.userData.update(clockT, dt)); bonusFlags.forEach((o, k) => o.userData.update(clockT + k * 0.7));  if (tourTex) tourTex.offset.set((-clockT * 0.035) % 1, (-clockT * 0.035) % 1); }
   const followAlpha = 1 - Math.pow(1 - 0.25, dt * 60);
   for (const p of S ? S.players : []) { const t = tokens[p.id]; if (t && t.userData.to && dispPos[p.id] === undefined) { followTarget.set(t.userData.to.x, TOPY, t.userData.to.z); t.position.lerp(followTarget, followAlpha); } }
@@ -1017,7 +976,7 @@ function frame(now) {
   glows.forEach((g) => { if (g.userData.on) g.material.opacity = 0.12 + Math.sin(clockT * 5) * 0.1; else g.material.opacity = 0; });
   if (renderer.shadowMap.enabled && shadowDirty) { renderer.shadowMap.needsUpdate = true; shadowDirty = false; }
   renderer.render(scene, camera);
-  const nextProfile = GRAPHICS[graphicsLevel], nextFps = renderIsActive(performance.now()) ? nextProfile.fps : nextProfile.idleFps;
+  const nextProfile = GRAPHICS[graphicsLevel], nextFps = nextProfile.fps;
   queueFrame(1000 / nextFps);
 }
 function startFrame() {
@@ -1074,7 +1033,7 @@ function renderCards(delay = 0) {
   if (el.dataset.ids !== key) {
     el.dataset.ids = key;
     el.innerHTML = S.players.map((p) => { const st = seatOf[p.id]; return `<div class="pcard ${st.corner}" style="--c:${st.color}" data-p="${p.id}">
-      <div class="av"><img alt="" src="${snapshot('pet-' + st.pet, place(st.pet, 1))}"></div>
+      <div class="av"><img alt="" src="${petImg(st.pet)}"></div>
       <div class="info"><div class="nm">${esc(p.name)}${p.bot ? ' <em>(BOT)</em>' : MODE === 'net' && isMe(p.id) ? ' <em>(bạn)</em>' : ''}</div><div class="mo"><span class="num"></span><small></small><div class="power"></div></div><div class="tbar"><i></i></div></div></div>`; }).join('');
   }
   S.players.forEach((p, idx) => {
@@ -1613,7 +1572,7 @@ function inviteBox() {
     ${invite.map((l, k) => `<a href="${esc(l.url)}" target="_blank" rel="noopener"${k ? ' class="sub"' : ''}>${esc(l.url)}</a>${k ? '' : `<em>${esc(l.kind)}</em>`}`).join('')}</div></div>`;
 }
 const timeLabel = (m) => (m % 60 ? `${Math.floor(m / 60)} giờ ${m % 60}` : `${m / 60} giờ`);
-const petImg = (id) => snapshot('pet-' + id, place(id, 1));
+const petImg = (id) => `thumbnails/static/pet-${id}.png?v=${PROPERTY_THUMBNAIL_VERSION.slice(0, 12)}`;
 let localDraft = null;   // chế độ một máy: [{ name, pet }]
 let lobbyOpen = false;   // chế độ một máy: đang mở phòng chờ
 let lobbyDraftName = ''; // chế độ mạng: tên đang gõ dở khi đổi nhân vật
@@ -1834,7 +1793,7 @@ async function prepareBoard() {
     const modelBundle = await (await fetch('models/bundle.json')).json();
     await loadModels(modelBundle);
     await HK.loadKit('models', (d, n) => { $('#loadmsg').textContent = `Tải mô hình 3D ${d}/${n}`; }, modelBundle);
-    await loadGroundPatterns();
+    await Promise.all([loadGroundPatterns(), preloadWorldAssets(), HK.preloadSpecialAssets(CFG.BONUS_MULT), loadDice()]);
     buildTiles(); decorate();
     resize();
     boardReady = true;

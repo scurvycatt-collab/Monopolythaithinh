@@ -4,6 +4,7 @@
    Mọi mô hình trả về: đáy y=0, tâm (0,0), mặt tiền nhìn về +z, nằm gọn trong ô vuông FOOT×FOOT. */
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { PROPERTY_THUMBNAIL_VERSION } from '../thumbnails/property/version.js';
 
 export const LEVELS = ['Ô đất', 'Nhà 1', 'Nhà 2', 'Nhà 3', 'Khách sạn'];
 export const FOOT = 1.46;                       // khớp FOOT trên bàn cờ hiện tại
@@ -19,12 +20,16 @@ const FILES = {
   industrial: ['windmill'],
 };
 const RAW = {};
+let thumbnailBuildMode = false;
 function decodeBase64(encoded) {
   const raw = atob(encoded), bytes = new Uint8Array(raw.length);
   for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
   return bytes.buffer;
 }
-export async function loadKit(base = 'models', onProgress, suppliedBundle = null) {
+const generatedRecolors = new Map();
+const generatedDecor = new Map();
+export async function loadKit(base = 'models', onProgress, suppliedBundle = null, loadGenerated = true) {
+  thumbnailBuildMode = !loadGenerated;
   const loader = new GLTFLoader();
   const jobs = [];
   for (const [kit, list] of Object.entries(FILES)) for (const n of list) jobs.push([kit, n]);
@@ -39,10 +44,35 @@ export async function loadKit(base = 'models', onProgress, suppliedBundle = null
     g.scene.traverse((o) => {
       if (!o.isMesh) return;
       o.castShadow = true; o.receiveShadow = true;
-      const m = o.material; if ('metalness' in m) { m.metalness = 0; m.roughness = Math.max(m.roughness ?? 1, 0.6); }
+      const m = o.material;
+      if (m.map && m.map.image) {
+        const src = String(m.map.image.currentSrc || m.map.image.src || '');
+        m.userData.ttTexture = src.includes('variation-a') ? 'variation-a' : 'colormap';
+        m.userData.ttKit = kit;
+      }
+      if ('metalness' in m) { m.metalness = 0; m.roughness = Math.max(m.roughness ?? 1, 0.6); }
     });
     RAW[kit + '/' + n] = g.scene; onProgress && onProgress(++done, jobs.length);
   })));
+  if (loadGenerated) {
+    const colors = ['ec3f78', '2c8ff0', '3cb043', 'f4c430', 'ef5a3c', '8a63e8', 'f7a21b', '2fb5a3', '9aa4b1'];
+    const decorColors = colors.slice(0, 4);
+    const textures = ['colormap', 'variation-a'];
+    const textureLoader = new THREE.TextureLoader();
+    await Promise.all(['suburban', 'commercial'].flatMap((kit) => textures.flatMap((source) => colors.map(async (color) => {
+      const tex = await textureLoader.loadAsync(`thumbnails/static/model-${kit}-${source}-${color}.png?v=${PROPERTY_THUMBNAIL_VERSION.slice(0, 12)}`);
+      tex.flipY = false; tex.colorSpace = THREE.SRGBColorSpace; tex.magFilter = THREE.NearestFilter; tex.generateMipmaps = false; tex.minFilter = THREE.LinearFilter;
+      generatedRecolors.set(`${kit}:${source}:#${color}`, tex);
+    }))));
+    const decorFiles = [
+      ['sign-start-e2557f', 'sign:start:#e2557f'],
+      ...decorColors.flatMap((color) => [['sign-hotel-' + color, 'sign:hotel:#' + color], ['sign-resort-' + color, 'sign:resort:#' + color], ['stripe-' + color, 'stripe:#' + color]]),
+    ];
+    await Promise.all(decorFiles.map(async ([file, key]) => {
+      const tex = await textureLoader.loadAsync(`thumbnails/static/${file}.png?v=${PROPERTY_THUMBNAIL_VERSION.slice(0, 12)}`);
+      tex.colorSpace = THREE.SRGBColorSpace; generatedDecor.set(key, tex);
+    }));
+  }
 }
 
 /* ---------- đổi màu bảng màu (colormap) theo người chơi ---------- */
@@ -50,32 +80,22 @@ const texCache = new Map();
 function recolor(baseMat, hex, rule) {
   const key = baseMat.uuid + hex + rule;
   if (texCache.has(key)) return texCache.get(key);
-  const img = baseMat.map.image;
-  const cv = document.createElement('canvas'); cv.width = img.width; cv.height = img.height;
-  const c = cv.getContext('2d'); c.drawImage(img, 0, 0);
-  const d = c.getImageData(0, 0, cv.width, cv.height), px = d.data;
-  const tgt = new THREE.Color(hex), th = {}; tgt.getHSL(th);
-  const col = new THREE.Color(), hsl = {};
-  for (let p = 0; p < px.length; p += 4) {
-    col.setRGB(px[p] / 255, px[p + 1] / 255, px[p + 2] / 255); col.getHSL(hsl);
-    const green = hsl.s > 0.25 && hsl.h > 0.3 && hsl.h < 0.55;
-    // Một số model dùng mái cam thay vì mái xanh trong cùng bảng màu nguồn.
-    // Cả hai dải đều là màu nhận diện chủ sở hữu và phải đi theo màu người chơi.
-    const orange = hsl.s > 0.35 && hsl.h > 0.02 && hsl.h < 0.14;
-    const dark = rule === 'darkgreen' && hsl.l < 0.3 && hsl.s < 0.3;
-    const red = rule === 'red' && hsl.s > 0.4 && (hsl.h < 0.035 || hsl.h > 0.95);
-    // tường: các ô xám tím rất nhạt trong bảng màu → trắng tinh #FFFFFF (giữ nguyên mọi chi tiết khác)
-    if (hsl.s < 0.3 && hsl.l > 0.78) { px[p] = px[p + 1] = px[p + 2] = 255; continue; }
-    if ((rule !== 'red' && (green || orange)) || dark || red) {
-      const l = dark ? Math.min(0.6, th.l * 0.62 + hsl.l * 0.9) : Math.min(0.8, hsl.l * 0.5 + th.l * 0.55);
-      col.setHSL(th.h, Math.min(1, th.s * 0.92), l);
-      px[p] = col.r * 255; px[p + 1] = col.g * 255; px[p + 2] = col.b * 255;
+  const generated = rule === 'green' && generatedRecolors.get(`${baseMat.userData.ttKit}:${baseMat.userData.ttTexture}:${hex.toLowerCase()}`);
+  if (!generated && thumbnailBuildMode) {
+    const img = baseMat.map.image, cv = document.createElement('canvas'); cv.width = img.width; cv.height = img.height;
+    const c = cv.getContext('2d'); c.drawImage(img, 0, 0); const d = c.getImageData(0, 0, cv.width, cv.height), px = d.data;
+    const tgt = new THREE.Color(hex), th = {}, col = new THREE.Color(), hsl = {}; tgt.getHSL(th);
+    for (let p = 0; p < px.length; p += 4) {
+      col.setRGB(px[p] / 255, px[p + 1] / 255, px[p + 2] / 255); col.getHSL(hsl);
+      const green = hsl.s > 0.25 && hsl.h > 0.3 && hsl.h < 0.55, orange = hsl.s > 0.35 && hsl.h > 0.02 && hsl.h < 0.14;
+      if (hsl.s < 0.3 && hsl.l > 0.78) { px[p] = px[p + 1] = px[p + 2] = 255; continue; }
+      if (green || orange) { const l = Math.min(0.8, hsl.l * 0.5 + th.l * 0.55); col.setHSL(th.h, Math.min(1, th.s * 0.92), l); px[p] = col.r * 255; px[p + 1] = col.g * 255; px[p + 2] = col.b * 255; }
     }
+    c.putImageData(d, 0, 0); const tex = new THREE.CanvasTexture(cv); tex.flipY = false; tex.colorSpace = THREE.SRGBColorSpace;
+    const m = baseMat.clone(); m.map = tex; texCache.set(key, m); return m;
   }
-  c.putImageData(d, 0, 0);
-  const tex = new THREE.CanvasTexture(cv); tex.flipY = false; tex.colorSpace = THREE.SRGBColorSpace;
-  tex.magFilter = THREE.NearestFilter; tex.generateMipmaps = false; tex.minFilter = THREE.LinearFilter;
-  const m = baseMat.clone(); m.map = tex; texCache.set(key, m); return m;
+  if (!generated) throw new Error(`Thiếu texture model sinh sẵn: ${baseMat.userData.ttKit}/${baseMat.userData.ttTexture}/${hex}`);
+  const m = baseMat.clone(); m.map = generated; texCache.set(key, m); return m;
 }
 // lấy một mô hình gốc, tuỳ chọn tô màu, đặt tâm về gốc toạ độ
 function get(key, hex, rule = 'green', { center = true } = {}) {
@@ -121,6 +141,13 @@ const signCache = new Map();
 function signMat(text, bg, fg = '#ffffff', w = 512, h = 128) {
   const key = text + bg + fg + w + h;
   if (signCache.has(key)) return signCache.get(key);
+  if (!thumbnailBuildMode) {
+    const t = generatedDecor.get(`sign:${text.toLowerCase()}:${bg.toLowerCase()}`);
+    if (!t) throw new Error(`Thiếu biển hiệu sinh sẵn: ${text}/${bg}`);
+    t.anisotropy = 4;
+    const m = new THREE.MeshStandardMaterial({ map: t, roughness: 0.6, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.25 });
+    signCache.set(key, m); return m;
+  }
   const cv = document.createElement('canvas'); cv.width = w; cv.height = h; const c = cv.getContext('2d');
   c.fillStyle = bg; c.fillRect(0, 0, w, h);
   c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = Math.max(4, h * 0.05); c.strokeRect(c.lineWidth, c.lineWidth, w - 2 * c.lineWidth, h - 2 * c.lineWidth);
@@ -143,6 +170,12 @@ function sign(text, hex, w, h, depth = 0.04, vertical = false) {
 const stripeCache = new Map();
 function stripeMat(hex) {
   if (stripeCache.has(hex)) return stripeCache.get(hex);
+  if (!thumbnailBuildMode) {
+    const t = generatedDecor.get(`stripe:${hex.toLowerCase()}`);
+    if (!t) throw new Error(`Thiếu texture mái hiên sinh sẵn: ${hex}`);
+    t.magFilter = THREE.NearestFilter;
+    const m = new THREE.MeshStandardMaterial({ map: t, roughness: 0.7, flatShading: true }); stripeCache.set(hex, m); return m;
+  }
   const cv = document.createElement('canvas'); cv.width = 128; cv.height = 8; const c = cv.getContext('2d');
   for (let k = 0; k < 8; k++) { c.fillStyle = k % 2 ? '#fff8ee' : hex; c.fillRect(k * 16, 0, 16, 8); }
   const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.magFilter = THREE.NearestFilter;
