@@ -51,7 +51,9 @@ const sourceFiles = [
 ];
 const sourceHash = () => {
   const hash = crypto.createHash('sha256');
-  sourceFiles.forEach((file) => hash.update(file).update(fs.readFileSync(path.join(ROOT, file))));
+  // Chuẩn hoá CRLF → LF cho file văn bản để hash giống nhau trên Windows (autocrlf) và CI.
+  const read = (file) => { const buf = fs.readFileSync(path.join(ROOT, file)); return /\.(js|json)$/.test(file) ? Buffer.from(buf.toString('utf8').replace(/\r\n/g, '\n')) : buf; };
+  sourceFiles.forEach((file) => hash.update(file).update(read(file)));
   hash.update(JSON.stringify({ colors: COLORS, cityLevels: CITY_LEVELS, resortLevels: RESORT_LEVELS }));
   return hash.digest('hex');
 };
