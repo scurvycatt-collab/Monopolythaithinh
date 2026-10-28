@@ -246,6 +246,7 @@ body[data-screen="gate"] :is(#stage,#cards,#hub,#zoom,#soundpanel,#banner,#modal
 .who b{font:800 17px var(--display)}
 .who em{font:600 12px var(--body);color:var(--ink-soft);font-style:normal}
 .who em.host{padding:2px 7px;border-radius:999px;background:#f5b714;color:#fff;font-weight:900;letter-spacing:.05em}
+.who em.bot{padding:2px 7px;border-radius:999px;background:#695681;color:#fff;font-weight:900;letter-spacing:.05em}
 .who .dot{margin-left:auto;width:10px;height:10px;border-radius:50%;background:#c9d3df}
 .who .dot.on{background:#3cb043}
 .times{display:flex;gap:10px;flex-wrap:wrap}
@@ -262,6 +263,7 @@ body[data-screen="gate"] :is(#stage,#cards,#hub,#zoom,#soundpanel,#banner,#modal
 .add{margin-top:4px;font-size:15px;padding:8px 16px}
 .center{text-align:center}
 .room-readonly{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:14px 0 4px;padding:10px 12px;border-radius:12px;background:#fff5cf;color:var(--ink-soft);font-size:12px}.room-readonly b{color:#9a6b00}.host-wait{align-self:center;color:var(--ink-soft);font-size:13px;font-weight:700}
+.add-bot{width:100%;margin-top:10px;padding:10px 14px;border:2px dashed #8d7aa5;border-radius:12px;background:#f5effb;color:#5d4777;font:800 14px var(--display)}
 #conn{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:30;display:none;padding:8px 14px;border-radius:999px;background:#d6304a;color:#fff;font:700 14px var(--body)}
 #conn.show{display:block}
 body[data-mode="net"] #newgame{display:none}

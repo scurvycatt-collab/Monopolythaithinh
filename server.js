@@ -61,7 +61,7 @@ const hasOnlinePlayers = () => state.players.some((p) => isOnline(p.id));
 const offlineSec = (id) => (isOnline(id) ? 0 : (Date.now() - (offlineSince.get(id) || Date.now())) / 1000);
 function presence() {
   const o = {};
-  for (const p of state.players) o[p.id] = { on: isOnline(p.id), since: isOnline(p.id) ? 0 : (offlineSince.get(p.id) || Date.now()) };
+  for (const p of state.players) o[p.id] = { on: !!p.bot || isOnline(p.id), bot: !!p.bot, since: p.bot || isOnline(p.id) ? 0 : (offlineSince.get(p.id) || Date.now()) };
   return o;
 }
 const viewers = () => [...new Set([...clients].filter((c) => !c.pid && c.viewer).map((c) => c.viewer))];
@@ -77,7 +77,7 @@ function scheduleEmptyCleanup() {
   if (!state.players.length) return;
   if (!hasOnlinePlayers()) emptyTimer = setTimeout(deleteEmptyRoom, EMPTY_ROOM_TTL_MS);
 }
-function commit() { state.version++; save(); broadcast(); scheduleEmptyCleanup(); }
+function commit() { state.version++; save(); broadcast(); scheduleEmptyCleanup(); scheduleBot(); }
 scheduleEmptyCleanup();
 
 setInterval(() => { const msg = `event: ping\ndata: ${Date.now()}\n\n`; for (const c of clients) c.res.write(msg); }, 15000);
@@ -101,6 +101,25 @@ function runAuto(reason) {
     G.act(state, p.id, t, d);
   }
   commit();
+}
+let botTimer = null;
+function scheduleBot() {
+  clearTimeout(botTimer); botTimer = null;
+  const p = state.phase === 'play' && G.cur(state);
+  if (!p || !p.bot || !hasOnlinePlayers()) return;
+  botTimer = setTimeout(runBotTurn, 650);
+}
+function runBotTurn() {
+  botTimer = null;
+  if (state.phase !== 'play' || !hasOnlinePlayers()) return;
+  const p = G.cur(state); if (!p || !p.bot) return;
+  state.log.push({ n: ++state.seq, t: `🤖 ${p.name} đang đi` });
+  try {
+    for (let n = 0; n < 80 && state.phase === 'play' && G.cur(state).id === p.id; n++) {
+      const [t, d] = G.botAction(state); G.act(state, p.id, t, d);
+    }
+    commit();
+  } catch (e) { console.error('Lỗi bot:', e); }
 }
 setInterval(() => {
   const sec = state.settings.autoSec;
@@ -135,7 +154,7 @@ function handleEvents(req, res, url) {
   req.socket.setKeepAlive(true, 10000); req.socket.setNoDelay(true);
   const c = { res, pid: p ? p.id : null, viewer };
   clients.add(c);
-  if (p) { conns.set(p.id, (conns.get(p.id) || 0) + 1); clearTimeout(emptyTimer); emptyTimer = null; }
+  if (p) { conns.set(p.id, (conns.get(p.id) || 0) + 1); clearTimeout(emptyTimer); emptyTimer = null; scheduleBot(); }
   broadcast();
   req.on('close', () => {
     clients.delete(c);
@@ -155,6 +174,7 @@ async function handleApi(req, res, url) {
     if (url.pathname === '/api/join') {
       const existing = G.byName(state, body.name);
       if (existing) {
+        if (existing.bot) return sendJSON(res, 409, { error: 'Tên này đang được bot sử dụng' });
         if (isOnline(existing.id)) return sendJSON(res, 409, { error: `${existing.name} đang online trên một thiết bị khác` });
         offlineSince.set(existing.id, Date.now());
         scheduleEmptyCleanup();
@@ -179,7 +199,7 @@ async function handleApi(req, res, url) {
     if (url.pathname === '/api/act') {
       const p = byToken(body.token);
       if (!p) return sendJSON(res, 401, { error: 'Bạn chưa vào phòng (hoặc phiên đã hết hạn)' });
-      if (['start', 'reset', 'kick', 'settings'].includes(body.type) && !G.isHost(state, p.id)) {
+      if (['start', 'reset', 'kick', 'settings', 'addBot', 'removeBot'].includes(body.type) && !G.isHost(state, p.id)) {
         return sendJSON(res, 403, { error: 'Chỉ host mới được thay đổi cấu hình phòng' });
       }
       const d = body.data || {};
@@ -193,6 +213,8 @@ async function handleApi(req, res, url) {
         case 'pet': G.setPet(state, p.id, d.pet); break;
         case 'rename': G.renamePlayer(state, p.id, d.name); break;
         case 'settings': G.setSettings(state, d); break;
+        case 'addBot': G.addBot(state, { id: 'bot' + crypto.randomBytes(4).toString('hex') }); break;
+        case 'removeBot': G.removeBot(state, d.id); break;
         case 'proxy': {
           if (state.phase !== 'play') throw new G.GameError('Ván không diễn ra');
           const c = G.cur(state);

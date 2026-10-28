@@ -19,10 +19,25 @@ G.setSettings(s, { mapId: 'map-1' });
 assert.strictEqual(s.settings.mapId, 'map-1');
 G.setSettings(s, { mapId: 'map-khong-ton-tai' });
 assert.strictEqual(s.settings.mapId, 'map-1', 'map không hợp lệ phải bị bỏ qua');
+const bot = G.addBot(s, { id: 'bot1' });
+assert.strictEqual(bot.bot, true, 'bot phải được đánh dấu riêng trong state');
+assert.strictEqual(bot.token, null, 'bot không được có token đăng nhập');
+assert.strictEqual(s.hostId, 'host', 'thêm bot không được thay đổi host');
+assert.ok(!Object.prototype.hasOwnProperty.call(G.publicView(s).players.find((p) => p.id === bot.id), 'token'), 'public state của bot không được lộ trường token');
+G.removeBot(s, bot.id);
 G.removePlayer(s, 'host');
 assert.strictEqual(s.hostId, 'guest', 'host rời lobby phải chuyển quyền cho người kế tiếp');
 G.removePlayer(s, 'guest');
 assert.strictEqual(s.hostId, null, 'room trống không có host');
+
+const botTurn = G.createState();
+G.addPlayer(botTurn, { id: 'human', token: 'h', name: 'Người' });
+const buyerBot = G.addBot(botTurn, { id: 'buyer-bot' });
+botTurn.phase = 'play'; botTurn.turn = 1; botTurn.step = { kind: 'buy' };
+buyerBot.pos = G.TILES.find((tile) => tile.type === 'city').i; buyerBot.laps = 3;
+const [botType, botData] = G.botAction(botTurn);
+assert.strictEqual(botType, 'buy', 'bot phải biết mua thành phố thay vì luôn bỏ qua như chế độ đi hộ');
+assert.ok(botData.level >= 0 && botData.level <= 3, 'bot phải chọn cấp xây hợp lệ');
 
 function achievementState() {
   const state = G.createState();
@@ -59,5 +74,19 @@ own(resort, G.RESORTS.slice(0, -1));
 G.checkWin(resort, resort.players[0]);
 const resortReady = resort.achievements.find((x) => x.kind === 'resortReady');
 assert.deepStrictEqual(resortReady.missing, G.RESORTS.slice(-1), 'cảnh báo Resort phải nêu đúng bãi biển còn thiếu');
+
+const botGame = G.createState();
+for (let i = 0; i < 4; i++) G.addBot(botGame, { id: `sim-bot-${i}` });
+G.setSettings(botGame, { roundLimit: 15, turnSec: 0 });
+let seed = 17; G.setRng(() => ((seed = (seed * 48271) % 2147483647) - 1) / 2147483646);
+G.startGame(botGame);
+let botActions = 0, botOwned = false;
+while (botGame.phase === 'play' && botActions++ < 10000) {
+  const p = G.cur(botGame), [type, data] = G.botAction(botGame);
+  G.act(botGame, p.id, type, data);
+  if (Object.keys(botGame.props).length) botOwned = true;
+}
+assert.strictEqual(botGame.phase, 'over', 'một ván toàn bot phải tự chạy tới kết thúc mà không kẹt state');
+assert.ok(botOwned, 'bot phải thực sự mua tài sản trong ván mô phỏng');
 
 console.log('Host ownership tests passed.');

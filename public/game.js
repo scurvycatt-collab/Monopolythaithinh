@@ -109,7 +109,8 @@
   function ensureHost(s) {
     // Đồng bộ màu theo nhân vật để các room/file lưu từ phiên bản cũ cũng nhận bảng màu mới.
     s.players.forEach((p) => { const pet = PETS.find((x) => x.id === p.pet); if (pet) p.color = pet.c; });
-    if (!s.hostId || !byId(s, s.hostId)) s.hostId = s.players.length ? s.players[0].id : null;
+    const host = s.hostId && byId(s, s.hostId);
+    if (!host || host.bot) s.hostId = (s.players.find((p) => !p.bot) || {}).id || null;
     return s.hostId;
   }
   const isHost = (s, id) => ensureHost(s) === id;
@@ -135,19 +136,29 @@
     if (want && PETS.some((x) => x.id === want) && !used.has(want)) return want;
     const f = PETS.find((x) => !used.has(x.id)); return f && f.id;
   }
-  function addPlayer(s, { id, token, name, pet }) {
+  function addPlayer(s, { id, token, name, pet, bot = false }) {
     if (s.phase !== 'lobby') fail('Ván đang diễn ra, không thể vào thêm');
     if (s.players.length >= CFG.MAX_PLAYERS) fail('Phòng đã đủ người');
     name = cleanName(name);
     if (s.players.some((p) => p.name.toLowerCase() === name.toLowerCase())) fail('Tên này đã có người dùng');
     if (pet && s.players.some((p) => p.pet === pet)) fail('Nhân vật này đã có người chọn');
     pet = freePet(s, pet);
-    const p = { id, token, name, pet, color: PETS.find((x) => x.id === pet).c };
+    const p = { id, token: bot ? null : token, name, pet, color: PETS.find((x) => x.id === pet).c, bot: !!bot };
     resetPlayer(p);
     s.players.push(p);
     ensureHost(s);
     log(s, `${name} đã vào phòng`);
     return p;
+  }
+  function addBot(s, { id, pet } = {}) {
+    let n = 1;
+    while (s.players.some((p) => p.name.toLowerCase() === `bot ${n}`)) n++;
+    return addPlayer(s, { id: id || `bot-${Date.now()}-${n}`, token: null, name: `Bot ${n}`, pet, bot: true });
+  }
+  function removeBot(s, id) {
+    const p = byId(s, id);
+    if (!p || !p.bot) fail('Không tìm thấy bot');
+    removePlayer(s, id);
   }
   function resetPlayer(p) {
     Object.assign(p, { money: CFG.START_MONEY, laps: 0, pos: 0, island: 0, escapeCards: 0, shields: 0, bankrupt: false, doubles: 0, tourPending: false });
@@ -682,6 +693,49 @@
     }
   }
 
+  /* Bot thật: tự mua/xây nếu còn quỹ dự phòng, còn autoAction ở trên vẫn là chế độ
+     đi hộ an toàn cho người mất kết nối và không được tự ý tiêu tiền của họ. */
+  function botAction(s) {
+    const st = s.step, p = cur(s), reserve = 250;
+    if (!p || !p.bot) return autoAction(s);
+    const canSpend = (cost) => p.money >= cost && (p.money - cost >= reserve || cost <= Math.min(120, p.money));
+    switch (st.kind) {
+      case 'buy': {
+        const i = p.pos, t = TILES[i], cap = t.type === 'resort' ? 0 : Math.min(3, maxBuild(p));
+        for (let level = cap; level >= 0; level--) if (canSpend(value(i, level))) return ['buy', { level }];
+        return ['skip', {}];
+      }
+      case 'upgrade': {
+        const i = st.tile, curLevel = s.props[i].level;
+        const levels = curLevel < 3 ? [3, 2, 1].filter((level) => level > curLevel && level <= maxBuild(p)) : [4];
+        for (const level of levels) if (canSpend(upgradeCost(i, curLevel, level))) return ['upgrade', { level }];
+        return ['skip', {}];
+      }
+      case 'takeover': {
+        const price = takeoverPrice(s, st.tile);
+        return canSpend(price) ? ['takeover', {}] : ['skip', {}];
+      }
+      case 'tour': {
+        const targets = tourTargets(s, p);
+        if (!targets.length || !canSpend(CFG.TOUR_FEE)) return ['skip', {}];
+        targets.sort((a, b) => value(b, 0) - value(a, 0));
+        return ['tour', { tile: targets[0] }];
+      }
+      case 'festival': {
+        const targets = festivalTargets(s, p);
+        if (!targets.length) return ['skip', {}];
+        if (s.festival !== null && targets.includes(s.festival)) return ['festival', { tile: s.festival }];
+        if (!canSpend(CFG.CHAMP_MOVE_FEE)) return ['skip', {}];
+        targets.sort((a, b) => rentOf(s, b) - rentOf(s, a));
+        return ['festival', { tile: targets[0] }];
+      }
+      case 'island':
+        if (p.escapeCards) return ['useCard', {}];
+        return ['roll', {}];
+      default: return autoAction(s);
+    }
+  }
+
   /* ---------- thời gian mỗi bước ---------- */
   // còn bao nhiêu ms cho bước hiện tại (đã cộng thời gian hoạt ảnh); null nếu không giới hạn
   function stepLeft(s, now) {
@@ -701,8 +755,8 @@
   const api = {
     RULES: R, STATES, stepLeft, checkTurn,
     GROUPS, TILES, CFG, COLORS, PETS, MAPS, CARDS, LEVEL_NAMES, RESORTS, SIDES, GameError,
-    setRng, createState, publicView, ensureHost, isHost, byName, addPlayer, removePlayer, setPet, renamePlayer, setSettings, startGame, resetGame, checkWin,
-    act, autoAction, checkTime, cur, byId, value, invested, toll, upgradeCost, rentOf, rentMultiplier, takeoverPrice, canTakeover, sellValue, ownedBy, networth,
+    setRng, createState, publicView, ensureHost, isHost, byName, addPlayer, addBot, removePlayer, removeBot, setPet, renamePlayer, setSettings, startGame, resetGame, checkWin,
+    act, autoAction, botAction, checkTime, cur, byId, value, invested, toll, upgradeCost, rentOf, rentMultiplier, takeoverPrice, canTakeover, sellValue, ownedBy, networth,
     ownsGroup, canUpgrade, nextLevel, isBuyable, maxBuild, villaLocked, taxBase, outaged, festMult, tourTargets, festivalTargets, cardTargets,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

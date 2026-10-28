@@ -7,7 +7,7 @@ Bản Cloudflare dùng **Workers + Durable Objects**:
 - API giống hệt `server.js`, nên trình duyệt không cần sửa gì. Mã QR "Mời cả nhà" tự dùng địa chỉ web của Worker.
 - Trang đầu tiên là main menu độc lập, không hiện hay tải map/model 3D; chỉ phục vụ static shell và health check. Người chơi phải nhập username rồi tạo hoặc vào room; lúc đó trình duyệt mới tải bàn cờ, mở SSE và đánh thức Durable Object của room.
 - Mỗi room code là một Durable Object tách biệt. Link mời và QR giữ `?room=<mã>`. Khi room chờ không còn kết nối, alarm dư thừa được xóa; trạng thái vẫn lưu bền vững mà không chạy liên tục.
-- Người chơi đầu tiên là host. Cả Worker và server Node đều kiểm tra server-side: `start`, `reset`, `kick`, `settings` trả HTTP 403 khi token không thuộc host. UI người chơi thường chỉ hiển thị cấu hình ở chế độ đọc.
+- Người chơi đầu tiên là host. Cả Worker và server Node đều kiểm tra server-side: `start`, `reset`, `kick`, `settings`, `addBot`, `removeBot` trả HTTP 403 khi token không thuộc host. UI người chơi thường chỉ hiển thị cấu hình ở chế độ đọc; bot không được nhận quyền host.
 - `settings.mapId` lưu map của room và chỉ host được đổi. `public/rules.js` là nơi đăng ký danh sách `MAPS`; hiện có `map-1` / **Map 1 (Mặc định)**.
 - `POST /api/join` nhận lại ghế cũ khi username (sau chuẩn hóa khoảng trắng, không phân biệt hoa/thường) đã tồn tại trong cùng room và ghế đang offline. Ghế online trả HTTP 409. ID, token, tài sản và quyền host được giữ nguyên.
 

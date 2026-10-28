@@ -57,8 +57,14 @@ async function snapshot(token, viewer) {
   const c0 = ok(await post('api/join', { name: 'Khách', pet: 'animal-panda' }));
   assert.strictEqual((await post('api/act', { token: b.token, type: 'settings', data: { timeLimitMin: 120 } })).status, 403, 'khách không được đổi cấu hình');
   assert.strictEqual((await post('api/act', { token: b.token, type: 'kick', data: { id: c0.id } })).status, 403, 'khách không được mời người khác ra');
+  assert.strictEqual((await post('api/act', { token: b.token, type: 'addBot' })).status, 403, 'chỉ host được thêm bot');
   assert.strictEqual((await post('api/act', { token: b.token, type: 'start' })).status, 403, 'khách không được bắt đầu');
   ok(await post('api/act', { token: a.token, type: 'kick', data: { id: c0.id } })); // mời ra ghế mất kết nối
+  const withBot = ok(await post('api/act', { token: a.token, type: 'addBot' }));
+  const bot = withBot.state.players.find((p) => p.bot);
+  assert.ok(bot && /^Bot \d+$/.test(bot.name), 'host phải thêm được bot có tên tự động');
+  assert.strictEqual((await post('api/act', { token: b.token, type: 'removeBot', data: { id: bot.id } })).status, 403, 'khách không được xóa bot');
+  ok(await post('api/act', { token: a.token, type: 'removeBot', data: { id: bot.id } }));
   ok(await post('api/act', { token: a.token, type: 'settings', data: { mapId: 'map-1', timeLimitMin: 90 } }));
   let d = await snapshot();
   assert.strictEqual(d.state.hostId, a.id, 'người đầu tiên phải là host');

@@ -137,7 +137,7 @@ function seatSetup() { seatOf = {}; S.players.forEach((p, k) => { const pet = p.
 const curP = () => (S.phase === 'play' ? S.players[S.turn] : null);
 const isMe = (pid) => MODE === 'local' || (!!me && me.id === pid);
 const myTurn = () => !!curP() && isMe(curP().id);
-const online = (pid) => MODE === 'local' || !presence[pid] || presence[pid].on;
+const online = (pid) => MODE === 'local' || !!(G.byId(S, pid) || {}).bot || !presence[pid] || presence[pid].on;
 
 /* ---------------- three.js: cảnh ---------------- */
 const stage = $('#stage');
@@ -1092,7 +1092,7 @@ function renderCards(delay = 0) {
     el.dataset.ids = key;
     el.innerHTML = S.players.map((p) => { const st = seatOf[p.id]; return `<div class="pcard ${st.corner}" style="--c:${st.color}" data-p="${p.id}">
       <div class="av"><img alt="" src="${snapshot('pet-' + st.pet, place(st.pet, 1))}"></div>
-      <div class="info"><div class="nm">${esc(p.name)}${MODE === 'net' && isMe(p.id) ? ' <em>(bạn)</em>' : ''}</div><div class="mo"><span class="num"></span><small></small><div class="power"></div></div><div class="tbar"><i></i></div></div></div>`; }).join('');
+      <div class="info"><div class="nm">${esc(p.name)}${p.bot ? ' <em>(BOT)</em>' : MODE === 'net' && isMe(p.id) ? ' <em>(bạn)</em>' : ''}</div><div class="mo"><span class="num"></span><small></small><div class="power"></div></div><div class="tbar"><i></i></div></div></div>`; }).join('');
   }
   S.players.forEach((p, idx) => {
     const card = el.querySelector(`[data-p="${p.id}"]`), cur = S.phase === 'play' && idx === S.turn;
@@ -1663,7 +1663,12 @@ function renderGateMapPreview() {
 function lobbyNet(el) {
   const mine = me && G.byId(S, me.id), amHost = !!mine && S.hostId === mine.id, taken = new Set(S.players.map((p) => p.pet));
   const currentMap = MAPS.find((map) => map.id === S.settings.mapId) || MAPS[0];
-  const list = S.players.map((p) => `<li style="--c:${p.color}"><img alt="" src="${petImg(p.pet)}"><b>${esc(p.name)}</b>${p.id === S.hostId ? '<em class="host">HOST</em>' : ''}${isMe(p.id) ? '<em>bạn</em>' : ''}<i class="dot${presence[p.id] && presence[p.id].on ? ' on' : ''}" title="${presence[p.id] && presence[p.id].on ? 'Đang online' : 'Mất kết nối'}"></i>${amHost && !isMe(p.id) && !(presence[p.id] && presence[p.id].on) ? `<button type="button" class="kick" data-kick="${p.id}" aria-label="Mời ${esc(p.name)} ra khỏi phòng">×</button>` : ''}</li>`).join('');
+  const list = S.players.map((p) => {
+    const on = !!p.bot || !!(presence[p.id] && presence[p.id].on);
+    const remove = amHost && p.bot ? `<button type="button" class="kick" data-remove-bot="${p.id}" aria-label="Xóa ${esc(p.name)}">×</button>`
+      : amHost && !isMe(p.id) && !on ? `<button type="button" class="kick" data-kick="${p.id}" aria-label="Mời ${esc(p.name)} ra khỏi phòng">×</button>` : '';
+    return `<li style="--c:${p.color}"><img alt="" src="${petImg(p.pet)}"><b>${esc(p.name)}</b>${p.id === S.hostId ? '<em class="host">HOST</em>' : ''}${p.bot ? '<em class="bot">BOT</em>' : isMe(p.id) ? '<em>bạn</em>' : ''}<i class="dot${on ? ' on' : ''}" title="${p.bot ? 'Bot tự động' : on ? 'Đang online' : 'Mất kết nối'}"></i>${remove}</li>`;
+  }).join('');
   if (!mine) {
     const pet = (S.players.length < CFG.MAX_PLAYERS) && (lobbyNet.pick && !taken.has(lobbyNet.pick) ? lobbyNet.pick : (G.PETS.find((x) => !taken.has(x.id)) || {}).id);
     lobbyNet.pick = pet;
@@ -1682,23 +1687,25 @@ function lobbyNet(el) {
   }
   el.innerHTML = sheet('#2c8ff0', 'Thái Thịnh Monopoly', 'Phòng chờ', `<ul class="who">${list}</ul>
     <div class="fld">Đổi nhân vật</div>${petGrid(mine.pet, taken, 'data-pet')}
-    ${amHost ? `<div class="fld">Bản đồ</div>${mapRow(S.settings.mapId || MAPS[0].id)}
+    ${amHost ? `${S.players.length < CFG.MAX_PLAYERS ? '<button class="add-bot" type="button" id="lbot">🤖 + Thêm bot</button>' : ''}<div class="fld">Bản đồ</div>${mapRow(S.settings.mapId || MAPS[0].id)}
     <div class="fld">Thời lượng ván</div>${timeRow(S.settings.timeLimitMin, 'data-t')}
     <div class="fld">Thời gian mỗi lượt</div>${turnRow(S.settings.turnSec || CFG.TURN_SEC, 'data-ts')}` : `<div class="room-readonly"><b>Host đang cài đặt phòng</b><span>${esc(currentMap.name)} · ${timeLabel(S.settings.timeLimitMin)} · ${S.settings.turnSec || CFG.TURN_SEC} giây/lượt</span></div>`}
     ${inviteBox()}`,
     `<button class="pill ghost" type="button" id="lleave">Rời phòng</button>${amHost ? `<button class="pill big" type="button" id="lstart" ${S.players.length < 2 ? 'disabled' : ''}>Bắt đầu</button>` : '<span class="host-wait">Chờ host bắt đầu…</span>'}`);
-  const send = (type, data) => api('api/act', { token: me.token, type, data }).catch((e) => toast(e.message));
+  const send = (type, data) => api('api/act', { token: me.token, type, data }).then((result) => { if (result.state) onState(result.state); return result; }).catch((e) => { toast(e.message); return null; });
   el.querySelectorAll('[data-pet]').forEach((b) => { b.onclick = () => send('pet', { pet: b.dataset.pet }); });
   el.querySelectorAll('[data-kick]').forEach((b) => { b.onclick = () => send('kick', { id: b.dataset.kick }); });
+  el.querySelectorAll('[data-remove-bot]').forEach((b) => { b.onclick = () => send('removeBot', { id: b.dataset.removeBot }); });
   el.querySelectorAll('[data-map]').forEach((b) => { b.onclick = () => send('settings', { mapId: b.dataset.map }); });
   el.querySelectorAll('[data-t]').forEach((b) => { b.onclick = () => send('settings', { timeLimitMin: Number(b.dataset.t) }); });
   el.querySelectorAll('[data-ts]').forEach((b) => { b.onclick = () => send('settings', { turnSec: Number(b.dataset.ts) }); });
-  $('#lleave').onclick = () => send('leave').then(exitRoom);
+  $('#lleave').onclick = () => send('leave').then((result) => { if (result) exitRoom(); });
+  if ($('#lbot')) $('#lbot').onclick = () => send('addBot');
   if ($('#lstart')) $('#lstart').onclick = () => send('start');
 }
 // vào giữa ván từ thiết bị khác: nhận lại ghế đang mất kết nối, hoặc chỉ xem
 function lobbyClaim(el) {
-  const off = S.players.filter((p) => !p.bankrupt && !(presence[p.id] && presence[p.id].on));
+  const off = S.players.filter((p) => !p.bot && !p.bankrupt && !(presence[p.id] && presence[p.id].on));
   el.innerHTML = sheet('#2c8ff0', 'Ván đang diễn ra', 'Bạn là ai?', off.length ? `<div class="pets">${off.map((p) => `<button type="button" class="pet" data-id="${p.id}" style="--c:${p.color}"><img alt="" src="${petImg(p.pet)}"><span>${esc(p.name)}</span></button>`).join('')}</div>` : '<p class="center">Mọi người chơi đều đang online.</p>',
     '<button class="pill ghost" type="button" id="lwatch">Chỉ xem</button>');
   el.querySelectorAll('[data-id]').forEach((b) => { b.onclick = async () => { try { setMe(await api('api/claim', { id: b.dataset.id })); } catch (e) { toast(e.message); } }; });

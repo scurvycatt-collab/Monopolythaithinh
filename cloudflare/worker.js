@@ -68,7 +68,7 @@ export class GameRoom extends DurableObject {
   offlineSec(id) { return this.isOnline(id) ? 0 : (Date.now() - (this.offlineSince.get(id) || Date.now())) / 1000; }
   presence() {
     const o = {};
-    for (const p of this.state.players) o[p.id] = { on: this.isOnline(p.id), since: this.isOnline(p.id) ? 0 : (this.offlineSince.get(p.id) || Date.now()) };
+    for (const p of this.state.players) o[p.id] = { on: !!p.bot || this.isOnline(p.id), bot: !!p.bot, since: p.bot || this.isOnline(p.id) ? 0 : (this.offlineSince.get(p.id) || Date.now()) };
     return o;
   }
   viewers() { return [...new Set([...this.clients].filter((c) => !c.pid && c.viewer).map((c) => c.viewer))]; }
@@ -109,6 +109,8 @@ export class GameRoom extends DurableObject {
       return t.length ? Math.max(now + 250, Math.min(...t)) : null;
     }
     if (s.phase === 'play') {
+      const current = G.cur(s);
+      if (current && current.bot) t.push(now + 650);
       if (s.endsAt) t.push(s.endsAt);
       const left = G.stepLeft(s, now); if (left !== null) t.push(now + left);
       const p = G.cur(s), sec = s.settings.autoSec;
@@ -129,7 +131,8 @@ export class GameRoom extends DurableObject {
     }
     if (s.phase === 'play' && this.hasOnlinePlayers()) try {
       const now = Date.now();
-      if (G.checkTime(s, now)) await this.commit();
+      if (G.cur(s) && G.cur(s).bot) { this.runBot(); await this.commit(); }
+      else if (G.checkTime(s, now)) await this.commit();
       else if (G.checkTurn(s, now)) await this.commit();
       else {
         const p = G.cur(s), sec = s.settings.autoSec;
@@ -144,6 +147,12 @@ export class GameRoom extends DurableObject {
     const s = this.state, p = G.cur(s);
     s.log.push({ n: ++s.seq, t: `🤖 ${reason} cho ${p.name}` });
     for (let n = 0; n < 80 && s.phase === 'play' && G.cur(s).id === p.id; n++) { const [t, d] = G.autoAction(s); G.act(s, p.id, t, d); }
+  }
+  runBot() {
+    const s = this.state, p = G.cur(s);
+    if (!p || !p.bot) return;
+    s.log.push({ n: ++s.seq, t: `🤖 ${p.name} đang đi` });
+    for (let n = 0; n < 80 && s.phase === 'play' && G.cur(s).id === p.id; n++) { const [t, d] = G.botAction(s); G.act(s, p.id, t, d); }
   }
 
   /* ---------- HTTP ---------- */
@@ -197,6 +206,7 @@ export class GameRoom extends DurableObject {
       if (url.pathname === '/api/join') {
         const existing = G.byName(s, body.name);
         if (existing) {
+          if (existing.bot) return json(409, { error: 'Tên này đang được bot sử dụng' });
           if (this.isOnline(existing.id)) return json(409, { error: `${existing.name} đang online trên một thiết bị khác` });
           this.offlineSince.set(existing.id, Date.now());
           await this.startEmptyGrace();
@@ -222,7 +232,7 @@ export class GameRoom extends DurableObject {
       if (url.pathname === '/api/act') {
         const p = this.byToken(body.token);
         if (!p) return json(401, { error: 'Bạn chưa vào phòng (hoặc phiên đã hết hạn)' });
-        if (['start', 'reset', 'kick', 'settings'].includes(body.type) && !G.isHost(s, p.id)) {
+        if (['start', 'reset', 'kick', 'settings', 'addBot', 'removeBot'].includes(body.type) && !G.isHost(s, p.id)) {
           return json(403, { error: 'Chỉ host mới được thay đổi cấu hình phòng' });
         }
         const d = body.data || {};
@@ -236,6 +246,8 @@ export class GameRoom extends DurableObject {
           case 'pet': G.setPet(s, p.id, d.pet); break;
           case 'rename': G.renamePlayer(s, p.id, d.name); break;
           case 'settings': G.setSettings(s, d); break;
+          case 'addBot': G.addBot(s, { id: 'bot' + hex(4) }); break;
+          case 'removeBot': G.removeBot(s, d.id); break;
           case 'proxy': {
             if (s.phase !== 'play') throw new G.GameError('Ván không diễn ra');
             const c = G.cur(s);
