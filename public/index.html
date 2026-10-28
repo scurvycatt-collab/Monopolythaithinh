@@ -40,6 +40,7 @@
   <label class="sound-toggle"><span><b>Âm thanh lượt &amp; cảnh báo</b><small>Báo đến lượt và 5 giây cuối</small></span><input type="checkbox" id="turn-enabled"></label>
   <label class="sound-volume"><span>Âm lượng hiệu ứng</span><input type="range" id="turn-volume" min="0" max="100" step="5"></label>
   <button type="button" id="settings-rules">Luật chơi</button>
+  <button type="button" id="settings-reset">Reset ván đấu</button>
   <button type="button" id="settings-leave">Rời phòng</button>
 </section>
 <div id="banner"></div>
@@ -78,7 +79,7 @@
 <div id="lobby" role="dialog" aria-modal="true" aria-label="Phòng chờ"></div>
 <div id="conn" role="status">Mất kết nối tới server, đang thử lại…</div>
 <button id="newgame" type="button">Ván mới</button>
-<div id="loading">Đang dựng bàn cờ…<small id="loadmsg">Tải mô hình 3D</small></div>
+<div id="loading">Đang mở trò chơi…<small id="loadmsg">Chuẩn bị trang chủ</small></div>
 <script src="rules.js"></script>
 <script src="game.js"></script>
 <div id="bigclock" aria-label="Thời gian còn lại của ván"></div>

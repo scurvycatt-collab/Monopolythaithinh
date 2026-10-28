@@ -78,6 +78,7 @@ function renderSoundSettings() {
   $('#turn-enabled').checked = !!soundPrefs.turn; $('#turn-volume').value = soundPrefs.turnVolume;
   $('#music-volume').disabled = !soundPrefs.music; $('#turn-volume').disabled = !soundPrefs.turn;
   $('#graphics-level').value = graphicsLevel;
+  $('#settings-reset').classList.toggle('show', MODE === 'net' && ROOM_GATE && !!ROOM && !!me && S.hostId === me.id && S.phase !== 'lobby');
   $('#settings-leave').classList.toggle('show', MODE === 'net' && ROOM_GATE && !!ROOM);
 }
 function updateSoundPref(key, value) { soundPrefs[key] = value; saveSoundPrefs(); renderSoundSettings(); syncMusic(); }
@@ -99,6 +100,17 @@ function showRulebook() {
 }
 function hideRulebook() { $('#rulebook').classList.remove('show'); }
 $('#settings-rules').onclick = showRulebook;
+$('#settings-reset').onclick = async () => {
+  if (MODE !== 'net' || !me || S.hostId !== me.id || S.phase === 'lobby') return;
+  if (!confirm('Reset ván đấu và đưa tất cả người chơi về phòng chờ?')) return;
+  const button = $('#settings-reset'); button.disabled = true;
+  try {
+    const result = await api('api/act', { token: me.token, type: 'reset' });
+    if (result.state) onState(result.state);
+    $('#soundpanel').classList.remove('show');
+  } catch (e) { toast(e.message); }
+  finally { button.disabled = false; }
+};
 $('#rulebook').addEventListener('click', (e) => { if (e.target.id === 'rulebook') hideRulebook(); });
 $('#settings-leave').onclick = async () => {
   if (MODE !== 'net' || !ROOM_GATE || !ROOM) return;
@@ -722,7 +734,9 @@ function connect() {
   source.onerror = () => { if (epoch === connectionEpoch) $('#conn').classList.add('show'); };
   source.onmessage = (e) => {
     if (epoch !== connectionEpoch) return;
-    const d = JSON.parse(e.data); presence = d.presence || {}; viewers = d.viewers || []; proxySec = d.proxySec || 15; skew = d.now - Date.now(); renderWatchBadge(); onState(d.state, epoch);
+    const d = JSON.parse(e.data); presence = d.presence || {}; viewers = d.viewers || []; proxySec = d.proxySec || 15; skew = d.now - Date.now(); renderWatchBadge();
+    if (ROOM_GATE && pendingJoinName && !me && d.state.players.length === 0) { autoJoinRoom(d.state); return; }
+    onState(d.state, epoch);
     if (ROOM_GATE) autoJoinRoom(d.state);
   };
 }
@@ -954,11 +968,13 @@ async function enterRoom(create, watch = false) {
   if (!validRoom(room)) { toast('Mã phòng cần 3–24 ký tự'); return $('#groom').focus(); }
   const mapId = $('#gmap').value;
   if (create && !MAPS.some((map) => map.id === mapId)) { toast('Hãy chọn bản đồ'); return $('#gmap').focus(); }
-  if (watch) {
+  let loadMapId = mapId;
+  if (!create) {
     try {
       const response = await fetch(roomEndpoint(location.href, 'api/watch', room), { cache: 'no-store' });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || 'Không tìm thấy phòng');
+      loadMapId = mapEntry(result.mapId).id;
     } catch (e) {
       toast(e.message || 'Phòng không tồn tại hoặc đã bị xoá');
       return $('#groom').focus();
@@ -978,7 +994,7 @@ async function enterRoom(create, watch = false) {
   enterRoom.busy = true;
   $('#gcreate').disabled = true; $('#gjoin').disabled = true; $('#gwatch').disabled = true;
   try {
-    await prepareBoard(pendingRoomMap || undefined);
+    await prepareBoard(loadMapId);
     me = watch ? null : loadMe();
     invite = [];
     connect();

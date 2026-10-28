@@ -12,6 +12,7 @@ const specials = fs.readFileSync(new URL('../public/js/specials.js', import.meta
 const world = fs.readFileSync(new URL('../public/js/world.js', import.meta.url), 'utf8');
 
 assert.match(html, /<body data-screen="boot">/);
+assert.doesNotMatch(html, /Đang dựng bàn cờ/, 'initial boot screen must not claim that a map is being built');
 assert.match(html, /class="gate-layout"/);
 assert.match(html, /class="gate-brand"/);
 assert.match(html, /class="gate-logo" src="assets\/avatar-map-style-transparent\.png"/, 'home screen must use the complete transparent logo image');
@@ -29,6 +30,7 @@ assert.match(html, /Thấp · 30 FPS/);
 assert.match(html, /Cân bằng · 40 FPS/);
 assert.match(html, /Cao · 60 FPS/);
 assert.match(html, /id="settings-leave"/);
+assert.match(html, /id="settings-reset"/);
 assert.match(html, /id="settings-rules"/);
 assert.match(html, /id="rulebook"/);
 assert.match(html, /assets\/avatar-map-style-v2\.png/, 'new map-style avatar must be wired as the site icon and share image');
@@ -119,6 +121,8 @@ assert.match(app, /obj\.userData\.hideOnLow = true/, 'low graphics must hide non
 assert.match(app, /function lowDetailBuilding\(level, hex, resort = false\)/, 'low graphics must use lightweight ownership/building markers');
 assert.match(app, /new THREE\.Mesh\(new THREE\.BoxGeometry\(f\.w - 0\.06, TOPY, f\.d - 0\.06\), side\)/, 'tile bodies must render with one material group');
 assert.match(app, /function showRulebook\(\)/, 'settings must open the Vietnamese rulebook');
+assert.match(app, /S\.hostId === me\.id && S\.phase !== 'lobby'/, 'reset-game setting must only be visible to the host during or after a game');
+assert.match(app, /type: 'reset'/, 'host reset setting must call the authoritative reset action');
 assert.match(app, /G\.RULES\.RULEBOOK/, 'rulebook UI must read the single-source rules data');
 assert.match(app, /G\.RULES\.TILE_INFO\[t\.type\]/, 'special-tile info cards must read their descriptions from rules.js');
 assert.match(app, /G\.RULES\.RULE_TEXT\.TOUR_DESTINATION/, 'World Tour notices must share the centralized destination rule');
@@ -172,7 +176,10 @@ assert.match(app, /pendingRoomMap = create \? mapId : ''/, 'only room creation m
 assert.match(app, /function renderGateMapPreview\(\)/, 'map preview must update with the selected map');
 assert.match(app, /src="\$\{esc\(map\.preview\)\}"/, 'map cards must use their registered preview image');
 assert.match(app, /#gwatch'\)\.onclick = \(\) => enterRoom\(false, true\)/, 'watch button must enter spectator mode');
-assert.match(app, /fetch\(roomEndpoint\(location\.href, 'api\/watch', room\)/, 'spectator mode must verify the room before loading the 3D board');
+assert.match(app, /fetch\(roomEndpoint\(location\.href, 'api\/watch', room\)/, 'join and spectator modes must read room metadata before loading a board');
+assert.match(app, /loadMapId = mapEntry\(result\.mapId\)\.id/, 'an existing room must load its selected map directly without first building Map 1');
+assert.match(app, /await prepareBoard\(loadMapId\)/, 'room entry must build exactly the resolved room map');
+assert.match(app, /pendingJoinName && !me && d\.state\.players\.length === 0[\s\S]*autoJoinRoom\(d\.state\); return/, 'new rooms must not briefly replace their selected map with the empty default room map');
 assert.match(app, /me = watch \? null : loadMe\(\)/, 'spectator mode must not authenticate with a saved player token');
 assert.match(app, /WATCH_MODE \? \{ viewer: lobbyDraftName \} : \{\}/, 'spectator SSE must carry its username without a player token');
 assert.match(app, /Thoát đảo\$\{p\.escapeCards > 1 \? ' ×' \+ p\.escapeCards : ''\}/, 'player card must show stacked escape-card quantity');

@@ -270,7 +270,7 @@ const server = http.createServer((req, res) => {
   if (req.method === 'GET' && url.pathname === '/api/info') return sendJSON(res, 200, { links: links() });
   if (req.method === 'GET' && url.pathname === '/api/watch') {
     if (!state.players.length) return sendJSON(res, 404, { error: 'Phòng không tồn tại hoặc đã bị xoá' });
-    return sendJSON(res, 200, { exists: true });
+    return sendJSON(res, 200, { exists: true, mapId: state.settings.mapId });
   }
   if (req.method === 'GET' && url.pathname === '/health') return sendJSON(res, 200, { app: 'thai-thinh-monopoly', phase: state.phase, version: state.version });
   if (req.method === 'GET') return handleStatic(req, res, url);

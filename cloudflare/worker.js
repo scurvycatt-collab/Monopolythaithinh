@@ -168,7 +168,7 @@ export class GameRoom extends DurableObject {
     }
     if (url.pathname === '/api/watch' && req.method === 'GET') {
       if (!this.state.players.length) return json(404, { error: 'Phòng không tồn tại hoặc đã bị xoá' });
-      return json(200, { exists: true });
+      return json(200, { exists: true, mapId: this.state.settings.mapId });
     }
     if (url.pathname === '/events' && req.method === 'GET') return this.events(url);
     if (req.method === 'POST' && url.pathname.startsWith('/api/')) return this.api(url, req);
