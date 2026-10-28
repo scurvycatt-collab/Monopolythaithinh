@@ -13,7 +13,8 @@ Cờ tỷ phú kiểu Business Tour, chơi qua mạng (Node `server.js` hoặc C
 | `server.js`, `cloudflare/` | Server Node / Worker + Durable Object | game |
 | `public/js/app.js` | UI, lobby, mạng, âm thanh; gọi renderer qua contract | game |
 | `public/maps/<id>/` | Mỗi map một thư mục: `renderer.js`, `preview.svg`, `assets/` | render / art |
-| `public/js/render-common/` | Code dùng chung giữa các renderer | render |
+| `public/js/render-common/board2d/` | Khung xương 2D dùng chung: map mới chỉ viết skin | render |
+| `public/assets/shared/` | Asset dùng chung nhiều map (Kenney packs), một bản duy nhất | art |
 | `public/js/houses.js`, `specials.js`, `world.js` | Model 3D của map-1 (sẽ chuyển vào `public/maps/map-1/`) | render |
 | `tools/map-lab/` | Trang thử nghiệm, chọn asset; không vào bản phát hành | art |
 | `test/`, `scripts/` | Kiểm thử, sinh thumbnail / tài liệu luật | qa |
@@ -24,8 +25,10 @@ Cờ tỷ phú kiểu Business Tour, chơi qua mạng (Node `server.js` hoặc C
 
 | Việc | Đọc | Không cần đọc |
 |---|---|---|
-| Làm / sửa một map | `docs/contracts/map-renderer.md`, `public/maps/<id>/**` | `app.js`, `game.js`, `server.js` |
-| Tạo map mới | như trên + `public/maps/_template/` + `npm run map:new <id>` | |
+| Làm / sửa skin map 2D | `docs/contracts/map-skin.md`, `public/js/render-common/board2d/PEN.md`, `KINDS.md`, `public/maps/<id>/**` | khung xương, `app.js`, `game.js`, `server.js` |
+| Tạo map mới | `npm run map:new <id>` rồi như dòng trên | |
+| Sửa khung xương 2D | `docs/contracts/map-renderer.md`, `map-skin.md`, `public/js/render-common/board2d/**` | skin từng map |
+| Sửa map-1 (3D) | `docs/contracts/map-renderer.md`, `public/maps/map-1/**`, `docs/ARCHITECTURE/render-map-1.md` | |
 | Đổi luật / giá / thẻ | `public/rules.js`, `docs/ARCHITECTURE/rules.md` | renderer |
 | Lobby, UI, âm thanh | `docs/ARCHITECTURE/client-ui.md`, `public/js/app.js` | `public/maps/**` |
 | Mạng, phòng, bot | `docs/ARCHITECTURE/server.md`, `server.js`, `cloudflare/worker.js` | renderer |
