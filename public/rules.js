@@ -157,6 +157,7 @@
   // thêm map mới vào đây trước khi nối renderer/asset tương ứng.
   const MAPS = [
     { id: 'map-1', name: 'Map 1', description: 'Bản đồ Thái Thịnh mặc định', preview: 'maps/map-1/preview.svg', renderer: 'maps/map-1/renderer.js', default: true },
+    { id: 'four-seasons', name: 'Bốn Mùa', description: 'Mỗi cạnh một mùa: Xuân, Hạ, Thu, Đông. Hội chợ bốn mùa và đài phun nước giữa bàn. Bàn 2D nhẹ, hợp máy yếu.', preview: 'maps/four-seasons/preview.svg', renderer: 'maps/four-seasons/renderer.js' },
   ];
 
   /* ===================== LỚP 2 — SƠ ĐỒ TRẠNG THÁI ===================== */
