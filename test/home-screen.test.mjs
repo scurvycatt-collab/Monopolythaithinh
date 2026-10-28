@@ -54,9 +54,9 @@ assert.match(app, /turnVolume: 75/, 'effect volume must default to an audible le
 assert.match(app, /soundPrefs\.turnVolume \/ 100 \* 0\.30/, 'turn chime gain must be louder than the original mix');
 assert.match(app, /soundPrefs\.turnVolume \/ 100 \* 0\.23/, 'countdown warning gain must be louder than the original mix');
 assert.match(app, /const GRAPHICS_KEY = 'tt-monopoly-graphics-v1'/);
-assert.match(app, /high: \{ ratio: 2, shadows: true, shadowSize: 2048, fps: 60, idleFps: 15/, 'high graphics must avoid the former 4096px shadow-map hotspot');
-assert.match(app, /medium: \{ ratio: 1\.5, shadows: true, shadowSize: 1024, fps: 40, idleFps: 12/, 'medium graphics must cap rendering at 40 FPS');
-assert.match(app, /low: \{ ratio: 1, shadows: false, shadowSize: 512, fps: 30, idleFps: 4, worldMotion: false/, 'low graphics must cap FPS and stop decorative motion');
+assert.match(app, /high: \{ ratio: 2, shadows: true, shadowSize: 2048, fps: 60, idleFps: 15, motionFps: 45/, 'high graphics must keep decorative motion smooth without restoring full active FPS');
+assert.match(app, /medium: \{ ratio: 1\.5, shadows: true, shadowSize: 1024, fps: 40, idleFps: 12, motionFps: 30/, 'medium graphics must render continuous world motion at 30 FPS');
+assert.match(app, /low: \{ ratio: 1, shadows: false, shadowSize: 512, fps: 30, idleFps: 4, motionFps: 4, worldMotion: false/, 'low graphics must cap FPS and stop decorative motion');
 assert.match(app, /next\.shadowMap\.autoUpdate = false/, 'static shadows must not be regenerated every frame');
 assert.match(app, /if \(renderer\.shadowMap\.enabled && shadowDirty\)/, 'shadow maps must update only after scene changes');
 assert.match(app, /if \(!frameRunning \|\| document\.hidden\) return/, 'rendering must stop while the tab is hidden');
@@ -64,7 +64,9 @@ assert.match(app, /const frameInterval = 1000 \/ targetFps/, 'render loop must h
 assert.match(app, /const confetti = \[\], confettiPool = \[\]/, 'confetti meshes must be pooled instead of recreated for every festival');
 assert.match(app, /confettiPool\.push\(c\)/, 'expired confetti must return to the pool');
 assert.match(app, /now - overlayUpdatedAt >= 100/, 'DOM overlays must update at 10 FPS instead of every render frame');
-assert.match(app, /renderIsActive\(now\) \? profile\.fps : profile\.idleFps/, 'idle scenes must render below the active FPS cap');
+assert.match(app, /continuousMotion = !REDUCED && profile\.worldMotion/, 'reduced-motion users must retain the low static idle cap');
+assert.match(app, /renderIsActive\(now\) \? profile\.fps : \(continuousMotion \? profile\.motionFps : profile\.idleFps\)/, 'continuous world motion must use a smooth intermediate FPS instead of the static idle cap');
+assert.match(app, /Math\.min\(0\.1, Math\.max\(0, clockT - \(frame\.last \|\| clockT\)\)\)/, 'world animation delta must recover from a few delayed frames without losing travel distance');
 assert.match(app, /frameTimer = setTimeout/, 'idle rendering must sleep instead of polling requestAnimationFrame at display refresh rate');
 assert.match(app, /navigator\.deviceMemory/, 'first launch must choose a safe graphics level from device capacity');
 assert.match(app, /replaceMainRenderer\(wantsAntialias\)/, 'changing to or from low graphics must recreate the WebGL context with the requested antialias setting');

@@ -16,9 +16,9 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const GRAPHICS_KEY = 'tt-monopoly-graphics-v1';
 const GRAPHICS = {
-  low: { ratio: 1, shadows: false, shadowSize: 512, fps: 30, idleFps: 4, worldMotion: false, confetti: 30 },
-  medium: { ratio: 1.5, shadows: true, shadowSize: 1024, fps: 40, idleFps: 12, worldMotion: true, confetti: 50 },
-  high: { ratio: 2, shadows: true, shadowSize: 2048, fps: 60, idleFps: 15, worldMotion: true, confetti: 70 },
+  low: { ratio: 1, shadows: false, shadowSize: 512, fps: 30, idleFps: 4, motionFps: 4, worldMotion: false, confetti: 30 },
+  medium: { ratio: 1.5, shadows: true, shadowSize: 1024, fps: 40, idleFps: 12, motionFps: 30, worldMotion: true, confetti: 50 },
+  high: { ratio: 2, shadows: true, shadowSize: 2048, fps: 60, idleFps: 15, motionFps: 45, worldMotion: true, confetti: 70 },
 };
 let graphicsLevel = 'high';
 try {
@@ -1008,11 +1008,13 @@ function queueFrame(delay = 0) {
 function frame(now) {
   frameRequest = 0;
   if (!frameRunning || document.hidden) return;
-  const profile = GRAPHICS[graphicsLevel], targetFps = renderIsActive(now) ? profile.fps : profile.idleFps;
+  const profile = GRAPHICS[graphicsLevel], continuousMotion = !REDUCED && profile.worldMotion;
+  const targetFps = renderIsActive(now) ? profile.fps : (continuousMotion ? profile.motionFps : profile.idleFps);
   const frameInterval = 1000 / targetFps;
   if (lastRenderedAt && now - lastRenderedAt < frameInterval - 1) { queueFrame(frameInterval - (now - lastRenderedAt)); return; }
   clockT = now / 1000;
-  const dt = Math.min(0.05, Math.max(0, clockT - (frame.last || clockT))); frame.last = clockT;
+  // Cho phép bù đủ thời gian khi trình duyệt trễ một vài frame; cap 0,1 s vẫn chặn cú nhảy lớn sau khi tab vừa hiện lại.
+  const dt = Math.min(0.1, Math.max(0, clockT - (frame.last || clockT))); frame.last = clockT;
   lastRenderedAt = lastRenderedAt ? lastRenderedAt + frameInterval * Math.max(1, Math.floor((now - lastRenderedAt) / frameInterval)) : now;
   stepAnims(now);
   if (anims.length) requestShadowUpdate();
@@ -1829,7 +1831,7 @@ $('#newgame').onclick = newGameFlow;
 addEventListener('resize', resize);
 window.__TT = {
   get S() { return S; }, get mode() { return MODE; }, get me() { return me; }, get busy() { return busy; },
-  get perf() { const p = GRAPHICS[graphicsLevel], r = renderer.info.render; return { graphicsLevel, activeFps: p.fps, idleFps: p.idleFps, antialias: !!renderer.getContext().getContextAttributes().antialias, frame: r.frame, calls: r.calls, triangles: r.triangles, points: r.points }; },
+  get perf() { const p = GRAPHICS[graphicsLevel], r = renderer.info.render; return { graphicsLevel, activeFps: p.fps, motionFps: p.motionFps, idleFps: p.idleFps, antialias: !!renderer.getContext().getContextAttributes().antialias, frame: r.frame, calls: r.calls, triangles: r.triangles, points: r.points }; },
   act, tokens, scr: (i) => { const f = tileFrame(i); return screenOf(new THREE.Vector3(f.x, TOPY, f.z)); }, sync() { resetView(); },
 }; // cho script kiểm thử và đo hiệu năng runtime
 
