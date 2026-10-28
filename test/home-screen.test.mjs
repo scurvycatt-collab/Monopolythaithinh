@@ -64,8 +64,13 @@ assert.match(app, /turnArrow\.userData\.material\.color\.set\(color\)/, 'turn ar
 assert.match(app, /turnArrow\.userData\.material\.emissive\.set\(color\)/, 'turn arrow glow must use the current player color');
 assert.match(app, /const SOUND_KEY = 'tt-monopoly-sound-v1'/);
 assert.match(app, /turnVolume: 75/, 'effect volume must default to an audible level');
-assert.match(app, /soundPrefs\.turnVolume \/ 100 \* 0\.30/, 'turn chime gain must be louder than the original mix');
-assert.match(app, /soundPrefs\.turnVolume \/ 100 \* 0\.23/, 'countdown warning gain must be louder than the original mix');
+assert.match(app, /background-loop\.wav\?v=1/, 'background music must use the pre-rendered one-minute loop');
+assert.match(app, /backgroundMusic\.loop = true/, 'background music must loop continuously');
+assert.match(app, /soundPrefs\.musicVolume \/ 100 \* 2/, 'background music volume must be doubled');
+assert.match(app, /soundPrefs\.turnVolume \/ 100 \* 0\.60/, 'turn chime gain must be doubled');
+assert.match(app, /soundPrefs\.turnVolume \/ 100 \* 0\.46/, 'countdown warning gain must be doubled');
+assert.match(app, /soundPrefs\.turnVolume \/ 100 \* \.48/, 'interaction flight gain must be doubled');
+assert.match(app, /soundPrefs\.turnVolume \/ 100 \* \.4/, 'interaction impact gain must be doubled');
 assert.match(app, /const GRAPHICS_KEY = 'tt-monopoly-graphics-v1'/);
 assert.match(app, /high: \{ ratio: 2, shadows: true, shadowSize: 2048, fps: 60, idleFps: 60, motionFps: 60/, 'high graphics must stay at 60 FPS before, during and after rolling');
 assert.match(app, /medium: \{ ratio: 1\.5, shadows: true, shadowSize: 1024, fps: 40, idleFps: 40, motionFps: 40/, 'medium graphics must stay at 40 FPS throughout a turn');

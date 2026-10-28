@@ -6,11 +6,12 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "verify": "node scripts/rules-doc.mjs --check && node scripts/generate-property-thumbnails.mjs --check && node test/rules.test.js && node test/sim.js 7 300 && node test/e2e.js && node test/host.test.js && node test/cloudflare-paths.test.mjs && node test/room-session.test.mjs && node test/home-screen.test.mjs && node test/maps.test.mjs && node test/map-new.test.mjs",
+    "verify": "node scripts/rules-doc.mjs --check && node scripts/generate-property-thumbnails.mjs --check && node scripts/generate-background-music.mjs --check && node test/rules.test.js && node test/sim.js 7 300 && node test/e2e.js && node test/host.test.js && node test/cloudflare-paths.test.mjs && node test/room-session.test.mjs && node test/home-screen.test.mjs && node test/maps.test.mjs && node test/map-new.test.mjs",
     "test": "npm run verify",
     "map:new": "node scripts/map-new.mjs",
     "rules:doc": "node scripts/rules-doc.mjs",
     "thumbnails": "node scripts/generate-property-thumbnails.mjs",
+    "music": "node scripts/generate-background-music.mjs",
     "setup": "git config core.hooksPath .githooks",
     "build:exe": "npm run verify && node scripts/build-exe.mjs",
     "cf:dev": "wrangler dev",

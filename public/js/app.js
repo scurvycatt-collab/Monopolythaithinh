@@ -28,8 +28,7 @@ const outageRounds = (i) => Math.max(0, Number(S.outage && S.outage[i] || 0) - N
 const SOUND_KEY = 'tt-monopoly-sound-v1';
 const soundPrefs = { music: true, musicVolume: 20, turn: true, turnVolume: 75 };
 try { Object.assign(soundPrefs, JSON.parse(localStorage.getItem(SOUND_KEY) || '{}')); } catch (e) { /* dùng mặc định */ }
-let audioCtx = null, musicTimer = null, musicStep = 0;
-const musicNotes = [261.63, 329.63, 392, 329.63, 293.66, 349.23, 440, 349.23];
+let audioCtx = null, backgroundMusic = null;
 function saveSoundPrefs() { try { localStorage.setItem(SOUND_KEY, JSON.stringify(soundPrefs)); } catch (e) { /* trình duyệt chặn lưu */ } }
 function tone(freq, duration, volume, type = 'sine', at = audioCtx && audioCtx.currentTime) {
   if (!audioCtx || audioCtx.state !== 'running' || !volume) return;
@@ -57,7 +56,7 @@ function noise(duration, volume, filterType = 'lowpass', frequency = 900, at = a
 }
 function playInteractionSound(kind) {
   if (!soundPrefs.turn || !audioCtx || audioCtx.state !== 'running') return;
-  const v = soundPrefs.turnVolume / 100 * .24, at = audioCtx.currentTime;
+  const v = soundPrefs.turnVolume / 100 * .48, at = audioCtx.currentTime;
   if (kind === 'egg') { tone(240, .11, v, 'triangle', at); noise(.16, v * .8, 'lowpass', 700, at + .06); }
   else if (kind === 'rocket') { sweep(150, 1250, .58, v * .7, 'sawtooth', at); noise(.48, v * .32, 'highpass', 1400, at + .05); }
   else if (kind === 'tomato') { tone(145, .14, v, 'sine', at); noise(.22, v, 'lowpass', 520, at + .03); }
@@ -71,7 +70,7 @@ function playInteractionSound(kind) {
 }
 function playInteractionImpactSound(kind) {
   if (!soundPrefs.turn || !audioCtx || audioCtx.state !== 'running') return;
-  const v = soundPrefs.turnVolume / 100 * .2, at = audioCtx.currentTime;
+  const v = soundPrefs.turnVolume / 100 * .4, at = audioCtx.currentTime;
   if (kind === 'egg') { noise(.13, v, 'lowpass', 520, at); tone(190, .12, v * .65, 'triangle', at); }
   else if (kind === 'rocket') { noise(.34, v, 'lowpass', 430, at); sweep(180, 70, .3, v * .8, 'sawtooth', at); }
   else if (kind === 'tomato') { noise(.19, v * .95, 'lowpass', 360, at); tone(120, .14, v * .7, 'sine', at); }
@@ -83,17 +82,18 @@ function playInteractionImpactSound(kind) {
   else if (kind === 'applause') { noise(.1, v * .7, 'bandpass', 1350, at); noise(.1, v * .7, 'bandpass', 1350, at + .12); }
   else if (kind === 'congrats') { tone(1046.5, .18, v * .6, 'square', at); tone(1318.5, .35, v * .7, 'triangle', at + .12); }
 }
-function playMusicStep() {
-  if (!soundPrefs.music || document.hidden || document.body.dataset.screen !== 'game') return;
-  const volume = soundPrefs.musicVolume / 100 * 0.09, note = musicNotes[musicStep % musicNotes.length];
-  tone(note, 0.48, volume, 'triangle');
-  if (musicStep % 4 === 0) tone(note / 2, 0.8, volume * 0.52, 'sine');
-  musicStep++;
+function getBackgroundMusic() {
+  if (backgroundMusic) return backgroundMusic;
+  backgroundMusic = new Audio(new URL('../audio/background-loop.wav?v=1', import.meta.url).href);
+  backgroundMusic.loop = true; backgroundMusic.preload = 'none'; backgroundMusic.playsInline = true;
+  return backgroundMusic;
 }
 function syncMusic() {
   const shouldPlay = !!audioCtx && audioCtx.state === 'running' && soundPrefs.music && !document.hidden && document.body.dataset.screen === 'game';
-  if (!shouldPlay) { if (musicTimer) clearInterval(musicTimer); musicTimer = null; return; }
-  if (!musicTimer) { playMusicStep(); musicTimer = setInterval(playMusicStep, 620); }
+  if (!backgroundMusic && !shouldPlay) return;
+  const music = getBackgroundMusic(); music.volume = Math.min(1, soundPrefs.musicVolume / 100 * 2);
+  if (!shouldPlay) { music.pause(); return; }
+  music.play().catch(() => { /* trình duyệt sẽ cho phát sau lần chạm tiếp theo */ });
 }
 function unlockAudio() {
   const Audio = window.AudioContext || window.webkitAudioContext;
@@ -103,7 +103,7 @@ function unlockAudio() {
 }
 function playTurnSound() {
   if (!soundPrefs.turn || !audioCtx || audioCtx.state !== 'running') return;
-  const volume = soundPrefs.turnVolume / 100 * 0.30, at = audioCtx.currentTime;
+  const volume = soundPrefs.turnVolume / 100 * 0.60, at = audioCtx.currentTime;
   tone(523.25, 0.2, volume, 'sine', at); tone(659.25, 0.24, volume * 0.88, 'sine', at + 0.12); tone(783.99, 0.38, volume * 0.82, 'sine', at + 0.25);
 }
 let timeWarningKey = '';
@@ -114,7 +114,7 @@ function playTimeWarning() {
   const second = Math.ceil(left / 1000), key = `${S.stepAt}:${second}`;
   if (key === timeWarningKey) return;
   timeWarningKey = key;
-  const volume = soundPrefs.turnVolume / 100 * 0.23;
+  const volume = soundPrefs.turnVolume / 100 * 0.46;
   tone(second <= 2 ? 880 : 659.25, second <= 2 ? 0.18 : 0.11, volume, second <= 2 ? 'square' : 'sine');
 }
 function renderSoundSettings() {
@@ -915,7 +915,7 @@ const INTERACTION_IMPACTS = {
 };
 function showInteractionMenu(pid, anchor) {
   const targetPlayer = G.byId(S, pid), menu = $('#interaction-menu'); if (!targetPlayer || !me) return;
-  menu.innerHTML = `<header><b>Tương tác với ${esc(targetPlayer.name)}</b><button type="button" aria-label="Đóng">×</button></header><div>${INTERACTION_ITEMS.map(([kind, icon, label]) => `<button type="button" data-kind="${kind}"><i>${icon}</i><span>${label}</span></button>`).join('')}</div>`;
+  menu.innerHTML = `<section class="interaction-panel"><header><b>Tương tác với ${esc(targetPlayer.name)}</b><button type="button" aria-label="Đóng">×</button></header><div class="interaction-grid">${INTERACTION_ITEMS.map(([kind, icon, label]) => `<button type="button" data-kind="${kind}"><i>${icon}</i><span>${label}</span></button>`).join('')}</div></section>`;
   const r = anchor.getBoundingClientRect(); menu.style.setProperty('--ax', `${r.left + r.width / 2}px`); menu.style.setProperty('--ay', `${r.top + r.height / 2}px`); menu.classList.add('show');
   menu.querySelector('header button').onclick = hideInteractionMenu;
   menu.querySelectorAll('[data-kind]').forEach((button) => { button.onclick = async () => {
