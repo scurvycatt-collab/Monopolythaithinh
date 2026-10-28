@@ -60,6 +60,7 @@ async function snapshot(token, viewer) {
   let social = await snapshot();
   assert.strictEqual(social.chat.at(-1).text, 'Chào cả nhà!', 'chat phải được làm sạch và phát realtime trong phòng');
   assert.strictEqual(social.chat.at(-1).name, 'Bố', 'server phải lấy tên chat từ token, không tin tên do client gửi');
+  assert.strictEqual(social.chat.at(-1).pid, a.id, 'chat người chơi phải mang player id để giao diện dùng đúng màu ghế');
   ok(await post('api/interact', { token: a.token, target: b.id, kind: 'egg' }));
   social = await snapshot();
   assert.deepStrictEqual([social.interaction.from, social.interaction.to, social.interaction.kind], [a.id, b.id, 'egg'], 'tương tác phải được phát từ người gửi tới đúng người nhận');

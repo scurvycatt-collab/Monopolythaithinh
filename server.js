@@ -215,7 +215,7 @@ async function handleApi(req, res, url) {
       if (!p && !activeViewer) return sendJSON(res, 401, { error: 'Bạn cần vào phòng hoặc vào xem trước khi chat' });
       const text = String(body.text || '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 240);
       if (!text) return sendJSON(res, 400, { error: 'Tin nhắn đang trống' });
-      chat.push({ id: crypto.randomBytes(8).toString('hex'), name: p ? p.name : viewer, viewer: !p, text, at: Date.now() });
+      chat.push({ id: crypto.randomBytes(8).toString('hex'), pid: p ? p.id : '', name: p ? p.name : viewer, viewer: !p, text, at: Date.now() });
       chat = chat.slice(-40); saveChat(); broadcast();
       return sendJSON(res, 200, { ok: true });
     }

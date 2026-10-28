@@ -39,6 +39,50 @@ function tone(freq, duration, volume, type = 'sine', at = audioCtx && audioCtx.c
   gain.gain.exponentialRampToValueAtTime(0.0001, at + duration);
   osc.connect(gain).connect(audioCtx.destination); osc.start(at); osc.stop(at + duration + 0.04);
 }
+function sweep(from, to, duration, volume, type = 'sine', at = audioCtx && audioCtx.currentTime) {
+  if (!audioCtx || audioCtx.state !== 'running' || !volume) return;
+  const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+  osc.type = type; osc.frequency.setValueAtTime(from, at); osc.frequency.exponentialRampToValueAtTime(Math.max(1, to), at + duration);
+  gain.gain.setValueAtTime(0.0001, at); gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, volume), at + .025); gain.gain.exponentialRampToValueAtTime(0.0001, at + duration);
+  osc.connect(gain).connect(audioCtx.destination); osc.start(at); osc.stop(at + duration + .04);
+}
+function noise(duration, volume, filterType = 'lowpass', frequency = 900, at = audioCtx && audioCtx.currentTime) {
+  if (!audioCtx || audioCtx.state !== 'running' || !volume) return;
+  const buffer = audioCtx.createBuffer(1, Math.ceil(audioCtx.sampleRate * duration), audioCtx.sampleRate), data = buffer.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+  const source = audioCtx.createBufferSource(), filter = audioCtx.createBiquadFilter(), gain = audioCtx.createGain();
+  source.buffer = buffer; filter.type = filterType; filter.frequency.value = frequency;
+  gain.gain.setValueAtTime(Math.max(0.0001, volume), at); gain.gain.exponentialRampToValueAtTime(0.0001, at + duration);
+  source.connect(filter).connect(gain).connect(audioCtx.destination); source.start(at); source.stop(at + duration + .02);
+}
+function playInteractionSound(kind) {
+  if (!soundPrefs.turn || !audioCtx || audioCtx.state !== 'running') return;
+  const v = soundPrefs.turnVolume / 100 * .24, at = audioCtx.currentTime;
+  if (kind === 'egg') { tone(240, .11, v, 'triangle', at); noise(.16, v * .8, 'lowpass', 700, at + .06); }
+  else if (kind === 'rocket') { sweep(150, 1250, .58, v * .7, 'sawtooth', at); noise(.48, v * .32, 'highpass', 1400, at + .05); }
+  else if (kind === 'tomato') { tone(145, .14, v, 'sine', at); noise(.22, v, 'lowpass', 520, at + .03); }
+  else if (kind === 'pie') { tone(520, .12, v * .8, 'triangle', at); tone(350, .18, v, 'triangle', at + .09); noise(.13, v * .55, 'lowpass', 850, at + .13); }
+  else if (kind === 'water') { tone(980, .1, v * .7, 'sine', at); tone(720, .13, v * .85, 'sine', at + .08); tone(1120, .09, v * .55, 'sine', at + .17); }
+  else if (kind === 'pillow') { noise(.3, v * .5, 'lowpass', 380, at); tone(180, .2, v * .35, 'sine', at + .04); }
+  else if (kind === 'flower') { tone(659.25, .22, v * .65, 'sine', at); tone(880, .3, v * .75, 'sine', at + .13); }
+  else if (kind === 'gift') { tone(523.25, .16, v * .7, 'triangle', at); tone(659.25, .18, v * .75, 'triangle', at + .1); tone(783.99, .26, v * .8, 'triangle', at + .2); }
+  else if (kind === 'applause') { noise(.12, v * .75, 'bandpass', 1200, at); noise(.12, v * .75, 'bandpass', 1200, at + .14); noise(.18, v * .9, 'bandpass', 1200, at + .28); }
+  else if (kind === 'congrats') { tone(523.25, .18, v * .75, 'square', at); tone(659.25, .2, v * .7, 'square', at + .12); tone(783.99, .2, v * .7, 'square', at + .24); tone(1046.5, .42, v * .8, 'triangle', at + .36); }
+}
+function playInteractionImpactSound(kind) {
+  if (!soundPrefs.turn || !audioCtx || audioCtx.state !== 'running') return;
+  const v = soundPrefs.turnVolume / 100 * .2, at = audioCtx.currentTime;
+  if (kind === 'egg') { noise(.13, v, 'lowpass', 520, at); tone(190, .12, v * .65, 'triangle', at); }
+  else if (kind === 'rocket') { noise(.34, v, 'lowpass', 430, at); sweep(180, 70, .3, v * .8, 'sawtooth', at); }
+  else if (kind === 'tomato') { noise(.19, v * .95, 'lowpass', 360, at); tone(120, .14, v * .7, 'sine', at); }
+  else if (kind === 'pie') { noise(.2, v * .75, 'lowpass', 700, at); tone(310, .18, v * .6, 'triangle', at); }
+  else if (kind === 'water') { noise(.2, v * .7, 'highpass', 1700, at); tone(1050, .12, v * .6, 'sine', at + .04); }
+  else if (kind === 'pillow') { noise(.26, v * .42, 'lowpass', 300, at); }
+  else if (kind === 'flower') { tone(987.77, .28, v * .65, 'sine', at); }
+  else if (kind === 'gift') { tone(784, .13, v * .65, 'triangle', at); tone(1174.66, .3, v * .7, 'triangle', at + .1); }
+  else if (kind === 'applause') { noise(.1, v * .7, 'bandpass', 1350, at); noise(.1, v * .7, 'bandpass', 1350, at + .12); }
+  else if (kind === 'congrats') { tone(1046.5, .18, v * .6, 'square', at); tone(1318.5, .35, v * .7, 'triangle', at + .12); }
+}
 function playMusicStep() {
   if (!soundPrefs.music || document.hidden || document.body.dataset.screen !== 'game') return;
   const volume = soundPrefs.musicVolume / 100 * 0.09, note = musicNotes[musicStep % musicNotes.length];
@@ -857,6 +901,18 @@ const INTERACTION_ITEMS = [
   ['egg', '🥚', 'Ném trứng'], ['rocket', '🚀', 'Tên lửa'], ['tomato', '🍅', 'Cà chua'], ['pie', '🥧', 'Bánh kem'], ['water', '💧', 'Bóng nước'],
   ['pillow', '☁️', 'Ném gối'], ['flower', '💐', 'Tặng hoa'], ['gift', '🎁', 'Tặng quà'], ['applause', '👏', 'Vỗ tay'], ['congrats', '🎉', 'Chúc mừng'],
 ];
+const INTERACTION_IMPACTS = {
+  egg: '<b>🍳</b><i>🥚</i><i>✨</i>',
+  rocket: '<b>💥</b><i>☁️</i><i>🔥</i>',
+  tomato: '<b>🍅</b><i>🔴</i><i>🔴</i>',
+  pie: '<b>🥧</b><i>🤍</i><i>🤍</i>',
+  water: '<b>💦</b><i>💧</i><i>💧</i>',
+  pillow: '<b>☁️</b><i>🪶</i><i>🪶</i>',
+  flower: '<b>💐</b><i>🌸</i><i>🌼</i>',
+  gift: '<b>🎁</b><i>⭐</i><i>✨</i>',
+  applause: '<b>👏</b><i>👏</i><i>✨</i>',
+  congrats: '<b>🎊</b><i>🏆</i><i>🎉</i>',
+};
 function showInteractionMenu(pid, anchor) {
   const targetPlayer = G.byId(S, pid), menu = $('#interaction-menu'); if (!targetPlayer || !me) return;
   menu.innerHTML = `<header><b>Tương tác với ${esc(targetPlayer.name)}</b><button type="button" aria-label="Đóng">×</button></header><div>${INTERACTION_ITEMS.map(([kind, icon, label]) => `<button type="button" data-kind="${kind}"><i>${icon}</i><span>${label}</span></button>`).join('')}</div>`;
@@ -874,6 +930,7 @@ function receiveInteraction(event) {
   lastInteractionId = event.id;
   const from = document.querySelector(`.pcard[data-p="${CSS.escape(event.from)}"] .av`), to = document.querySelector(`.pcard[data-p="${CSS.escape(event.to)}"] .av`);
   const item = INTERACTION_ITEMS.find(([kind]) => kind === event.kind); if (!from || !to || !item) return;
+  playInteractionSound(event.kind);
   const a = from.getBoundingClientRect(), b = to.getBoundingClientRect(), x1 = a.left + a.width / 2, y1 = a.top + a.height / 2, x2 = b.left + b.width / 2, y2 = b.top + b.height / 2;
   const fx = document.createElement('span'); fx.className = `interaction-fly ${event.kind}`; fx.textContent = item[1]; fx.style.left = `${x1}px`; fx.style.top = `${y1}px`; $('#interaction-fx').appendChild(fx);
   const dx = x2 - x1, dy = y2 - y1, arc = Math.min(150, Math.max(55, Math.hypot(dx, dy) * .22));
@@ -882,9 +939,10 @@ function receiveInteraction(event) {
     { transform: `translate(calc(-50% + ${dx * .5}px),calc(-50% + ${dy * .5 - arc}px)) scale(1.25) rotate(${event.kind === 'rocket' ? 20 : 200}deg)`, opacity: 1, offset: .55 },
     { transform: `translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) scale(.9) rotate(${event.kind === 'rocket' ? 35 : 380}deg)`, opacity: 1 },
   ], { duration: event.kind === 'rocket' ? 650 : 900, easing: 'cubic-bezier(.2,.75,.25,1)', fill: 'forwards' }).finished.then(() => {
-    fx.remove(); const card = to.closest('.pcard'); card.classList.add('social-hit');
-    const burst = document.createElement('span'); burst.className = `interaction-burst ${event.kind}`; burst.textContent = ['flower', 'gift', 'applause', 'congrats'].includes(event.kind) ? '✨' : '💥'; burst.style.left = `${x2}px`; burst.style.top = `${y2}px`; $('#interaction-fx').appendChild(burst);
-    setTimeout(() => { burst.remove(); card.classList.remove('social-hit'); }, 900);
+    fx.remove(); playInteractionImpactSound(event.kind);
+    const card = to.closest('.pcard'); card.classList.add('social-hit', `social-${event.kind}`);
+    const burst = document.createElement('span'); burst.className = `interaction-burst ${event.kind}`; burst.innerHTML = INTERACTION_IMPACTS[event.kind]; burst.style.left = `${x2}px`; burst.style.top = `${y2}px`; $('#interaction-fx').appendChild(burst);
+    setTimeout(() => { burst.remove(); card.classList.remove('social-hit', `social-${event.kind}`); }, 1200);
   }).catch(() => fx.remove());
 }
 function renderChat() {
@@ -895,7 +953,12 @@ function renderChat() {
   if (!chatOpen && newest && newest !== chatLastSeen) $('#chat-unread').classList.add('show');
   if (chatOpen) { chatLastSeen = newest; $('#chat-unread').classList.remove('show'); }
   const list = $('#chat-messages'), ownName = me ? (G.byId(S, me.id) || {}).name : lobbyDraftName;
-  list.innerHTML = chatMessages.map((m) => `<article class="${m.name === ownName ? 'mine' : ''}"><b>${esc(m.name)}${m.viewer ? ' · xem' : ''}</b><p>${esc(m.text)}</p></article>`).join('') || '<small>Chưa có tin nhắn</small>';
+  list.innerHTML = chatMessages.map((m) => {
+    const player = (m.pid && G.byId(S, m.pid)) || S.players.find((p) => p.name === m.name);
+    const color = player && seatOf[player.id] ? seatOf[player.id].color : '#695681';
+    const mine = me ? m.pid === me.id : m.name === ownName;
+    return `<article class="${mine ? 'mine' : ''}" style="--chat-color:${color}"><b>${esc(m.name)}${m.viewer ? ' · xem' : ''}</b><p>${esc(m.text)}</p></article>`;
+  }).join('') || '<small>Chưa có tin nhắn</small>';
   if (chatOpen) requestAnimationFrame(() => { list.scrollTop = list.scrollHeight; });
 }
 $('#chat-toggle').onclick = () => { chatOpen = !chatOpen; renderChat(); };

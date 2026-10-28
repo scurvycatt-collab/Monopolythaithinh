@@ -246,7 +246,7 @@ export class GameRoom extends DurableObject {
         if (!p && !activeViewer) return json(401, { error: 'Bạn cần vào phòng hoặc vào xem trước khi chat' });
         const text = String(body.text || '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 240);
         if (!text) return json(400, { error: 'Tin nhắn đang trống' });
-        this.chat.push({ id: hex(8), name: p ? p.name : viewer, viewer: !p, text, at: Date.now() });
+        this.chat.push({ id: hex(8), pid: p ? p.id : '', name: p ? p.name : viewer, viewer: !p, text, at: Date.now() });
         this.chat = this.chat.slice(-40);
         await this.ctx.storage.put('chat', this.chat);
         this.broadcast();
