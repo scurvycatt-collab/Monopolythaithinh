@@ -1,0 +1,6 @@
+# Giữ LF trong repo để hash thumbnail và test giống nhau trên mọi máy
+* text=auto eol=lf
+*.png binary
+*.ico binary
+*.glb binary
+*.bat text eol=crlf
