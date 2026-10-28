@@ -72,8 +72,12 @@ assert.match(app, /navigator\.deviceMemory/, 'first launch must choose a safe gr
 assert.match(app, /replaceMainRenderer\(wantsAntialias\)/, 'changing to or from low graphics must recreate the WebGL context with the requested antialias setting');
 assert.match(app, /old\.dispose\(\); old\.forceContextLoss\(\)/, 'replaced WebGL contexts must be released');
 assert.match(app, /setTimeout\(releaseSnapshotRenderer, 2000\)/, 'the snapshot WebGL context must be released after its burst of work');
-assert.match(app, /function deferredSnapshotAttrs\(key, make\)/, '3D property thumbnails must be deferred so modal controls bind before WebGL capture');
-assert.match(app, /if \(busy \|\| anims\.length\)/, 'deferred thumbnails must not compete with gameplay animations');
+assert.match(app, /PROPERTY_THUMBNAIL_VERSION/, 'property thumbnails must use a generated cache version');
+assert.match(app, /const propertyThumbnail = \(kind, level, color\) => `thumbnails\/property\//, 'property dialogs must use prebuilt static thumbnails');
+assert.match(app, /propertyThumbnail\('city', pr\.level, col\)/, 'purchase and takeover dialogs must use the matching static city thumbnail');
+assert.match(app, /propertyThumbnail\('city', Math\.max\(0, lv\), hex\)/, 'city info cards must use prebuilt thumbnails');
+assert.match(app, /propertyThumbnail\('resort', Math\.max\(1, n\), hex\)/, 'resort info cards must use prebuilt thumbnails');
+assert.doesNotMatch(app, /deferredSnapshotAttrs|SNAP_PLACEHOLDER|prewarmPropertySnapshots/, 'property thumbnails must not be rendered again in the browser');
 assert.match(app, /sourceButton\.textContent = 'Đang xử lý…'/, 'network actions must show immediate button feedback');
 assert.match(app, /if \(result\.state\) onState\(result\.state\)/, 'actions must apply the state returned by HTTP instead of depending only on SSE');
 assert.match(app, /controller\.abort\(\), 12000/, 'stalled action requests must time out and restore the UI');

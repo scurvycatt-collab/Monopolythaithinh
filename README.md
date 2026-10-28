@@ -65,7 +65,9 @@ Toàn bộ luật nằm ở **một file duy nhất: `public/rules.js`**, gồm 
 
 Quy trình đổi luật: sửa `rules.js` (thông số + dòng bảng quyết định liên quan) → `npm run rules:doc` → `npm run verify` → sửa engine nếu có dòng báo lệch → commit.
 
-`npm run verify` = tài liệu khớp luật + bảng quyết định + giả lập 300 ván + thử server thật. Chặn ở ba chỗ:
+Quy tắc thumbnail công trình: khi thêm/sửa mẫu nhà, resort, màu người chơi hoặc số cấp công trình, phải chạy `npm run thumbnails` để sinh lại toàn bộ PNG trong `public/thumbnails/property/`. Không sửa các PNG hay `manifest.json` bằng tay. `npm run verify`, hook commit, build exe và deploy đều kiểm tra hash nguồn, đủ màu/cấp và phiên bản cache; ảnh chưa đồng bộ sẽ làm quy trình dừng.
+
+`npm run verify` = tài liệu khớp luật + thumbnail khớp model/màu/cấp + bảng quyết định + giả lập 300 ván + thử server thật. Chặn ở ba chỗ:
 - **commit**: chạy `npm run setup` một lần để bật hook `.githooks/pre-commit`;
 - **GitHub**: `.github/workflows/verify.yml` chạy mỗi lần push / pull request;
 - **đóng gói**: `npm run build:exe` chạy verify trước.

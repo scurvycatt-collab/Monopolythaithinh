@@ -6,6 +6,7 @@ import { colosseum, worldTour, lostIsland, startGate, chanceBox, beachHouse, fes
 import { centerWorld } from './world.js';
 import qrcode from '../vendor/qrcode.mjs';
 import { normalizeRoom, roomEndpoint, selectRoomCode, validRoom } from './room-session.mjs';
+import { PROPERTY_THUMBNAIL_VERSION } from '../thumbnails/property/version.js';
 const HK = { loadKit, building: houseBuilding, colosseum, worldTour, lostIsland, startGate, chanceBox, beachHouse, festivalFlag, festivalPlaque, BEACH_LEVELS };
 
 const G = window.Game;
@@ -133,7 +134,10 @@ let presence = {}, viewers = [], skew = 0, proxySec = 15;
 let ROOM = '', ROOM_GATE = false, WATCH_MODE = false, pendingJoinName = '', pendingRoomMap = '', joiningRoom = false;
 let boardReady = false, boardReadyPromise = null, frameRunning = false;
 const now = () => Date.now() + skew;   // giờ theo server
-function seatSetup() { seatOf = {}; S.players.forEach((p, k) => { const pet = p.pet || G.PETS[k % G.PETS.length].id, def = G.PETS.find((x) => x.id === pet); p.color = def ? def.c : p.color; seatOf[p.id] = { color: p.color, pet, corner: CORNERS[k % 4] }; }); }
+function seatSetup() {
+  seatOf = {};
+  S.players.forEach((p, k) => { const pet = p.pet || G.PETS[k % G.PETS.length].id, def = G.PETS.find((x) => x.id === pet); p.color = def ? def.c : p.color; seatOf[p.id] = { color: p.color, pet, corner: CORNERS[k % 4] }; });
+}
 const curP = () => (S.phase === 'play' ? S.players[S.turn] : null);
 const isMe = (pid) => MODE === 'local' || (!!me && me.id === pid);
 const myTurn = () => !!curP() && isMe(curP().id);
@@ -833,30 +837,9 @@ function snapshot(key, obj) {
   snapDisposeTimer = setTimeout(releaseSnapshotRenderer, 2000);
   return (snapCache[key] = url);
 }
-// Ảnh công trình dùng WebGL + toDataURL, khá nặng trên điện thoại yếu. Modal phải gắn
-// nút bấm trước, sau đó mới tạo từng thumbnail lúc main thread rảnh để nút không bị "đơ".
-const SNAP_PLACEHOLDER = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="220" height="220" viewBox="0 0 220 220"%3E%3Crect width="220" height="220" rx="24" fill="%23eef6ff"/%3E%3Cpath d="M55 112 110 68l55 44v48H55z" fill="%23fff" stroke="%239dc6df" stroke-width="8"/%3E%3Cpath d="m48 116 62-50 62 50" fill="none" stroke="%232eaee5" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/%3E%3C/svg%3E';
-const snapJobs = new Map();
-let snapJobTimer = 0;
-function updateDeferredSnapshots(key, url) {
-  document.querySelectorAll('img[data-snapshot]').forEach((img) => { if (img.dataset.snapshot === key) img.src = url; });
-}
-function runSnapshotJob() {
-  snapJobTimer = 0;
-  if (busy || anims.length) { snapJobTimer = setTimeout(runSnapshotJob, 300); return; }
-  const entry = snapJobs.entries().next();
-  if (entry.done) return;
-  const [key, make] = entry.value; snapJobs.delete(key);
-  try { updateDeferredSnapshots(key, snapshot(key, make())); } catch (e) { console.warn('Không tạo được thumbnail 3D:', e); }
-  if (snapJobs.size) snapJobTimer = setTimeout(runSnapshotJob, 50);
-}
-function deferredSnapshotAttrs(key, make) {
-  if (!snapCache[key] && !snapJobs.has(key)) {
-    snapJobs.set(key, make);
-    if (!snapJobTimer) snapJobTimer = setTimeout(runSnapshotJob, 250);
-  }
-  return `src="${snapCache[key] || SNAP_PLACEHOLDER}" data-snapshot="${esc(key)}"`;
-}
+// Thumbnail công trình được sinh sẵn khi build và phục vụ như asset tĩnh. Không dựng
+// WebGL/toDataURL mỗi lần vào game; browser/CDN có thể cache trực tiếp các PNG này.
+const propertyThumbnail = (kind, level, color) => `thumbnails/property/${kind}-${String(color || '#9aa4b1').replace('#', '').toLowerCase()}-${level}.png?v=${PROPERTY_THUMBNAIL_VERSION.slice(0, 12)}`;
 
 /* ---------------- khung hình, zoom & kéo ---------------- */
 const CAM_OFF = new THREE.Vector3(20, 16.5, 20);
@@ -1250,17 +1233,14 @@ function renderModal() {
     if (!choosable.includes(pickLevel) || !can(pickLevel)) pickLevel = choosable.filter(can).pop() ?? choosable[0];
     const NAMES = G.LEVEL_NAMES;
     const bl = resort ? Math.min(4, beachLevel(p.id) + 1) : 0;
-    const imageAttrs = (l) => {
-      const key = resort ? `hb${bl}${col}` : `h${t.type}${l}${col}`;
-      return deferredSnapshotAttrs(key, () => (resort ? HK.beachHouse(bl, col) : HK.building('suburb', l, col)));
-    };
+    const imageUrl = (l) => propertyThumbnail(resort ? 'resort' : 'city', resort ? bl : l, col);
     const rentAt = (l) => (resort ? CFG.RESORT_TOLL[bl] : G.toll(i, l));
     const card = (l) => {
       const built = st.kind === 'upgrade' && l <= cur, on = built || (l <= pickLevel && (choosable.includes(l) || l === 0 || (st.kind === 'buy'))), lock = built || !can(l);
       const lapLock = !built && l <= 3 && l > cap;
       const note = built ? 'Đã xây' : lapLock ? `🔒 Vòng ${CFG.LAP_CAP.indexOf(l) + 1}` : choosable.includes(l) ? money(costOf(l)) : '';
       return `<button type="button" data-l="${l}" class="${on ? 'on' : ''}" ${lock ? 'disabled' : ''} style="${!built && !can(l) ? 'opacity:.45' : ''}">
-        <img alt="" ${imageAttrs(l)}><b>${resort ? HK.BEACH_LEVELS[bl - 1] : NAMES[l]}</b><span>${note}</span><i class="tick${on ? ' y' : ''}" aria-hidden="true"></i></button>`;
+        <img alt="" src="${imageUrl(l)}"><b>${resort ? HK.BEACH_LEVELS[bl - 1] : NAMES[l]}</b><span>${note}</span><i class="tick${on ? ' y' : ''}" aria-hidden="true"></i></button>`;
     };
     const price = costOf(pickLevel);
     const body = `<div class="lv" style="--n:${shown.length}">${shown.map(card).join('')}</div>
@@ -1274,8 +1254,8 @@ function renderModal() {
     $('#yes').onclick = (e) => act(st.kind, { level: pickLevel }, e.currentTarget);
   } else if (st.kind === 'takeover') {
     const pr = S.props[st.tile], owner = G.byId(S, pr.owner);
-    const imageAttrs = deferredSnapshotAttrs(`h${pr.level}${col}`, () => HK.building('suburb', pr.level, col));
-    m.innerHTML = sheet('#f5a20a', 'Mua lại?', `${esc(TILES[st.tile].name)} của ${esc(owner.name)}`, `<div class="tinfo"><div class="pic"><img alt="" ${imageAttrs}></div><div>
+    const imageUrl = propertyThumbnail('city', pr.level, col);
+    m.innerHTML = sheet('#f5a20a', 'Mua lại?', `${esc(TILES[st.tile].name)} của ${esc(owner.name)}`, `<div class="tinfo"><div class="pic"><img alt="" src="${imageUrl}"></div><div>
       <p style="margin:2px 0 6px">Nhận luôn <b>${G.LEVEL_NAMES[pr.level]}</b></p>
       <div class="kv"><span>Giá mua lại</span><b>${money(st.price)}</b></div><div class="kv"><span>Bạn có</span><b>${money(p.money)}</b></div>
       </div></div>`,
@@ -1408,8 +1388,8 @@ function showInfo(i) {
     const rows = [0, 1, 2, 3, 4].map((l) => `<tr class="${l === lv ? 'cur' : ''}"><td><span class="ck">${l <= lv ? '✓' : ''}</span>${G.LEVEL_NAMES[l]}</td>
       <td>${money(G.value(i, l))}</td><td>${money(G.toll(i, l))}</td><td>${money(G.value(i, l) * CFG.SELL_MULT)}</td></tr>`).join('');
     if (pr && G.ownsGroup(S, pr.owner, t.group)) notes.push(`Độc quyền nhóm ${GROUPS[t.group].name}: tiền thuê x${CFG.MONOPOLY_MULT}`);
-    const citySnapshot = deferredSnapshotAttrs(`h${Math.max(0, lv)}${hex}`, () => HK.building('suburb', Math.max(0, lv), hex));
-    body = `<div class="tinfo"><div class="pic"><img alt="" ${citySnapshot}></div><div>
+    const citySnapshot = propertyThumbnail('city', Math.max(0, lv), hex);
+    body = `<div class="tinfo"><div class="pic"><img alt="" src="${citySnapshot}"></div><div>
       <table class="lvl"><thead><tr><th>Công trình</th><th>Giá theo cấp</th><th>Tiền thuê</th><th>Bán ngân hàng</th></tr></thead><tbody>${rows}</tbody></table>
       ${pr ? `<div class="kv"><span>Tiền thuê hiện tại</span><b>${money(G.rentOf(S, i))}</b></div>
         <div class="kv"><span>Giá mua lại</span><b>${G.canTakeover(S, i) ? money(G.takeoverPrice(S, i)) : 'Không thể mua lại'}</b></div>` : ''}
@@ -1418,8 +1398,8 @@ function showInfo(i) {
     color = RESORT_COLOR; sub = `Bãi biển · ${owner ? 'của ' + esc(owner.name) : 'chưa có chủ'}`;
     const n = pr ? beachLevel(pr.owner) : 0;
     const rows = [1, 2, 3, 4].map((k) => `<tr class="${k === n ? 'cur' : ''}"><td><span class="ck">${k <= n ? '✓' : ''}</span>${k} bãi biển · ${HK.BEACH_LEVELS[k - 1]}</td><td>${money(CFG.RESORT_TOLL[k])}</td></tr>`).join('');
-    const resortSnapshot = deferredSnapshotAttrs(`hb${Math.max(1, n)}${hex}`, () => HK.beachHouse(Math.max(1, n), hex));
-    body = `<div class="tinfo"><div class="pic"><img alt="" ${resortSnapshot}></div><div>
+    const resortSnapshot = propertyThumbnail('resort', Math.max(1, n), hex);
+    body = `<div class="tinfo"><div class="pic"><img alt="" src="${resortSnapshot}"></div><div>
       <table class="lvl"><thead><tr><th>Số bãi cùng chủ</th><th>Tiền thuê</th></tr></thead><tbody>${rows}</tbody></table>
       <div class="kv"><span>Giá mua</span><b>${money(t.price)}</b></div>
       <div class="kv"><span>Bán ngân hàng</span><b>${money(t.price * CFG.SELL_MULT)}</b></div>
