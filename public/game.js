@@ -179,6 +179,7 @@
   function setReady(s, id, ready) {
     if (s.phase !== 'lobby') fail('Chỉ sẵn sàng khi đang ở phòng chờ');
     const p = byId(s, id); if (!p || p.bot) fail('Người chơi không hợp lệ');
+    if (isHost(s, id)) fail('Host không cần bấm sẵn sàng');
     p.ready = !!ready;
   }
   function renamePlayer(s, id, name) {
@@ -202,7 +203,7 @@
   function startGame(s, now) {
     if (s.phase !== 'lobby') fail('Ván đã bắt đầu');
     if (s.players.length < 2) fail('Cần ít nhất 2 người chơi');
-    if (s.players.some((p) => !p.bot && !p.ready)) fail('Tất cả người chơi phải sẵn sàng');
+    if (s.players.some((p) => !p.bot && p.id !== s.hostId && !p.ready)) fail('Tất cả người chơi khác phải sẵn sàng');
     shuffle(s.players);
     s.players.forEach(resetPlayer);
     now = now || Date.now();

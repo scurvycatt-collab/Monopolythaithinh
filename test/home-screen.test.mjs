@@ -145,7 +145,8 @@ assert.match(app, /id="lbot">🤖 \+ Thêm bot/, 'the host lobby must offer an a
 assert.match(app, /data-remove-bot=/, 'bot seats must expose a host-only remove control');
 assert.match(app, /amHost && !isMe\(p\.id\)[\s\S]*data-kick=/, 'host must be able to kick another human whether online or offline');
 assert.match(app, /id="lready"/, 'every human player must have a ready toggle');
-assert.match(app, /const allReady = S\.players\.length >= 2 && S\.players\.every\(\(p\) => p\.bot \|\| p\.ready\)/, 'start button must require every human player to be ready');
+assert.match(app, /p\.bot \|\| p\.id === S\.hostId \|\| p\.ready/, 'start button must require every guest, but not the host, to be ready');
+assert.match(app, /p\.id === S\.hostId \? '' : `<em class="ready/, 'host card must not show a ready badge');
 assert.doesNotMatch(app, /const mapRow|data-map=/, 'map selection must not be rendered inside the lobby');
 assert.match(app, /p\.bot \? '<em class="bot">BOT<\/em>'/, 'bot seats must be visibly labelled');
 assert.match(app, /const online = \(pid\) => MODE === 'local' \|\| !!\(G\.byId\(S, pid\) \|\| \{\}\)\.bot/, 'bots must not be shown as disconnected players');

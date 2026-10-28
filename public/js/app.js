@@ -838,13 +838,13 @@ function renderGateMapPreview() {
 }
 function lobbyNet(el) {
   const mine = me && G.byId(S, me.id), amHost = !!mine && S.hostId === mine.id, taken = new Set(S.players.map((p) => p.pet));
-  const allReady = S.players.length >= 2 && S.players.every((p) => p.bot || p.ready);
+  const allReady = S.players.length >= 2 && S.players.every((p) => p.bot || p.id === S.hostId || p.ready);
   const list = S.players.map((p) => {
     const on = !!p.bot || !!(presence[p.id] && presence[p.id].on);
     const remove = amHost && p.bot ? `<button type="button" class="kick" data-remove-bot="${p.id}" aria-label="Xóa ${esc(p.name)}">×</button>`
       : amHost && !isMe(p.id) ? `<button type="button" class="kick" data-kick="${p.id}" aria-label="Kích ${esc(p.name)} khỏi phòng" title="Kích người chơi">×</button>` : '';
-    const ready = p.bot || p.ready;
-    return `<li style="--c:${p.color}"><img alt="" src="${petImg(p.pet)}"><b>${esc(p.name)}</b>${p.id === S.hostId ? '<em class="host">HOST</em>' : ''}${p.bot ? '<em class="bot">BOT</em>' : isMe(p.id) ? '<em>bạn</em>' : ''}<em class="ready ${ready ? 'on' : ''}">${ready ? 'SẴN SÀNG' : 'CHƯA SẴN SÀNG'}</em><i class="dot${on ? ' on' : ''}" title="${p.bot ? 'Bot tự động' : on ? 'Đang online' : 'Mất kết nối'}"></i>${remove}</li>`;
+    const ready = p.bot || p.ready, readyBadge = p.id === S.hostId ? '' : `<em class="ready ${ready ? 'on' : ''}">${ready ? 'SẴN SÀNG' : 'CHƯA SẴN SÀNG'}</em>`;
+    return `<li style="--c:${p.color}"><img alt="" src="${petImg(p.pet)}"><b>${esc(p.name)}</b>${p.id === S.hostId ? '<em class="host">HOST</em>' : ''}${p.bot ? '<em class="bot">BOT</em>' : isMe(p.id) ? '<em>bạn</em>' : ''}${readyBadge}<i class="dot${on ? ' on' : ''}" title="${p.bot ? 'Bot tự động' : on ? 'Đang online' : 'Mất kết nối'}"></i>${remove}</li>`;
   }).join('');
   if (!mine) {
     const pet = (S.players.length < CFG.MAX_PLAYERS) && (lobbyNet.pick && !taken.has(lobbyNet.pick) ? lobbyNet.pick : (G.PETS.find((x) => !taken.has(x.id)) || {}).id);
@@ -868,7 +868,7 @@ function lobbyNet(el) {
     <div class="fld">Thời lượng ván</div>${timeRow(S.settings.timeLimitMin, 'data-t')}
     <div class="fld">Thời gian mỗi lượt</div>${turnRow(S.settings.turnSec || CFG.TURN_SEC, 'data-ts')}` : `<div class="room-readonly"><b>Host đang cài đặt phòng</b><span>${timeLabel(S.settings.timeLimitMin)} · ${S.settings.turnSec || CFG.TURN_SEC} giây/lượt</span></div>`}
     ${inviteBox()}`,
-    `<button class="pill ghost" type="button" id="lleave">Rời phòng</button><button class="pill ${mine.ready ? 'ghost' : ''}" type="button" id="lready">${mine.ready ? 'Huỷ sẵn sàng' : 'Sẵn sàng'}</button>${amHost ? `<button class="pill big" type="button" id="lstart" ${allReady ? '' : 'disabled'}>Bắt đầu</button>` : '<span class="host-wait">Chờ host bắt đầu…</span>'}`);
+    `<button class="pill ghost" type="button" id="lleave">Rời phòng</button>${amHost ? `<button class="pill big" type="button" id="lstart" ${allReady ? '' : 'disabled'}>Bắt đầu</button>` : `<button class="pill ${mine.ready ? 'ghost' : ''}" type="button" id="lready">${mine.ready ? 'Huỷ sẵn sàng' : 'Sẵn sàng'}</button><span class="host-wait">Chờ host bắt đầu…</span>`}`);
   const send = (type, data) => api('api/act', { token: me.token, type, data }).then((result) => { if (result.state) onState(result.state); return result; }).catch((e) => { toast(e.message); return null; });
   el.querySelectorAll('[data-pet]').forEach((b) => { b.onclick = () => send('pet', { pet: b.dataset.pet }); });
   el.querySelectorAll('[data-kick]').forEach((b) => { b.onclick = () => send('kick', { id: b.dataset.kick }); });
@@ -876,7 +876,7 @@ function lobbyNet(el) {
   el.querySelectorAll('[data-t]').forEach((b) => { b.onclick = () => send('settings', { timeLimitMin: Number(b.dataset.t) }); });
   el.querySelectorAll('[data-ts]').forEach((b) => { b.onclick = () => send('settings', { turnSec: Number(b.dataset.ts) }); });
   $('#lleave').onclick = () => send('leave').then((result) => { if (result) exitRoom(); });
-  $('#lready').onclick = () => send('ready', { ready: !mine.ready });
+  if ($('#lready')) $('#lready').onclick = () => send('ready', { ready: !mine.ready });
   if ($('#lbot')) $('#lbot').onclick = () => send('addBot');
   if ($('#lstart')) $('#lstart').onclick = () => send('start');
 }
