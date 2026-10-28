@@ -145,7 +145,7 @@ Map khung do \`npm run map:new ${id}\` sinh ra. Đang dùng skin mẫu: chạy �
 
 - Thay skin mẫu từng slot: tile, deco, house, resort, resortHouse, 4 góc, chance, tax, base, center.
 - Chọn palette 8 nhóm đất, tên 4 cấp nhà resort (\`labels.resortLevels\`).
-- Làm \`preview.svg\` thật; chạy \`npm run verify\` trước khi commit.
+- Làm \`preview.svg\` thật; hoàn tất \`docs/contracts/map-parity.md\` và chạy \`npm run verify\` trước khi commit.
 `;
 }
 
@@ -177,7 +177,7 @@ Bước tiếp theo:
   1. Sửa ${rel(path.join(dir, 'skin.js'))} (thay từng slot có chú thích "THAY:"), docs/contracts/map-skin.md, public/js/render-common/board2d/PEN.md.
   2. Điền ${rel(path.join(dir, 'README.md'))}; làm lại ${rel(path.join(dir, 'preview.svg'))}.
   3. Xem thử: PORT=3100 node server.js, mở http://localhost:3100, tạo phòng và chọn map "${name}".
-  4. npm run verify trước khi commit. Dọn khi thử xong: npm run map:new -- --remove ${id}`);
+  4. Kiểm tra docs/contracts/map-parity.md rồi chạy npm run verify trước khi commit. Dọn khi thử xong: npm run map:new -- --remove ${id}`);
 }
 
 function doRemove(o) {

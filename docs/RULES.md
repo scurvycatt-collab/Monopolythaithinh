@@ -1,4 +1,4 @@
-# Luật chơi Thái Thịnh Monopoly — v1.8.0
+# Luật chơi Thái Thịnh Monopoly — v1.8.1
 
 > Tự sinh từ `public/rules.js` bằng `npm run rules:doc`. Không sửa tay file này: sửa `rules.js`, chạy `npm run verify`.
 
@@ -123,7 +123,7 @@ stateDiagram-v2
 | `takeover` | Vừa trả thuê ô người khác, đủ tiền mua lại | **takeover**: Trả 2× giá trị cho chủ, nhận nguyên cấp nhà → nếu còn nâng cấp được thì sang upgrade, không thì kết thúc ô.<br>**skip**: Không mua → kết thúc ô. |
 | `festival` | Dừng ở Championships | **festival**: Tăng hệ số ô đang tổ chức thêm 1; hoặc trả 50K để chuyển sang ô của mình. Hệ số tối đa ×10.<br>**skip**: Bỏ qua → kết thúc ô. |
 | `card` | Thẻ Chance cần chọn ô | **card**: Áp dụng thẻ lên ô chọn (Đổi đất: chọn 2 lần) → kết thúc ô.<br>**skip**: Bỏ thẻ → kết thúc ô. |
-| `debt` | Có khoản phải trả (thuê/thuế) lớn hơn tiền mặt; khoản này đang treo | **sell**: Bán 1 ô cho ngân hàng; đủ tiền thì trả khoản treo cho người nhận → kết thúc ô (đổ đôi thì đổ tiếp).<br>**bankrupt**: Phá sản: toàn bộ tiền mặt cho người nhận, đất trả về ngân hàng → lượt người kế. |
+| `debt` | Có khoản phải trả (thuê/thuế) lớn hơn tiền mặt; khoản này đang treo | **sell**: Bán 1 ô cho ngân hàng; đủ tiền thì trả khoản treo cho người nhận → kết thúc ô (đổ đôi thì đổ tiếp).<br>**bankrupt**: Chỉ được phá sản khi bán hết vẫn không đủ: tự thanh lý toàn bộ đất, rồi chuyển toàn bộ tiền sau thanh lý cho người nhận → lượt người kế. |
 
 - Phòng chờ: người vào đầu tiên là host; chỉ host được đổi cấu hình room, mời người chơi ra, bắt đầu hoặc reset ván. Host rời phòng thì quyền chuyển cho người vào kế tiếp.
 - Bắt đầu lượt → tour (nếu đang có vé World Tour) / island (nếu đang kẹt đảo) / roll
@@ -173,7 +173,9 @@ stateDiagram-v2
 | C13 | Tiền thuê lớn hơn tiền mặt | Khoản thuê treo lại, chưa ai mất/nhận tiền → bước debt, thông báo "không đủ tiền thanh toán" |
 | C14 | Đang nợ, bán 1 ô đủ tiền | Trả khoản treo cho chủ rồi mới sang người kế |
 | C15 | Đổ đôi vào ô người khác, không đủ tiền | Phải bán trả xong mới được đổ tiếp |
-| C16 | Đang nợ, phá sản | Toàn bộ tiền mặt cho chủ nợ, đất về ngân hàng |
+| C16 | Đang nợ, phá sản ngay khi bán hết vẫn thiếu | Tự thanh lý đất rồi chuyển toàn bộ 80K cho chủ nợ |
+| C16A | Đang nợ, bán tự động hết tài sản rồi phá sản | Chủ nợ vẫn nhận đúng tổng 80K như phá sản ngay |
+| C16B | Tiền mặt cộng giá thanh lý vẫn đủ trả nợ | Không được tuyên bố phá sản; phải bán tài sản để trả |
 | C17 | Chủ sở hữu cả nhóm màu | Thuê × 2 |
 | C18 | Ô cắm cờ lễ hội đầu ván | Thuê × 2 |
 | C19 | Ô đang tổ chức lễ hội lần 2 | Thuê × 3 |

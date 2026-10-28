@@ -21,6 +21,13 @@ Giữa bàn là hội chợ bốn mùa (chợ hoa Tết, bãi thả diều, ph�
 - Kenney Isometric Buildings và Nature Kit (CC0), dùng chung ở `public/assets/shared/`. Không có asset riêng.
 - Quân cờ: ảnh Cube Pets sinh sẵn ở `public/thumbnails/static/pet-*.png`.
 
+## Parity với Map 1
+
+- Tuân thủ `docs/contracts/map-parity.md`: ô trống không hiện giá mua, quân cao chuẩn 1.08,
+  popup dùng thumbnail tĩnh và Chance phát thẻ theo `seq` trước chuyển động do thẻ tạo ra.
+- Cảnh tĩnh/sprite được cache; lúc rảnh giảm nhịp đánh thức, tab ẩn dừng render; mức `low`
+  bỏ ambient. Chạy `npm run verify` trước commit/deploy.
+
 ## Còn thiếu
 
 - Chuyển động của bản xem trước bị bỏ để giữ cảnh tĩnh nướng một lần: cờ bay, bóng bay, lửa trại, khói.

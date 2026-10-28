@@ -203,5 +203,25 @@ for (const row of R.DECISIONS) {
   const bad = check(row);
   if (bad.length) { fail++; console.error(`✗ ${row.id} [${row.table}] ${row.when} → ${row.then}\n    ${bad.join('\n    ')}`); }
 }
+
+// Ca hồi quy đúng ví dụ 3M nợ, 1M tiền mặt, thanh lý toàn bộ được thêm 1M:
+// phá sản ngay và bán hết rồi phá sản phải chuyển cùng 2M cho chủ nợ.
+{
+  const assets = [[1, 0], [2, 0], [3, 0], [5, 4], [27, 4]]; // 30 + 30 + 30 + 200 + 710 = 1.000K
+  const scenario = (sellFirst) => {
+    const s = build({ step: 'debt' }), me = G.byId(s, 'me'), op = G.byId(s, 'op');
+    me.money = 1000; op.money = 0; s.props = {};
+    for (const [tile, level] of assets) s.props[tile] = { owner: 'me', level };
+    assert.equal(assets.reduce((sum, [tile]) => sum + G.sellValue(s, tile), 0), 1000, 'tài sản mẫu phải thanh lý được đúng 1M');
+    s.pending = { from: 'me', to: 'op', amount: 3000, why: 'tiền thuê kiểm thử' };
+    s.step = { kind: 'debt' };
+    if (sellFirst) for (const [tile] of assets) G.act(s, 'me', 'sell', { tile });
+    G.act(s, 'me', 'bankrupt');
+    return { received: op.money, cash: me.money, properties: G.ownedBy(s, 'me').length };
+  };
+  const direct = scenario(false), afterAutoSell = scenario(true);
+  assert.deepEqual(direct, { received: 2000, cash: 0, properties: 0 }, 'phá sản ngay phải thanh lý tài sản và trả 2M');
+  assert.deepEqual(afterAutoSell, direct, 'bán tự động rồi phá sản phải trả đúng bằng phá sản ngay');
+}
 if (fail) { console.error(`\nLỆCH LUẬT: ${fail}/${R.DECISIONS.length} dòng bảng quyết định không khớp engine.`); process.exit(1); }
 console.log(`OK luật v${R.VERSION}: ${R.DECISIONS.length}/${R.DECISIONS.length} dòng bảng quyết định khớp engine`);

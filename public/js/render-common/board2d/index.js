@@ -16,6 +16,7 @@ const regionOf = (x, z) => (z >= Math.abs(x) ? 0 : -x > Math.abs(z) ? 1 : -z >= 
 const CORNER_LABEL = { start: [0.5, 0.5, 90, 0.92], island: [0.7, 0.8, 33, 0.5], festival: [0.7, 0.78, 33, 0.62], tour: [0.7, 0.78, 33, 0.62] };
 const DEFAULT_LABELS = { start: 'START', island: 'LOST ISLAND', festival: 'CHAMPIONSHIPS', tour: 'WORLD TOUR', chance: 'CHANCE', tax: 'TAX', hotel: 'HOTEL', resort: 'RESORT' };
 const SELL_MS = 380, BUILD_MS = 760, REBUILD_GAP = 420;   // hoạt ảnh bán / xây nhà
+const TOKEN_HEIGHT = 1.08; // parity Map 1: mọi nhân vật cùng chiều cao hiển thị
 const CONFETTI = ['#ff6fa0', '#ffc23a', '#5cc6e8', '#7fd6a0', '#a98af0', '#ffffff'];
 const shortK = (n) => (n >= 1000 ? (n / 1000).toFixed(n % 1000 ? 1 : 0).replace('.', ',') + 'M' : n + 'K');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -130,7 +131,6 @@ export async function createBoard2D(ctx, skin) {
       fitText(c2, t.name.toUpperCase(), cw / 2, gH - 26, 34, cw - 12, 0, pal.labelText || '#fff', pal.labelShadow);
       if (out) fitText(c2, `${outRounds(i)} ⚡`, cw / 2, sy, 60, cw - 16, 0, '#ffd23a', 'rgba(0,0,0,.45)');
       else if (own) fitText(c2, shortK(G.rentOf(S, i)), cw / 2, sy, 58, cw - 16, 0, '#ffffff', 'rgba(0,0,0,.35)');
-      else fitText(c2, t.price + 'K', cw / 2, sy, 58, cw - 16, 0, ink, inkSh);
     } else fitText(c2, LB[t.type] || t.type.toUpperCase(), cw / 2, sy, 40, cw - 16, 0, ink, inkSh);
     return tex;
   }
@@ -254,7 +254,7 @@ export async function createBoard2D(ctx, skin) {
   function drawToken(o, pid, now) {
     if (o.hidden) return;
     if (o.tx !== undefined) { o.x += (o.tx - o.x) * 0.25; o.z += (o.tz - o.z) * 0.25; if (Math.abs(o.tx - o.x) + Math.abs(o.tz - o.z) < 0.002) { o.x = o.tx; o.z = o.tz; delete o.tx; } }
-    const K = view.K, b = scr(o.x, 0, o.z), top = scr(o.x, o.y, o.z), im = petImg[o.pet], H = 0.95 * K;
+    const K = view.K, b = scr(o.x, 0, o.z), top = scr(o.x, o.y, o.z), im = petImg[o.pet], H = TOKEN_HEIGHT * K;
     g.save(); g.fillStyle = 'rgba(30,50,70,.22)'; g.beginPath(); g.ellipse(b.x, b.y, 0.3 * K, 0.15 * K, 0, 0, 7); g.fill();
     g.fillStyle = o.color; g.strokeStyle = '#ffffff'; g.lineWidth = Math.max(1.5, K * 0.03); g.beginPath(); g.ellipse(top.x, top.y, 0.28 * K, 0.14 * K, 0, 0, 7); g.fill(); g.stroke();
     if (pid === glowPid) { g.shadowColor = o.color; g.shadowBlur = Math.max(6, K * 0.25); }

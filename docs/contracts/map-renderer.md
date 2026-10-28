@@ -72,6 +72,10 @@ Kéo / cuộn / chụm để zoom do renderer tự xử lý trên `canvas`. App 
 
 ## 4. Quy tắc
 
+Mọi renderer còn phải qua checklist parity bắt buộc tại
+[`docs/contracts/map-parity.md`](map-parity.md). Checklist này là cổng kiểm tra trước commit/deploy,
+không phải hướng dẫn tuỳ chọn.
+
 - Mặt bàn 32 ô, đánh số như `rules.TILES`; 4 góc 0/8/16/24. Map được đổi hình, không được đổi số ô hay thứ tự.
 - Không chặn luồng chính quá 50 ms khi tải; tải asset trong `createRenderer`, trước khi trả `Board`.
 - Mức `low`: ≤ 200 draw call (3D) hoặc ≤ 4 ms/khung (2D) trên bàn trống.

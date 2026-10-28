@@ -526,7 +526,8 @@ function startSell(p) {
 }
 function drawSell() {
   if (!sell) return;
-  const p = G.byId(S, sell.pid), d = S.pending || { amount: 0, why: '' }, need = Math.max(0, d.amount - p.money), got = [...sell.picked].reduce((a, i) => a + G.sellValue(S, i), 0);
+  const p = G.byId(S, sell.pid), d = S.pending || { amount: 0, why: '' }, own = G.ownedBy(S, p.id), need = Math.max(0, d.amount - p.money), got = [...sell.picked].reduce((a, i) => a + G.sellValue(S, i), 0);
+  const insolvent = p.money + own.reduce((a, i) => a + G.sellValue(S, i), 0) < d.amount;
   const left = p.money + got - d.amount;
   $('#selltags').querySelectorAll('.stag').forEach((el) => el.classList.toggle('on', sell.picked.has(Number(el.dataset.i))));
   const b = $('#sellbox');
@@ -534,9 +535,9 @@ function drawSell() {
     <div class="ln">Số tiền cần: <b>${money(need)}</b></div>
     <div class="ln">Tiền còn lại sau khi bán: <b class="${left >= 0 ? 'ok' : 'bad'}">${left < 0 ? '−' : ''}${money(Math.abs(left))}</b></div>
     <div class="msg">${esc(p.name)} cần trả ${money(d.amount)} ${esc(d.why)} nhưng chỉ có ${money(p.money)}. Hãy bán tài sản.</div>
-    <div class="btns"><button class="pill red" type="button" id="sbk">Phá sản</button><button class="pill ghost" type="button" id="sauto">Bán tự động</button><button class="pill" type="button" id="sgo" ${sell.picked.size ? '' : 'disabled'}>Bán</button></div>`;
+    <div class="btns"><button class="pill red" type="button" id="sbk" ${insolvent ? '' : 'disabled title="Tài sản vẫn đủ để thanh toán"'}>Phá sản</button><button class="pill ghost" type="button" id="sauto">Bán tự động</button><button class="pill" type="button" id="sgo" ${sell.picked.size ? '' : 'disabled'}>Bán</button></div>`;
   b.classList.add('show');
-  $('#sbk').onclick = () => { endSell(); act('bankrupt'); };
+  $('#sbk').onclick = () => { if (!insolvent) return; endSell(); act('bankrupt'); };
   $('#sauto').onclick = () => { sell.picked = autoPick(p); drawSell(); doSell(true); };
   $('#sgo').onclick = () => doSell(false);
 }
@@ -669,7 +670,19 @@ async function playOut() {
   const achievements = S.phase === 'over' ? [] : (S.achievements || []).filter((x) => x.seq > seen.achievement).sort((a, b) => a.seq - b.seq);
   markSeen();
   if (diceNew) { await board.rollDice(diceNew.a, diceNew.b); showDiceSum(diceNew.a + diceNew.b, diceNew.a === diceNew.b); await sleep(200); }
-  for (const mv of moves) {
+  // Phát lại đúng thứ tự sự kiện của server: tới ô Chance -> hiện thẻ -> mới chạy
+  // chuyển động do thẻ tạo ra (ví dụ đi tới Championships). Không được gom mọi move
+  // lên trước card vì người chơi sẽ thấy quân đi trước khi biết thẻ vừa rút là gì.
+  const timeline = moves.map((move) => ({ kind: 'move', seq: move.seq, move }));
+  if (card) timeline.push({ kind: 'card', seq: card.seq, card });
+  timeline.sort((a, b) => a.seq - b.seq);
+  for (const event of timeline) {
+    if (event.kind === 'card') {
+      // Người rút Vé máy bay xác nhận bằng modal trạng thái `flight`; sau OK server mới tạo bước di chuyển.
+      if (!(event.card.id === 'FLIGHT_TICKET' && isMe(event.card.pid))) await showCard(event.card);
+      continue;
+    }
+    const mv = event.move;
     if (!S.players.some((p) => p.id === mv.pid)) continue;
     if (mv.jump) {
       await board.moveToken(mv.pid, mv.path, { jump: true, view: S }); await sleep(300);
@@ -679,8 +692,6 @@ async function playOut() {
     }
     await sleep(120);
   }
-  // Người rút Vé máy bay xác nhận bằng modal trạng thái `flight`; sau OK server mới tạo bước di chuyển.
-  if (card && !(card.id === 'FLIGHT_TICKET' && isMe(card.pid))) await showCard(card);
   const wait = await board.sync(S); renderCards(wait);
   if (reaction && reaction.kind === 'happyRent') showHappyReaction(reaction.pid);
   for (const achievement of achievements) await showAchievement(achievement);

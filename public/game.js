@@ -510,8 +510,14 @@
 
   function bankrupt(s, p) {
     const d = s.pending, to = d && d.to ? byId(s, d.to) : null;
-    if (to) { to.money = r2(to.money + p.money); log(s, `${to.name} nhận toàn bộ ${k(p.money)} tiền mặt còn lại của ${p.name}`); }
-    ownedBy(s, p.id).forEach((i) => { delete s.props[i]; delete s.outage[i]; if (s.festival === i) s.festival = null; });
+    const assets = ownedBy(s, p.id), liquidation = r2(assets.reduce((sum, i) => sum + sellValue(s, i), 0));
+    if (d && p.money + liquidation >= d.amount) fail('Bạn vẫn đủ tài sản để thanh toán — hãy bán tài sản thay vì phá sản');
+    if (liquidation > 0) {
+      p.money = r2(p.money + liquidation);
+      log(s, `${p.name} thanh lý toàn bộ tài sản được ${k(liquidation)}`);
+    }
+    assets.forEach((i) => { delete s.props[i]; delete s.outage[i]; if (s.festival === i) s.festival = null; });
+    if (to) { to.money = r2(to.money + p.money); log(s, `${to.name} nhận toàn bộ ${k(p.money)} sau thanh lý của ${p.name}`); }
     Object.assign(p, { money: 0, bankrupt: true, island: 0, tourPending: false });
     s.pending = null;
     log(s, `💥 ${p.name} tuyên bố phá sản`);

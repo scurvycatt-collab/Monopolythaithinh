@@ -25,6 +25,7 @@ Code chính: `scripts/build-exe.mjs`, `scripts/generate-property-thumbnails.mjs`
 
 ## Verify, CI, kiểm thử
 - `npm run verify` chạy qua: hook pre-commit, CI GitHub, `build:exe`; gồm `scripts/rules-doc.mjs --check` (không sửa `docs/RULES.md`; sinh bằng `npm run rules:doc`).
+- Mọi thay đổi map phải qua checklist `docs/contracts/map-parity.md`; test tự động chặn việc Map 2 hiện giá mua trên ô trống, sai kích thước quân hoặc phát thẻ di chuyển sai thứ tự.
 - `npm test` gồm `test/sim.js` (giả lập nhiều ván) và `test/e2e.js` (server thật qua HTTP).
 - Đã thử hai trình duyệt chơi cùng một ván.
 - Artifact claude.ai chạy chế độ một máy (không server).

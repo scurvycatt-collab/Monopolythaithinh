@@ -15,6 +15,7 @@ const run = (args, file = 'scripts/map-new.mjs') => spawnSync(process.execPath, 
 try {
   cpSync(path.join(ROOT, 'scripts'), path.join(tmp, 'scripts'), { recursive: true });
   cpSync(path.join(ROOT, 'test/maps.test.mjs'), path.join(tmp, 'test/maps.test.mjs'));
+  cpSync(path.join(ROOT, 'docs/contracts'), path.join(tmp, 'docs/contracts'), { recursive: true });
   cpSync(path.join(ROOT, 'public'), path.join(tmp, 'public'), { recursive: true, filter: (s) => !/[\\/]public[\\/](thumbnails|audio|sounds)([\\/]|$)/.test(s) });
   const rulesPath = path.join(tmp, 'public/rules.js');
   const before = readFileSync(rulesPath, 'utf8');

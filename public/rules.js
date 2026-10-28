@@ -10,7 +10,7 @@
    ============================================================================ */
 (function (root) {
   'use strict';
-  const VERSION = '1.8.0';
+  const VERSION = '1.8.1';
 
   /* ===================== LỚP 1 — THÔNG SỐ ===================== */
   const CONFIG = {
@@ -172,7 +172,7 @@
     takeover: { desc: 'Vừa trả thuê ô người khác, đủ tiền mua lại', actions: { takeover: 'Trả 2× giá trị cho chủ, nhận nguyên cấp nhà → nếu còn nâng cấp được thì sang upgrade, không thì kết thúc ô.', skip: 'Không mua → kết thúc ô.' } },
     festival: { desc: 'Dừng ở Championships', actions: { festival: 'Tăng hệ số ô đang tổ chức thêm 1; hoặc trả 50K để chuyển sang ô của mình. Hệ số tối đa ×10.', skip: 'Bỏ qua → kết thúc ô.' } },
     card: { desc: 'Thẻ Chance cần chọn ô', actions: { card: 'Áp dụng thẻ lên ô chọn (Đổi đất: chọn 2 lần) → kết thúc ô.', skip: 'Bỏ thẻ → kết thúc ô.' } },
-    debt: { desc: 'Có khoản phải trả (thuê/thuế) lớn hơn tiền mặt; khoản này đang treo', actions: { sell: 'Bán 1 ô cho ngân hàng; đủ tiền thì trả khoản treo cho người nhận → kết thúc ô (đổ đôi thì đổ tiếp).', bankrupt: 'Phá sản: toàn bộ tiền mặt cho người nhận, đất trả về ngân hàng → lượt người kế.' } },
+    debt: { desc: 'Có khoản phải trả (thuê/thuế) lớn hơn tiền mặt; khoản này đang treo', actions: { sell: 'Bán 1 ô cho ngân hàng; đủ tiền thì trả khoản treo cho người nhận → kết thúc ô (đổ đôi thì đổ tiếp).', bankrupt: 'Chỉ được phá sản khi bán hết vẫn không đủ: tự thanh lý toàn bộ đất, rồi chuyển toàn bộ tiền sau thanh lý cho người nhận → lượt người kế.' } },
   };
   // "Kết thúc ô": còn khoản treo → debt; đổ đôi và không kẹt đảo → roll (đổ thêm); còn lại → lượt người kế (bước đầu: tour / island / roll).
   const FLOW = [
@@ -214,7 +214,9 @@
     D('Thành phố — của người khác', 'C13', 'Tiền thuê lớn hơn tiền mặt', 'Khoản thuê treo lại, chưa ai mất/nhận tiền → bước debt, thông báo "không đủ tiền thanh toán"', { money: 50, props: { 3: ['op', 3], 9: ['me', 2] }, dice: [1, 2] }, [['roll']], { step: 'debt', me: 50, op: 2000, pending: 90, notice: 'cantPay' }),
     D('Thành phố — của người khác', 'C14', 'Đang nợ, bán 1 ô đủ tiền', 'Trả khoản treo cho chủ rồi mới sang người kế', { money: 50, props: { 3: ['op', 3], 9: ['me', 2] }, dice: [1, 2] }, [['roll'], ['sell', { tile: 9 }]], { me: 50 + 170 - 90, op: 2090, pending: 0, step: 'next' }),
     D('Thành phố — của người khác', 'C15', 'Đổ đôi vào ô người khác, không đủ tiền', 'Phải bán trả xong mới được đổ tiếp', { money: 100, props: { 6: ['op', 3], 9: ['me', 2] }, dice: [3, 3] }, [['roll'], ['sell', { tile: 9 }]], { me: 100 + 170 - 105, op: 2000 + 105, step: 'roll', turn: 'me' }),
-    D('Thành phố — của người khác', 'C16', 'Đang nợ, phá sản', 'Toàn bộ tiền mặt cho chủ nợ, đất về ngân hàng', { money: 50, props: { 3: ['op', 3], 9: ['me', 2] }, dice: [1, 2] }, [['roll'], ['bankrupt']], { op: 2050, owner: [9, null], phase: 'over' }),
+    D('Thành phố — của người khác', 'C16', 'Đang nợ, phá sản ngay khi bán hết vẫn thiếu', 'Tự thanh lý đất rồi chuyển toàn bộ 80K cho chủ nợ', { money: 50, props: { 1: ['me', 0], 3: ['op', 3] }, dice: [1, 2] }, [['roll'], ['bankrupt']], { op: 2080, owner: [1, null], phase: 'over' }),
+    D('Thành phố — của người khác', 'C16A', 'Đang nợ, bán tự động hết tài sản rồi phá sản', 'Chủ nợ vẫn nhận đúng tổng 80K như phá sản ngay', { money: 50, props: { 1: ['me', 0], 3: ['op', 3] }, dice: [1, 2] }, [['roll'], ['sell', { tile: 1 }], ['bankrupt']], { op: 2080, owner: [1, null], phase: 'over' }),
+    D('Thành phố — của người khác', 'C16B', 'Tiền mặt cộng giá thanh lý vẫn đủ trả nợ', 'Không được tuyên bố phá sản; phải bán tài sản để trả', { money: 50, props: { 3: ['op', 3], 9: ['me', 2] }, dice: [1, 2] }, [['roll'], ['bankrupt']], { error: true }),
     D('Thành phố — của người khác', 'C17', 'Chủ sở hữu cả nhóm màu', 'Thuê × 2', { props: { 1: ['op', 0], 2: ['op', 0], 3: ['op', 1] }, dice: [1, 2] }, [['roll']], { me: 2000 - 60 }),
     D('Thành phố — của người khác', 'C18', 'Ô cắm cờ lễ hội đầu ván', 'Thuê × 2', { bonus: [3], props: { 3: ['op', 1] }, dice: [1, 2] }, [['roll']], { me: 2000 - 60 }),
     D('Thành phố — của người khác', 'C19', 'Ô đang tổ chức lễ hội lần 2', 'Thuê × 3', { festival: 3, festLevel: 2, props: { 3: ['op', 1] }, dice: [1, 2] }, [['roll']], { me: 2000 - 90 }),

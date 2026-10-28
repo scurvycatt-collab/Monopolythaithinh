@@ -118,9 +118,12 @@ ambient: { particles: { petals: {…}, snow: {…} }, animate: { fountain(pen, t
 
 ## 7. labels (tuỳ chọn)
 
-`{ start: 'START', island: 'LOST ISLAND', festival: 'CHAMPIONSHIPS', tour: 'WORLD TOUR' }` và font chữ ô. `resortLevels`: mảng 4 tên cấp nhà resort (tuỳ chọn); khung xương trả ra `board.meta.resortLevels` cùng `meta.buildMs` (PR #5). Tên thành phố và giá **luôn lấy từ `rules`**, skin không đổi.
+`{ start: 'START', island: 'LOST ISLAND', festival: 'CHAMPIONSHIPS', tour: 'WORLD TOUR' }` và font chữ ô. `resortLevels`: mảng 4 tên cấp nhà resort (tuỳ chọn); khung xương trả ra `board.meta.resortLevels` cùng `meta.buildMs` (PR #5). Tên thành phố và giá **luôn lấy từ `rules`**, skin không đổi. Giá mua không hiện trên ô chưa có chủ; chỉ popup mua được hiển thị giá. Ô đã có chủ dùng dải này để hiện tiền thuê hoặc số vòng mất điện.
 
 ## 8. Quy tắc
+
+Ngoài contract skin, mọi map phải qua [`map-parity.md`](map-parity.md), gồm thứ tự thẻ/di chuyển,
+kích thước nhân vật, thumbnail dựng sẵn và các cổng hiệu năng trước commit/deploy.
 
 - Skin không định nghĩa ô, giá, nhóm, loại ô: đó là luật (`public/rules.js`).
 - Skin không import gì ngoài `defineSkin` và hằng số của chính nó. Tiện ích (màu, `rng`, chữ, cỏ) lấy từ `c.` và bút (`PEN.md`). Cần một `kind` hay hạt mới → đề xuất thêm vào khung xương (PR riêng, owner render), không viết lại trong skin.

@@ -7,7 +7,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 // Không import renderer vì nó cần trình duyệt (canvas, three.js). Renderer 2D (docs/contracts/map-skin.md) gọi
 // createBoard2D: kiểm tra khung xương có đủ hàm ★ và import skin.js trong Node để chạy defineSkin.
 const require = createRequire(import.meta.url);
-const PUBLIC = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'public');
+const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
+const PUBLIC = path.join(ROOT, 'public');
 const { MAPS } = require('../public/rules.js');
 
 const DEFAULT_RENDERER = 'maps/map-1/renderer.js';
@@ -71,10 +72,24 @@ for (const [i, entry] of (Array.isArray(MAPS) ? MAPS : []).entries()) {
   if (!/scheduleFrame\(active \?[^:]+: 250\)/.test(src)) errors.push('Khung 2D phải giảm nhịp đánh thức khi cảnh đứng yên.');
   if (!/document\.hidden/.test(src) || !/visibilitychange/.test(src)) errors.push('Khung 2D phải dừng render khi tab bị ẩn như Map 1.');
   if (!/const sprites = new Map\(\)/.test(src) || !/function cached\(key, fn\)/.test(src)) errors.push('Khung 2D phải cache sprite đã nướng thay vì tạo lại mỗi frame.');
+  if (!/const TOKEN_HEIGHT = 1\.08;/.test(src) || !/H = TOKEN_HEIGHT \* K/.test(src)) errors.push('Khung 2D phải chuẩn hoá kích thước nhân vật bằng Map 1 (1.08).');
+  if (/t\.price \+ 'K'/.test(src)) errors.push('Khung 2D không được hiện giá mua trên ô chưa có chủ.');
   for (const doc of ['PEN.md', 'KINDS.md']) if (!isFile(path.join(PUBLIC, path.dirname(BOARD2D), doc))) errors.push(`Khung xương thiếu ${doc}.`);
   // defineSkin phải bắt lỗi: thiếu slot bắt buộc
   const { defineSkin } = await import(pathToFileURL(path.join(PUBLIC, 'js/render-common/board2d/skin.js')).href);
   try { defineSkin({ id: 'x', palette: { groups: {} }, slots: {} }); errors.push('defineSkin không báo lỗi skin thiếu palette/slot.'); } catch (e) { /* đúng: phải lỗi */ }
+}
+{
+  const parityPath = path.join(ROOT, 'docs/contracts/map-parity.md');
+  if (!isFile(parityPath)) errors.push('Thiếu checklist parity bắt buộc docs/contracts/map-parity.md.');
+  else {
+    const parity = readFileSync(parityPath, 'utf8');
+    for (const rule of ['không hiện giá mua', 'thẻ tới Championships', '1.08', 'npm run thumbnails', 'npm run verify']) {
+      if (!parity.includes(rule)) errors.push(`Checklist parity thiếu quy tắc: ${rule}`);
+    }
+  }
+  const map1 = readFileSync(path.join(PUBLIC, DEFAULT_RENDERER), 'utf8');
+  if (!/if \(own\) text\(out \?/.test(map1)) errors.push('Map 1 phải chỉ hiện tiền thuê/mất điện khi ô đã có chủ.');
 }
 if (defaults !== 1) errors.push(`Phải có đúng một map \`default: true\`, hiện có ${defaults}.`);
 

@@ -40,7 +40,7 @@ Code chính: `public/js/app.js`
 
 ## Bán đất khi nợ
 - `startSell` bán đất khi nợ.
-- Nút **Bán tự động** tính trước tổng tiền mặt + giá bán các tài sản đã chọn; nếu vẫn thấp hơn nợ thì bán hết rồi tự gọi `bankrupt`. Bán thủ công không tự phá sản.
+- Nút **Bán tự động** tính trước tổng tiền mặt + giá bán các tài sản đã chọn; nếu vẫn thấp hơn nợ thì bán hết rồi tự gọi `bankrupt`. Bán thủ công không tự phá sản. Nút **Phá sản** chỉ bật khi tổng tiền mặt + giá thanh lý mọi tài sản vẫn thiếu; engine luôn tự thanh lý phần tài sản còn lại trước khi chuyển toàn bộ tiền cho chủ nợ, nên phá sản ngay và bán tự động rồi phá sản trả cùng một số tiền.
 
 ## Màn kết quả
 - Phòng mạng luôn có nút đỏ **Thoát phòng** cho người chơi và khán giả; gọi `exitRoom()` để đóng SSE, xoá phiên local, về màn username/mã phòng.
