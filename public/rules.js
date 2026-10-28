@@ -158,6 +158,7 @@
   const MAPS = [
     { id: 'map-1', name: 'Map 1', description: 'Bản đồ Thái Thịnh mặc định', preview: 'maps/map-1/preview.svg', renderer: 'maps/map-1/renderer.js', default: true },
     { id: 'four-seasons', name: 'Bốn Mùa', description: 'Mỗi cạnh một mùa: Xuân, Hạ, Thu, Đông. Hội chợ bốn mùa và đài phun nước giữa bàn. Bàn 2D nhẹ, hợp máy yếu.', preview: 'maps/four-seasons/preview.svg', renderer: 'maps/four-seasons/renderer.js' },
+    { id: 'isometric', name: 'Isometric', description: 'Thành phố khối Kenney, đảo nhiệt đới, sân bay giữa bàn', preview: 'maps/isometric/preview.svg', renderer: 'maps/isometric/renderer.js' },
   ];
 
   /* ===================== LỚP 2 — SƠ ĐỒ TRẠNG THÁI ===================== */
