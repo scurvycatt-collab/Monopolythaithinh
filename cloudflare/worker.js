@@ -166,6 +166,10 @@ export class GameRoom extends DurableObject {
       if (room) invite.searchParams.set('room', room);
       return json(200, { links: [{ kind: 'Web', url: invite.toString() }] });
     }
+    if (url.pathname === '/api/watch' && req.method === 'GET') {
+      if (!this.state.players.length) return json(404, { error: 'Phòng không tồn tại hoặc đã bị xoá' });
+      return json(200, { exists: true });
+    }
     if (url.pathname === '/events' && req.method === 'GET') return this.events(url);
     if (req.method === 'POST' && url.pathname.startsWith('/api/')) return this.api(url, req);
     return json(404, { error: 'Không có API này' });
@@ -174,6 +178,7 @@ export class GameRoom extends DurableObject {
   async events(url) {
     const p = this.byToken(url.searchParams.get('token'));
     const viewer = p ? '' : String(url.searchParams.get('viewer') || '').replace(/\s+/g, ' ').trim().slice(0, 16);
+    if (viewer && !this.state.players.length) return json(404, { error: 'Phòng không tồn tại hoặc đã bị xoá' });
     const { readable, writable } = new TransformStream();
     const c = { writer: writable.getWriter(), pid: p ? p.id : null, viewer };
     c.writer.closed.catch(() => this.drop(c)); // trình duyệt đóng kết nối → mất kết nối ngay

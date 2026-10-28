@@ -149,6 +149,7 @@ const byToken = (t) => (t ? state.players.find((p) => p.token === t) : null);
 function handleEvents(req, res, url) {
   const p = byToken(url.searchParams.get('token'));
   const viewer = p ? '' : String(url.searchParams.get('viewer') || '').replace(/\s+/g, ' ').trim().slice(0, 16);
+  if (viewer && !state.players.length) return sendJSON(res, 404, { error: 'Phòng không tồn tại hoặc đã bị xoá' });
   res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache, no-transform', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
   res.write('retry: 1500\n\n');
   req.socket.setKeepAlive(true, 10000); req.socket.setNoDelay(true);
@@ -264,6 +265,10 @@ const server = http.createServer((req, res) => {
   if (req.method === 'GET' && url.pathname === '/events') return handleEvents(req, res, url);
   if (req.method === 'POST' && url.pathname.startsWith('/api/')) return handleApi(req, res, url);
   if (req.method === 'GET' && url.pathname === '/api/info') return sendJSON(res, 200, { links: links() });
+  if (req.method === 'GET' && url.pathname === '/api/watch') {
+    if (!state.players.length) return sendJSON(res, 404, { error: 'Phòng không tồn tại hoặc đã bị xoá' });
+    return sendJSON(res, 200, { exists: true });
+  }
   if (req.method === 'GET' && url.pathname === '/health') return sendJSON(res, 200, { app: 'thai-thinh-monopoly', phase: state.phase, version: state.version });
   if (req.method === 'GET') return handleStatic(req, res, url);
   res.writeHead(405); res.end();

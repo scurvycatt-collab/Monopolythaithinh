@@ -953,6 +953,16 @@ async function enterRoom(create, watch = false) {
   if (!validRoom(room)) { toast('Mã phòng cần 3–24 ký tự'); return $('#groom').focus(); }
   const mapId = $('#gmap').value;
   if (create && !MAPS.some((map) => map.id === mapId)) { toast('Hãy chọn bản đồ'); return $('#gmap').focus(); }
+  if (watch) {
+    try {
+      const response = await fetch(roomEndpoint(location.href, 'api/watch', room), { cache: 'no-store' });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || 'Không tìm thấy phòng');
+    } catch (e) {
+      toast(e.message || 'Phòng không tồn tại hoặc đã bị xoá');
+      return $('#groom').focus();
+    }
+  }
   ROOM = room;
   WATCH_MODE = watch;
   lobbyDraftName = name;

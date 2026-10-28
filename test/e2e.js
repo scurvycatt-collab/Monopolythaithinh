@@ -45,7 +45,10 @@ async function snapshot(token, viewer) {
 (async () => {
   await start();
   const ok = (r) => { assert.strictEqual(r.status, 200, JSON.stringify(r.body)); return r.body; };
+  const emptyWatch = await fetch(BASE + 'api/watch');
+  assert.strictEqual(emptyWatch.status, 404, 'không được vào xem một phòng chưa tồn tại hoặc đã bị xoá');
   const a = ok(await post('api/join', { name: 'Bố', pet: 'animal-dog', mapId: 'map-1' }));
+  assert.strictEqual((await fetch(BASE + 'api/watch')).status, 200, 'phòng có người chơi phải cho phép vào xem');
   const watched = await snapshot(null, 'Ông xem');
   assert.deepStrictEqual(watched.viewers, ['Ông xem'], 'khán giả phải có username nhưng không chiếm ghế');
   assert.strictEqual(watched.state.players.length, 1, 'vào xem không được tạo người chơi');

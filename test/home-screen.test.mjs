@@ -168,6 +168,7 @@ assert.match(app, /pendingRoomMap = create \? mapId : ''/, 'only room creation m
 assert.match(app, /function renderGateMapPreview\(\)/, 'map preview must update with the selected map');
 assert.match(app, /src="\$\{esc\(map\.preview\)\}"/, 'map cards must use their registered preview image');
 assert.match(app, /#gwatch'\)\.onclick = \(\) => enterRoom\(false, true\)/, 'watch button must enter spectator mode');
+assert.match(app, /fetch\(roomEndpoint\(location\.href, 'api\/watch', room\)/, 'spectator mode must verify the room before loading the 3D board');
 assert.match(app, /me = watch \? null : loadMe\(\)/, 'spectator mode must not authenticate with a saved player token');
 assert.match(app, /WATCH_MODE \? \{ viewer: lobbyDraftName \} : \{\}/, 'spectator SSE must carry its username without a player token');
 assert.match(app, /Thoát đảo\$\{p\.escapeCards > 1 \? ' ×' \+ p\.escapeCards : ''\}/, 'player card must show stacked escape-card quantity');
@@ -192,5 +193,7 @@ assert.match(server, /if \(!hasOnlinePlayers\(\)\) emptyTimer = setTimeout\(dele
 assert.match(worker, /const EMPTY_ROOM_TTL_MS = 2 \* 60 \* 1000/);
 assert.match(worker, /await this\.ctx\.storage\.deleteAll\(\)/, 'empty Cloudflare rooms must delete persisted state');
 assert.match(worker, /await this\.ctx\.storage\.deleteAlarm\(\)/, 'deleted rooms must not leave a scheduled alarm behind');
+assert.match(worker, /if \(!this\.state\.players\.length\) return json\(404, \{ error: 'Phòng không tồn tại hoặc đã bị xoá' \}\)/, 'Cloudflare must reject spectators for a deleted room');
+assert.match(server, /if \(viewer && !state\.players\.length\) return sendJSON\(res, 404/, 'Node hosting must reject direct spectator streams for an empty room');
 
 console.log('Home screen lazy-map tests passed.');
