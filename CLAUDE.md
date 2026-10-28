@@ -26,7 +26,7 @@ Cờ tỷ phú kiểu Business Tour, chơi qua mạng (Node `server.js` hoặc C
 | Việc | Đọc | Không cần đọc |
 |---|---|---|
 | Làm / sửa skin map 2D | `docs/contracts/map-skin.md`, `public/js/render-common/board2d/PEN.md`, `KINDS.md`, `public/maps/<id>/**` | khung xương, `app.js`, `game.js`, `server.js` |
-| Tạo map mới | `npm run map:new <id>` rồi như dòng trên | |
+| Tạo map mới | `npm run map:new <id> [-- --name "Tên"]` (`--dry-run` xem trước; dọn: `npm run map:new -- --remove <id>`) sinh `public/maps/<id>/` + entry `MAPS`, rồi như dòng trên: sửa các chỗ `THAY:` trong `skin.js` | |
 | Sửa khung xương 2D | `docs/contracts/map-renderer.md`, `map-skin.md`, `public/js/render-common/board2d/**` | skin từng map |
 | Sửa map-1 (3D) | `docs/contracts/map-renderer.md`, `public/maps/map-1/**`, `docs/ARCHITECTURE/render-map-1.md` | |
 | Đổi luật / giá / thẻ | `public/rules.js`, `docs/ARCHITECTURE/rules.md` | renderer |
