@@ -889,6 +889,7 @@ export default async function createRenderer(ctx) {
       syncBonus(); buildTokens(); syncBuildings(true);
       syncFestival.first = false;
     },
+    meta: { buildMs: BUILD_MS, resortLevels: BEACH_LEVELS },
     async sync(v) {
       S = v; seatSetup();
       const wait = syncBuildings(); syncTokens(false);

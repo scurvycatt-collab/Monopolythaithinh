@@ -140,8 +140,9 @@ const online = (pid) => MODE === 'local' || !!(G.byId(S, pid) || {}).bot || !pre
 // app.js không chạm three.js: mọi thứ vẽ trên bàn đi qua `board` do public/maps/<id>/renderer.js trả về.
 const DEFAULT_RENDERER = 'maps/map-1/renderer.js';
 let board = null, boardMapId = '';
-const BUILD_MS = 1650 + 760;        // thời lượng hoạt ảnh xây nhà của map-1 ≈ 2,4 s; tiền nhận chạy cùng nhịp
-const BEACH_LEVELS = ['Chòi dù', 'Bungalow', 'Villa biển', 'Resort']; // tên cấp nhà biển (trùng public/js/specials.js)
+// Thông số hiển thị do renderer của map khai báo (board.meta); giá trị dưới chỉ là dự phòng khi map chưa tải.
+const META_DEFAULT = { buildMs: 2400, resortLevels: ['Cấp 1', 'Cấp 2', 'Cấp 3', 'Cấp 4'] };
+const boardMeta = () => Object.assign({}, META_DEFAULT, board && board.meta);
 const beachLevel = (owner) => Math.min(4, G.ownedBy(S, owner).filter((j) => TILES[j].type === 'resort').length);
 const mapEntry = (id) => MAPS.find((map) => map.id === id) || MAPS.find((map) => map.id === 'map-1') || MAPS[0];
 async function createBoard(entry) {
@@ -227,7 +228,7 @@ setInterval(updateOverlays, 100);
 /* ---------------- giao diện ---------------- */
 let busy = false;
 // Tiền bị trừ chạy nhanh để không làm chậm nhịp chơi; tiền nhận vẫn đồng bộ với hoạt ảnh xây nhà.
-const MONEY_MS = REDUCED ? 900 : BUILD_MS;
+const moneyMs = () => (REDUCED ? 900 : boardMeta().buildMs);
 const MONEY_DEBIT_MS = REDUCED ? 400 : 700;
 const target = {}, shown = {};      // số tiền đích / số đang hiển thị của mỗi người
 const fmtDelta = (d) => { const a = Math.abs(d), v = a >= 1000 ? (a / 1000).toFixed(2).replace(/\.?0+$/, '') + 'M' : (Math.round(a * 10) / 10) + 'K'; return (d > 0 ? '+$' : '-$') + v; };
@@ -236,7 +237,7 @@ function floatDelta(pid, d) {
   const el = moneyEl(pid); if (!el || !d) return;
   const r = el.getBoundingClientRect(), f = document.createElement('div');
   f.className = 'delta ' + (d > 0 ? 'up' : 'down'); f.textContent = fmtDelta(d);
-  const duration = d < 0 ? 900 : Math.max(1600, MONEY_MS);
+  const duration = d < 0 ? 900 : Math.max(1600, moneyMs());
   f.style.left = r.left + r.width / 2 + 'px'; f.style.top = r.top - 4 + 'px'; f.style.animationDuration = duration + 'ms';
   document.body.appendChild(f); setTimeout(() => f.remove(), duration + 100);
 }
@@ -251,7 +252,7 @@ function showHappyReaction(pid) {
 const tweens = {};
 function tweenMoney(pid, to, delay = 0) {
   const from = shown[pid] ?? to; cancelAnimationFrame(tweens[pid]);
-  const duration = to < from ? MONEY_DEBIT_MS : MONEY_MS;
+  const duration = to < from ? MONEY_DEBIT_MS : moneyMs();
   const t0 = performance.now() + delay;
   const step = (now) => {
     const k = Math.max(0, Math.min(1, (now - t0) / duration)), e = 1 - Math.pow(1 - k, 3);
@@ -423,7 +424,7 @@ function renderModal() {
       const lapLock = !built && l <= 3 && l > cap;
       const note = built ? 'Đã xây' : lapLock ? `🔒 Vòng ${CFG.LAP_CAP.indexOf(l) + 1}` : choosable.includes(l) ? money(costOf(l)) : '';
       return `<button type="button" data-l="${l}" class="${on ? 'on' : ''}" ${lock ? 'disabled' : ''} style="${!built && !can(l) ? 'opacity:.45' : ''}">
-        <img alt="" src="${imageUrl(l)}"><b>${resort ? BEACH_LEVELS[bl - 1] : NAMES[l]}</b><span>${note}</span><i class="tick${on ? ' y' : ''}" aria-hidden="true"></i></button>`;
+        <img alt="" src="${imageUrl(l)}"><b>${resort ? boardMeta().resortLevels[bl - 1] : NAMES[l]}</b><span>${note}</span><i class="tick${on ? ' y' : ''}" aria-hidden="true"></i></button>`;
     };
     const price = costOf(pickLevel);
     const body = `<div class="lv" style="--n:${shown.length}">${shown.map(card).join('')}</div>
@@ -580,7 +581,7 @@ function showInfo(i) {
   } else if (t.type === 'resort') {
     color = RESORT_COLOR; sub = `Bãi biển · ${owner ? 'của ' + esc(owner.name) : 'chưa có chủ'}`;
     const n = pr ? beachLevel(pr.owner) : 0;
-    const rows = [1, 2, 3, 4].map((k) => `<tr class="${k === n ? 'cur' : ''}"><td><span class="ck">${k <= n ? '✓' : ''}</span>${k} bãi biển · ${BEACH_LEVELS[k - 1]}</td><td>${money(CFG.RESORT_TOLL[k])}</td></tr>`).join('');
+    const rows = [1, 2, 3, 4].map((k) => `<tr class="${k === n ? 'cur' : ''}"><td><span class="ck">${k <= n ? '✓' : ''}</span>${k} bãi biển · ${boardMeta().resortLevels[k - 1]}</td><td>${money(CFG.RESORT_TOLL[k])}</td></tr>`).join('');
     const resortSnapshot = propertyThumbnail('resort', Math.max(1, n), hex);
     body = `<div class="tinfo"><div class="pic"><img alt="" src="${resortSnapshot}"></div><div>
       <table class="lvl"><thead><tr><th>Số bãi cùng chủ</th><th>Tiền thuê</th></tr></thead><tbody>${rows}</tbody></table>
@@ -672,7 +673,7 @@ async function playOut() {
   for (const achievement of achievements) await showAchievement(achievement);
   if (notice && S.phase === 'play') {
     const who = G.byId(S, notice.pid);
-    await sleep(Math.min(MONEY_MS, 900));
+    await sleep(Math.min(moneyMs(), 900));
     if (notice.kind === 'festival') board.effect('confetti', notice.tile);
     await showStatus(NOTICE[notice.kind](isMe(notice.pid), who ? who.name : '', notice));
   }

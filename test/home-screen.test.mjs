@@ -49,7 +49,7 @@ assert.match(app, /Đến lượt bạn!/);
 assert.match(app, /MODE === 'net' && !isMe\(p\.id\)/, 'network clients must not announce another player turn');
 assert.match(app, /MODE === 'net' \? 'Đến lượt bạn!' : `Đến lượt \$\{p\.name\}!`/);
 assert.match(app, /const MONEY_DEBIT_MS = REDUCED \? 400 : 700;/, 'debit animation must remain visible in reduced-motion mode');
-assert.match(app, /const duration = to < from \? MONEY_DEBIT_MS : MONEY_MS;/, 'only money deductions should use the faster animation');
+assert.match(app, /const duration = to < from \? MONEY_DEBIT_MS : moneyMs\(\);/, 'only money deductions should use the faster animation');
 assert.doesNotMatch(app, /REDUCED \? 1 :/, 'reduced-motion mode must not collapse animations to one millisecond');
 assert.match(app, /const followAlpha = 1 - Math\.pow\(1 - 0\.25, dt \* 60\)/, 'token following must be refresh-rate independent');
 assert.match(app, /Math\.pow\(0\.985, dt \* 60\)/, 'confetti drag must be refresh-rate independent');
