@@ -70,9 +70,7 @@
     return freeCities.length ? freeCities : ownedBy(s, p.id);
   }
   function festivalTargets(s, p) {
-    const targets = ownedBy(s, p.id);
-    if (s.festival !== null && s.festival !== undefined && !targets.includes(s.festival)) targets.push(s.festival);
-    return targets.sort((a, b) => a - b);
+    return ownedBy(s, p.id).filter((i) => s.festival === i || p.money >= CFG.CHAMP_MOVE_FEE);
   }
   function networth(s, p) {
     return r2(p.money + ownedBy(s, p.id).reduce((a, i) => a + value(i, s.props[i].level), 0));
@@ -113,6 +111,18 @@
     return s.hostId;
   }
   const isHost = (s, id) => ensureHost(s) === id;
+  // host mất kết nối ≥ HOST_HANDOVER_SEC giây → quyền host sang người đang online kế tiếp theo thứ tự ghế
+  function handoverHost(s, isOnline, offlineSec) {
+    const hostId = ensureHost(s);
+    if (!hostId || isOnline(hostId) || offlineSec(hostId) < CFG.HOST_HANDOVER_SEC) return false;
+    const at = s.players.findIndex((p) => p.id === hostId);
+    const order = s.players.slice(at + 1).concat(s.players.slice(0, at));
+    const next = order.find((p) => isOnline(p.id));
+    if (!next) return false;
+    s.hostId = next.id;
+    log(s, `${byId(s, hostId).name} mất kết nối — ${next.name} trở thành host`);
+    return true;
+  }
 
   function publicView(s) {
     const o = Object.assign({}, s);
@@ -414,7 +424,7 @@
       case 'island': goIsland(s, p); return finish(s);
       case 'festival':
         if (festivalTargets(s, p).length) { s.step = { kind: 'festival' }; return; }
-        log(s, `${p.name} tới Championships nhưng chưa có đất để tổ chức lễ hội`);
+        log(s, `${p.name} tới Championships nhưng không có ô nào để tổ chức`);
         return finish(s);
       case 'tour':
         p.tourPending = true; s.again = false;
@@ -588,12 +598,9 @@
         need('festival');
         const i = tileArg();
         const moving = s.festival !== i;
-        if (!festivalTargets(s, p).includes(i)) fail('Hãy chọn ô đang tổ chức hoặc một ô của bạn');
-        if (moving) {
-          if (!s.props[i] || s.props[i].owner !== p.id) fail('Chỉ được chuyển giải sang ô của bạn');
-          if (p.money < CFG.CHAMP_MOVE_FEE) fail('Không đủ tiền chuyển Championships');
-          transfer(p, null, CFG.CHAMP_MOVE_FEE);
-        }
+        if (!s.props[i] || s.props[i].owner !== p.id) fail('Chỉ được chọn ô của bạn');
+        if (moving && p.money < CFG.CHAMP_MOVE_FEE) fail('Không đủ tiền chuyển Championships');
+        if (moving) transfer(p, null, CFG.CHAMP_MOVE_FEE);
         s.festival = i;
         s.festLevel = Math.min(CFG.FEST_MULT.length - 1, (s.festLevel || 0) + 1);
         delete s.outage[i];
@@ -701,7 +708,7 @@
   const api = {
     RULES: R, STATES, stepLeft, checkTurn,
     GROUPS, TILES, CFG, COLORS, PETS, MAPS, CARDS, LEVEL_NAMES, RESORTS, SIDES, GameError,
-    setRng, createState, publicView, ensureHost, isHost, byName, addPlayer, removePlayer, setPet, renamePlayer, setSettings, startGame, resetGame, checkWin,
+    setRng, createState, publicView, ensureHost, isHost, handoverHost, byName, addPlayer, removePlayer, setPet, renamePlayer, setSettings, startGame, resetGame, checkWin,
     act, autoAction, checkTime, cur, byId, value, invested, toll, upgradeCost, rentOf, rentMultiplier, takeoverPrice, canTakeover, sellValue, ownedBy, networth,
     ownsGroup, canUpgrade, nextLevel, isBuyable, maxBuild, villaLocked, taxBase, outaged, festMult, tourTargets, festivalTargets, cardTargets,
   };

@@ -108,6 +108,7 @@ export class GameRoom extends DurableObject {
       if (this.emptySince !== null) t.push(this.emptySince + EMPTY_ROOM_TTL_MS);
       return t.length ? Math.max(now + 250, Math.min(...t)) : null;
     }
+    if (s.hostId && !this.isOnline(s.hostId)) t.push((this.offlineSince.get(s.hostId) || now) + C.HOST_HANDOVER_SEC * 1000);
     if (s.phase === 'play') {
       if (s.endsAt) t.push(s.endsAt);
       const left = G.stepLeft(s, now); if (left !== null) t.push(now + left);
@@ -127,6 +128,7 @@ export class GameRoom extends DurableObject {
     if (s.players.length && !this.hasOnlinePlayers() && this.emptySince !== null && Date.now() >= this.emptySince + EMPTY_ROOM_TTL_MS) {
       await this.deleteRoom(); return;
     }
+    if (G.handoverHost(s, (id) => this.isOnline(id), (id) => this.offlineSec(id))) await this.commit();
     if (s.phase === 'play' && this.hasOnlinePlayers()) try {
       const now = Date.now();
       if (G.checkTime(s, now)) await this.commit();

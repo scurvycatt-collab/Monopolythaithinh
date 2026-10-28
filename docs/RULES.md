@@ -1,4 +1,4 @@
-# Luật chơi Thái Thịnh Monopoly — v1.8.0
+# Luật chơi Thái Thịnh Monopoly — v1.8.1
 
 > Tự sinh từ `public/rules.js` bằng `npm run rules:doc`. Không sửa tay file này: sửa `rules.js`, chạy `npm run verify`.
 
@@ -121,11 +121,11 @@ stateDiagram-v2
 | `buy` | Dừng ở ô chưa có chủ, đủ tiền mua đất | **buy**: Mua đất + xây tới cấp chọn (≤ giới hạn vòng) → kiểm tra thắng → kết thúc ô.<br>**skip**: Không mua → kết thúc ô. |
 | `upgrade` | Dừng ở ô của mình (hoặc vừa mua lại) còn nâng cấp được | **upgrade**: Nâng lên cấp chọn → kết thúc ô.<br>**skip**: Để sau → kết thúc ô. |
 | `takeover` | Vừa trả thuê ô người khác, đủ tiền mua lại | **takeover**: Trả 2× giá trị cho chủ, nhận nguyên cấp nhà → nếu còn nâng cấp được thì sang upgrade, không thì kết thúc ô.<br>**skip**: Không mua → kết thúc ô. |
-| `festival` | Dừng ở Championships | **festival**: Tăng hệ số ô đang tổ chức thêm 1; hoặc trả 50K để chuyển sang ô của mình. Hệ số tối đa ×10.<br>**skip**: Bỏ qua → kết thúc ô. |
+| `festival` | Dừng ở Championships | **festival**: Chỉ chọn ô của mình: ô đang tổ chức thì tăng hệ số thêm 1, ô khác thì trả 50K để chuyển sang. Hệ số tối đa ×10.<br>**skip**: Bỏ qua → kết thúc ô. |
 | `card` | Thẻ Chance cần chọn ô | **card**: Áp dụng thẻ lên ô chọn (Đổi đất: chọn 2 lần) → kết thúc ô.<br>**skip**: Bỏ thẻ → kết thúc ô. |
 | `debt` | Có khoản phải trả (thuê/thuế) lớn hơn tiền mặt; khoản này đang treo | **sell**: Bán 1 ô cho ngân hàng; đủ tiền thì trả khoản treo cho người nhận → kết thúc ô (đổ đôi thì đổ tiếp).<br>**bankrupt**: Phá sản: toàn bộ tiền mặt cho người nhận, đất trả về ngân hàng → lượt người kế. |
 
-- Phòng chờ: người vào đầu tiên là host; chỉ host được đổi cấu hình room, mời người chơi ra, bắt đầu hoặc reset ván. Host rời phòng thì quyền chuyển cho người vào kế tiếp.
+- Phòng chờ: người vào đầu tiên là host; chỉ host được đổi cấu hình room, mời người chơi ra, bắt đầu hoặc reset ván. Host rời phòng thì quyền chuyển cho người vào kế tiếp; host mất kết nối quá 60 giây thì quyền chuyển cho người đang online kế tiếp.
 - Bắt đầu lượt → tour (nếu đang có vé World Tour) / island (nếu đang kẹt đảo) / roll
 - roll → di chuyển → GIẢI QUYẾT Ô (bảng quyết định) → buy | upgrade | takeover | festival | card | debt | KẾT THÚC Ô
 - KẾT THÚC Ô → debt (còn khoản treo) | roll (đổ đôi) | lượt người kế
@@ -180,7 +180,6 @@ stateDiagram-v2
 | C20 | Ô đang mất điện | Không trả thuê |
 | C21 | Có thẻ VIP, dừng ở ô đối thủ | Tự dùng 1 thẻ, miễn tiền thuê và hiện thông báo |
 | C22 | Có thẻ VIP nhưng không đủ tiền mua lại | Ưu tiên thông báo đã dùng thẻ miễn thuê |
-| C21 | Có thẻ VIP | Miễn thuê, mất 1 thẻ VIP |
 
 ### Bãi biển
 
@@ -202,6 +201,9 @@ stateDiagram-v2
 | S7 | Còn thành phố trống nhưng chọn ô của người khác | Bị từ chối |
 | S8 | Dừng ở Tax, tổng tài sản 2000 | Nộp 10% = 200 |
 | S9 | Dừng ở Championships, chuyển giải tới đất của mình | Trả 50K, hệ số lên ×2 |
+| S10 | Championships đang ở ô đối thủ, chọn ô đó | Bị từ chối (chỉ chọn ô của mình) |
+| S11 | Dừng ở Championships, không có đất | Không có gì xảy ra, sang người kế |
+| S12 | Championships đang ở ô của mình, chọn lại ô đó | Không mất phí, hệ số tăng thêm 1 |
 
 ### Thẻ Chance
 

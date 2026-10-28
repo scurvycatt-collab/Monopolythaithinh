@@ -1,6 +1,6 @@
 {
   "name": "thai-thinh-monopoly",
-  "version": "1.7.0",
+  "version": "1.8.1",
   "description": "Cờ tỷ phú 3D kiểu Business Tour cho gia đình, chơi qua mạng, chống rớt mạng",
   "private": true,
   "main": "server.js",

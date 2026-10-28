@@ -86,6 +86,7 @@ setInterval(() => { const msg = `event: ping\ndata: ${Date.now()}\n\n`; for (con
 setInterval(() => {
   try {
     if (!hasOnlinePlayers()) return;
+    if (G.handoverHost(state, isOnline, offlineSec)) commit();
     if (G.checkTime(state, Date.now())) return commit();
     if (G.checkTurn(state, Date.now())) commit();
   } catch (e) { console.error('Lỗi kiểm tra giờ:', e); }
