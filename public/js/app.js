@@ -1646,8 +1646,9 @@ function renderLobby() {
 }
 function renderWatchBadge() {
   const el = $('#watchbadge');
-  el.innerHTML = WATCH_MODE ? `👁 Đang xem: ${esc(lobbyDraftName)} · ${viewers.length || 1} khán giả` : '';
-  el.classList.toggle('show', WATCH_MODE);
+  const names = viewers.length ? viewers : (WATCH_MODE && lobbyDraftName ? [lobbyDraftName] : []);
+  el.innerHTML = names.map((name) => `<div class="watcher-card${WATCH_MODE && name === lobbyDraftName ? ' me' : ''}"><span class="watcher-eye" aria-hidden="true">👁</span><span><b>${esc(name)}</b><small>Đang theo dõi${WATCH_MODE && name === lobbyDraftName ? ' · bạn' : ''}</small></span></div>`).join('');
+  el.classList.toggle('show', names.length > 0);
 }
 const petGrid = (sel, taken, attr) => `<div class="pets">${G.PETS.map((x) => `<button type="button" class="pet${x.id === sel ? ' on' : ''}" ${attr}="${x.id}" ${taken.has(x.id) && x.id !== sel ? 'disabled' : ''} style="--c:${x.c}"><img alt="" src="${petImg(x.id)}"><span>${x.n}</span></button>`).join('')}</div>`;
 const timeRow = (cur, attr) => `<div class="times">${CFG.TIME_OPTIONS.map((m) => `<button type="button" class="pill ${m === cur ? '' : 'ghost'}" ${attr}="${m}">${timeLabel(m)}</button>`).join('')}</div>`;

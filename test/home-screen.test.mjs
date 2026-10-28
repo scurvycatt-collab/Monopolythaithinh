@@ -100,6 +100,10 @@ assert.match(app, /left > 5000/, 'time warning must start in the final five seco
 assert.match(app, /playTimeWarning\(\);/, 'turn timer must run the warning sound');
 assert.match(app, /st\.kind === 'flight'/, 'flight card must wait for confirmation');
 assert.match(app, /side: THREE\.BackSide/, 'controlled character must have a silhouette glow');
+assert.match(app, /names\.map\(\(name\) => `<div class="watcher-card/, 'the left spectator rail must render one named card per viewer');
+assert.match(app, /Đang theo dõi\$\{WATCH_MODE && name === lobbyDraftName \? ' · bạn' : ''\}/, 'the current spectator card must be identified locally');
+assert.match(css, /#watchbadge\{[^}]*left:calc\(12px[^}]*top:50%/, 'spectator cards must occupy a dedicated rail on the left');
+assert.match(css, /#watchbadge\.show\{display:flex\}/, 'the spectator rail must support multiple stacked names');
 assert.match(app, /MODE === 'net' \? isMe\(p\.id\)/, 'network mode must highlight only the local player token');
 assert.match(app, /doSell\(true\)/, 'automatic selling must enable bankruptcy fallback');
 assert.match(app, /if \(mustBankrupt\) await act\('bankrupt'\)/, 'automatic selling must declare bankruptcy when assets are insufficient');
