@@ -1,0 +1,5 @@
+Isometric Buildings — Kenney (www.kenney.nl)
+License: Creative Commons Zero, CC0 (http://creativecommons.org/publicdomain/zero/1.0/)
+Được dùng tự do cho dự án cá nhân, giáo dục và thương mại; không bắt buộc ghi công (ghi công: Kenney.nl).
+Bản dùng chung duy nhất trong repo; skin tham chiếu bằng tên pack "kenney-iso-buildings", không chép.
+24 mảnh khối nhà; điểm ảnh đỏ (mái, khung cửa) được khung xương tô màu chủ.

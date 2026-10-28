@@ -64,6 +64,7 @@ export default async function createRenderer(ctx) → Board
 | `start()`, `stop()` | tab hiện / ẩn, vào / rời game | `stop()` phải dừng hoàn toàn vòng vẽ |
 | `destroy()` | rời phòng, đổi map | Giải phóng GPU, listener, timer |
 | `stats() → object` | `window.__TT.perf` (đo hiệu năng, test) | Tuỳ chọn. Map-1 trả `{ graphicsLevel, activeFps, antialias, frame, calls, triangles, … }` |
+| `meta` (thuộc tính) | UI đọc thông số hiển thị của map | Tuỳ chọn. `{ buildMs, resortLevels: [4 tên cấp nhà resort] }`. Thiếu thì UI dùng 2400 ms và "Cấp 1–4" |
 
 Kéo / cuộn / chụm để zoom do renderer tự xử lý trên `canvas`. App nghe `pointerup` (bubble lên `#stage`) để nhận một lần chạm không kéo rồi gọi `pick(x, y)`. Tổng xúc xắc, nhãn giá bán đất, đồng hồ ván là DOM của app.
 
