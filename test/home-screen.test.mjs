@@ -3,7 +3,10 @@ import fs from 'node:fs';
 
 const html = fs.readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
 const css = fs.readFileSync(new URL('../public/style.css', import.meta.url), 'utf8');
-const app = fs.readFileSync(new URL('../public/js/app.js', import.meta.url), 'utf8');
+const appOnly = fs.readFileSync(new URL('../public/js/app.js', import.meta.url), 'utf8');
+// T06: phần vẽ 3D chuyển sang renderer của map-1; các kiểm tra mã nguồn bên dưới đọc cả hai file.
+const mapRenderer = fs.readFileSync(new URL('../public/maps/map-1/renderer.js', import.meta.url), 'utf8');
+const app = appOnly + '\n' + mapRenderer;
 const houses = fs.readFileSync(new URL('../public/js/houses.js', import.meta.url), 'utf8');
 const specials = fs.readFileSync(new URL('../public/js/specials.js', import.meta.url), 'utf8');
 const world = fs.readFileSync(new URL('../public/js/world.js', import.meta.url), 'utf8');
@@ -69,7 +72,7 @@ assert.match(app, /if \(!frameRunning \|\| document\.hidden\) return/, 'renderin
 assert.match(app, /const frameInterval = 1000 \/ targetFps/, 'render loop must honor the selected fixed FPS cap');
 assert.match(app, /const confetti = \[\], confettiPool = \[\]/, 'confetti meshes must be pooled instead of recreated for every festival');
 assert.match(app, /confettiPool\.push\(c\)/, 'expired confetti must return to the pool');
-assert.match(app, /now - overlayUpdatedAt >= 100/, 'DOM overlays must update at 10 FPS instead of every render frame');
+assert.match(appOnly, /setInterval\(updateOverlays, 100\)/, 'DOM overlays must update at 10 FPS instead of every render frame');
 assert.match(app, /const targetFps = profile\.fps/, 'render FPS must not drop while waiting to roll');
 assert.match(app, /nextFps = nextProfile\.fps/, 'the next frame must keep the same FPS after active animations finish');
 const hopSource = app.slice(app.indexOf('async function hop('), app.indexOf('/* xúc xắc 3D */'));

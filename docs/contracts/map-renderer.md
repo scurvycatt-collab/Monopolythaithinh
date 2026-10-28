@@ -38,8 +38,9 @@ export default async function createRenderer(ctx) → Board
 
 | Trường | Ý nghĩa |
 |---|---|
-| `canvas` | HTMLCanvasElement đã gắn vào `#board` |
+| `canvas` | HTMLCanvasElement đã gắn vào `#stage` (renderer không tự tạo canvas khác, trừ khi phải tạo lại context WebGL — khi đó thay đúng canvas này trong DOM) |
 | `rules` | `window.RULES` (TILES, GROUPS, CONFIG, PETS) — không tự import |
+| `game` | `window.Game` — chỉ dùng hàm **đọc** để suy ra từ `view` (`rentOf`, `outaged`, `festMult`, `ownedBy`); không gọi hàm đổi state |
 | `base` | URL thư mục map, ví dụ `'maps/four-seasons/'` |
 | `quality` | `'high' \| 'medium' \| 'low'` ban đầu |
 | `onProgress(done, total, label)` | báo tiến độ tải |
@@ -50,18 +51,21 @@ export default async function createRenderer(ctx) → Board
 |---|---|---|
 | ★ `reset(view)` | ván mới, vào giữa ván, đổi người | Dựng lại toàn bộ theo `view`, **không** hoạt ảnh |
 | ★ `sync(view) → Promise<ms>` | sau mỗi hành động | Cập nhật nhà, chủ đất, lễ hội, mất điện, Championships; trả về số ms hoạt ảnh xây nhà còn chạy (để UI hoãn đếm tiền) |
-| ★ `moveToken(pid, path, opts) → Promise` | quân đi | `path`: mảng ô (0–31). `opts.jump`: đặt thẳng, không nhảy. `opts.onStep(tile)` gọi khi chạm từng ô |
+| ★ `moveToken(pid, path, opts) → Promise` | quân đi | `path`: mảng ô (0–31). `opts.jump`: đặt thẳng, không nhảy. `opts.onStep(tile)` gọi khi chạm từng ô. `opts.view` (tuỳ chọn): `view` mới nhất, để xếp chỗ đứng với các quân khác trên ô đích |
 | ★ `rollDice(a, b) → Promise` | đổ xúc xắc | Resolve khi xúc xắc dừng |
-| ★ `tileScreen(i) → {x, y}` | đặt overlay DOM | Toạ độ CSS px trong canvas của tâm ô `i` |
+| ★ `tileScreen(i, lift = 0) → {x, y}` | đặt overlay DOM | Toạ độ CSS px trong canvas của tâm ô `i`; `lift` (đơn vị thế giới, tuỳ chọn) nâng điểm lên trên mặt ô — dùng cho nhãn giá khi bán đất. Map 2D được bỏ qua `lift` |
 | ★ `pick(x, y) → i \| null` | chạm / click | Ô dưới điểm CSS px |
 | `tokenScreen(pid) → {x, y}` | đặt mũi tên, mặt cười | |
-| `setActive(pid, color)` | đổi lượt | Viền sáng quân / mũi tên báo lượt |
+| `setActive(pid, color, glowPid = pid)` | đổi lượt, sau mỗi `renderHub` | Mũi tên báo lượt trên quân `pid` màu `color` (`pid = null` để ẩn). `glowPid`: quân có viền sáng — app truyền quân của chính mình ở chế độ mạng, quân đang tới lượt ở chế độ một máy |
 | `effect(kind, tile)` | `'confetti'`, `'festival'` | Hiệu ứng một lần |
-| `highlight(tiles, kind)` | bán đất, chọn ô World Tour | `tiles = []` để tắt |
+| `highlight(tiles, kind)` | bán đất, chọn ô World Tour, thẻ Chance | Làm tối cảnh, chỉ sáng `tiles`; `tiles = []` để tắt |
 | `setQuality(level)` | đổi đồ hoạ | |
 | `resize()`, `zoomBy(f)`, `fit()` | khung hình | |
 | `start()`, `stop()` | tab hiện / ẩn, vào / rời game | `stop()` phải dừng hoàn toàn vòng vẽ |
 | `destroy()` | rời phòng, đổi map | Giải phóng GPU, listener, timer |
+| `stats() → object` | `window.__TT.perf` (đo hiệu năng, test) | Tuỳ chọn. Map-1 trả `{ graphicsLevel, activeFps, antialias, frame, calls, triangles, … }` |
+
+Kéo / cuộn / chụm để zoom do renderer tự xử lý trên `canvas`. App nghe `pointerup` (bubble lên `#stage`) để nhận một lần chạm không kéo rồi gọi `pick(x, y)`. Tổng xúc xắc, nhãn giá bán đất, đồng hồ ván là DOM của app.
 
 `view` = `publicView(state)` từ server (xem `public/game.js`). Renderer tự suy ra mọi thứ cần vẽ từ `view`; màu người chơi lấy từ `view.players[i].color`.
 
