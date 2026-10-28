@@ -10,7 +10,7 @@
    ============================================================================ */
 (function (root) {
   'use strict';
-  const VERSION = '1.8.0';
+  const VERSION = '1.8.1';
 
   /* ===================== LỚP 1 — THÔNG SỐ ===================== */
   const CONFIG = {
@@ -37,6 +37,7 @@
     TIME_OPTIONS: [60, 90, 120],  // thời lượng ván (phút); hết giờ → giàu nhất thắng
     TURN_OPTIONS: [20, 30, 45, 60], TURN_SEC: 30, // thời gian cho mỗi bước của lượt (giây); hết → tự đi
     TURN_GRACE_SEC: 6,            // cộng thêm cho hoạt ảnh (xúc xắc, di chuyển, xây nhà) trước khi bắt đầu đếm
+    HOST_HANDOVER_SEC: 60,        // host mất kết nối quá lâu thì chuyển quyền cho người đang online
     AUTO_OFFLINE_SEC: 60, PROXY_SEC: 15, // người mất kết nối: server tự đi sau 60 s; người khác bấm "Đi hộ" sau 15 s
   };
 
@@ -61,7 +62,7 @@
       'Hết {islandTurns} lượt thì tự rời đảo. Trong lúc kẹt vẫn thu tiền thuê bình thường.',
     ] },
     festival: { color: '#f5a20a', subtitle: 'Lễ hội', items: [
-      'Dừng ở đây được tăng hệ số ô đang tổ chức thêm 1, hoặc trả <b>{champMoveFee}</b> để chuyển Championships sang ô của mình.',
+      'Dừng ở đây chọn một ô của mình: ô đang tổ chức thì tăng hệ số thêm 1, ô khác thì trả <b>{champMoveFee}</b> để chuyển Championships sang. Không có đất thì không có gì xảy ra.',
       'Hệ số tăng dần tới tối đa x{maxRentMult}. Lần tổ chức tới sẽ là x{nextFestivalMult}.',
       'Cả bàn chỉ có một lễ hội; tổ chức ở ô mới thì lễ hội chuyển sang ô đó. Thẻ Cúp điện làm mất lễ hội.',
       '{currentFestival}',
@@ -169,13 +170,13 @@
     buy: { desc: 'Dừng ở ô chưa có chủ, đủ tiền mua đất', actions: { buy: 'Mua đất + xây tới cấp chọn (≤ giới hạn vòng) → kiểm tra thắng → kết thúc ô.', skip: 'Không mua → kết thúc ô.' } },
     upgrade: { desc: 'Dừng ở ô của mình (hoặc vừa mua lại) còn nâng cấp được', actions: { upgrade: 'Nâng lên cấp chọn → kết thúc ô.', skip: 'Để sau → kết thúc ô.' } },
     takeover: { desc: 'Vừa trả thuê ô người khác, đủ tiền mua lại', actions: { takeover: 'Trả 2× giá trị cho chủ, nhận nguyên cấp nhà → nếu còn nâng cấp được thì sang upgrade, không thì kết thúc ô.', skip: 'Không mua → kết thúc ô.' } },
-    festival: { desc: 'Dừng ở Championships', actions: { festival: 'Tăng hệ số ô đang tổ chức thêm 1; hoặc trả 50K để chuyển sang ô của mình. Hệ số tối đa ×10.', skip: 'Bỏ qua → kết thúc ô.' } },
+    festival: { desc: 'Dừng ở Championships', actions: { festival: 'Chỉ chọn ô của mình: ô đang tổ chức thì tăng hệ số thêm 1, ô khác thì trả 50K để chuyển sang. Hệ số tối đa ×10.', skip: 'Bỏ qua → kết thúc ô.' } },
     card: { desc: 'Thẻ Chance cần chọn ô', actions: { card: 'Áp dụng thẻ lên ô chọn (Đổi đất: chọn 2 lần) → kết thúc ô.', skip: 'Bỏ thẻ → kết thúc ô.' } },
     debt: { desc: 'Có khoản phải trả (thuê/thuế) lớn hơn tiền mặt; khoản này đang treo', actions: { sell: 'Bán 1 ô cho ngân hàng; đủ tiền thì trả khoản treo cho người nhận → kết thúc ô (đổ đôi thì đổ tiếp).', bankrupt: 'Phá sản: toàn bộ tiền mặt cho người nhận, đất trả về ngân hàng → lượt người kế.' } },
   };
   // "Kết thúc ô": còn khoản treo → debt; đổ đôi và không kẹt đảo → roll (đổ thêm); còn lại → lượt người kế (bước đầu: tour / island / roll).
   const FLOW = [
-    'Phòng chờ: người vào đầu tiên là host; chỉ host được đổi cấu hình room, mời người chơi ra, bắt đầu hoặc reset ván. Host rời phòng thì quyền chuyển cho người vào kế tiếp.',
+    'Phòng chờ: người vào đầu tiên là host; chỉ host được đổi cấu hình room, mời người chơi ra, bắt đầu hoặc reset ván. Host rời phòng thì quyền chuyển cho người vào kế tiếp; host mất kết nối quá 60 giây thì quyền chuyển cho người đang online kế tiếp.',
     'Bắt đầu lượt → tour (nếu đang có vé World Tour) / island (nếu đang kẹt đảo) / roll',
     'roll → di chuyển → GIẢI QUYẾT Ô (bảng quyết định) → buy | upgrade | takeover | festival | card | debt | KẾT THÚC Ô',
     'KẾT THÚC Ô → debt (còn khoản treo) | roll (đổ đôi) | lượt người kế',
@@ -220,7 +221,6 @@
     D('Thành phố — của người khác', 'C20', 'Ô đang mất điện', 'Không trả thuê', { outage: { 3: 4 }, props: { 3: ['op', 1] }, dice: [1, 2] }, [['roll']], { me: 2000, op: 2000 }),
     D('Thành phố — của người khác', 'C21', 'Có thẻ VIP, dừng ở ô đối thủ', 'Tự dùng 1 thẻ, miễn tiền thuê và hiện thông báo', { shields: 1, props: { 3: ['op', 1] }, dice: [1, 2] }, [['roll']], { me: 2000, op: 2000, shields: 0, notice: 'vipUsed', step: 'takeover' }),
     D('Thành phố — của người khác', 'C22', 'Có thẻ VIP nhưng không đủ tiền mua lại', 'Ưu tiên thông báo đã dùng thẻ miễn thuê', { money: 10, shields: 1, props: { 3: ['op', 1] }, dice: [1, 2] }, [['roll']], { me: 10, op: 2000, shields: 0, notice: 'vipUsed', step: 'next' }),
-    D('Thành phố — của người khác', 'C21', 'Có thẻ VIP', 'Miễn thuê, mất 1 thẻ VIP', { shields: 1, props: { 3: ['op', 1] }, dice: [1, 2] }, [['roll']], { me: 2000, shields: 0 }),
     // ---- bãi biển
     D('Bãi biển', 'R1', 'Bãi biển chưa chủ', 'Bước buy (chỉ mua đất)', { dice: [1, 3] }, [['roll'], ['buy', { level: 0 }]], { owner: [4, 'me'], me: 1800 }),
     D('Bãi biển', 'R2', 'Bãi của người có 2 bãi', 'Thuê 50, không được mua lại', { props: { 4: ['op', 0], 14: ['op', 0] }, dice: [1, 3] }, [['roll']], { me: 1950, step: 'next' }),
@@ -234,6 +234,9 @@
     D('Ô đặc biệt', 'S7', 'Còn thành phố trống nhưng chọn ô của người khác', 'Bị từ chối', { pos: 24, tourPending: true, step: 'tour', props: { 3: ['op', 1] } }, [['tour', { tile: 3 }]], { error: true }),
     D('Ô đặc biệt', 'S8', 'Dừng ở Tax, tổng tài sản 2000', 'Nộp 10% = 200', { pos: 27, dice: [1, 2] }, [['roll']], { pos: 30, me: 1800 }),
     D('Ô đặc biệt', 'S9', 'Dừng ở Championships, chuyển giải tới đất của mình', 'Trả 50K, hệ số lên ×2', { pos: 13, dice: [1, 2], props: { 3: ['me', 1] } }, [['roll'], ['festival', { tile: 3 }]], { me: 1950, festival: 3, festLevel: 1 }),
+    D('Ô đặc biệt', 'S10', 'Championships đang ở ô đối thủ, chọn ô đó', 'Bị từ chối (chỉ chọn ô của mình)', { pos: 13, dice: [1, 2], festival: 9, festLevel: 1, props: { 3: ['me', 1], 9: ['op', 1] } }, [['roll'], ['festival', { tile: 9 }]], { error: true }),
+    D('Ô đặc biệt', 'S11', 'Dừng ở Championships, không có đất', 'Không có gì xảy ra, sang người kế', { pos: 13, dice: [1, 2], festival: 9, festLevel: 1, props: { 9: ['op', 1] } }, [['roll']], { me: 2000, festival: 9, festLevel: 1, step: 'next' }),
+    D('Ô đặc biệt', 'S12', 'Championships đang ở ô của mình, chọn lại ô đó', 'Không mất phí, hệ số tăng thêm 1', { pos: 13, dice: [1, 2], festival: 3, festLevel: 1, props: { 3: ['me', 1] } }, [['roll'], ['festival', { tile: 3 }]], { me: 2000, festival: 3, festLevel: 2 }),
     // ---- thẻ Chance
     D('Thẻ Chance', 'K1', 'Rút Trúng số', '+200', { pos: 9, dice: [1, 2], card: 'GOLDEN_LOTTERY' }, [['roll']], { me: 2200, step: 'next' }),
     D('Thẻ Chance', 'K2', 'Rút Thẻ VIP', 'Giữ 1 thẻ VIP', { pos: 9, dice: [1, 2], card: 'VIP_SHIELD' }, [['roll']], { shields: 1 }),
@@ -274,7 +277,7 @@
       'Lost Island: kẹt tối đa 3 lượt; thoát bằng cách trả 200.000, đổ đôi hoặc dùng thẻ Thoát đảo.',
       'Tax: nộp 10% tổng tài sản. Không đủ tiền thì phải bán tài sản.',
       'Bãi biển: giá 200.000, không thể mua lại; tiền thuê tăng theo tổng số bãi cùng chủ.',
-      'Championships: tăng hệ số ô đang tổ chức thêm 1, hoặc trả 50.000 để chuyển giải sang ô của mình; có thể bỏ qua.',
+      'Championships: chỉ chọn ô của mình — ô đang tổ chức thì tăng hệ số thêm 1, ô khác thì trả 50.000 để chuyển giải sang; không có đất thì không có gì xảy ra; có thể bỏ qua.',
       `World Tour: trả 50.000 để bay tới ${RULE_TEXT.TOUR_DESTINATION}.`,
     ] },
     { title: 'Thẻ Chance', items: [

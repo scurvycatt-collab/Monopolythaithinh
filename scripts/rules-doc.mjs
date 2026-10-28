@@ -51,13 +51,18 @@ L.push('', ...R.FLOW.map((f) => `- ${f}`));
 
 L.push('', '## 3. Bảng quyết định', '');
 let table = '';
+const seen = new Set();
 for (const d of R.DECISIONS) {
+  if (seen.has(d.id)) { console.error(`Mã bảng quyết định bị trùng: ${d.id}`); process.exit(1); }
+  seen.add(d.id);
   if (d.table !== table) { table = d.table; L.push('', `### ${table}`, '', '| Mã | Tình huống | Kết quả |', '|---|---|---|'); }
   L.push(`| ${d.id} | ${d.when} | ${d.then} |`);
 }
 L.push('');
 const md = L.join('\n');
 if (process.argv.includes('--check')) {
+  const pkg = JSON.parse(readFileSync(ROOT + 'package.json', 'utf8')).version;
+  if (pkg !== R.VERSION) { console.error(`package.json (${pkg}) khác rules.js (${R.VERSION}) — sửa cho khớp`); process.exit(1); }
   if (!existsSync(OUT) || readFileSync(OUT, 'utf8') !== md) { console.error('docs/RULES.md chưa khớp rules.js — chạy: npm run rules:doc'); process.exit(1); }
   console.log('OK docs/RULES.md khớp rules.js');
 } else { writeFileSync(OUT, md); console.log('Đã ghi docs/RULES.md'); }

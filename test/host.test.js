@@ -19,6 +19,20 @@ G.setSettings(s, { mapId: 'map-1' });
 assert.strictEqual(s.settings.mapId, 'map-1');
 G.setSettings(s, { mapId: 'map-khong-ton-tai' });
 assert.strictEqual(s.settings.mapId, 'map-1', 'map không hợp lệ phải bị bỏ qua');
+{
+  const h = G.createState();
+  ['a', 'b', 'c'].forEach((id) => G.addPlayer(h, { id, token: 't' + id, name: id.toUpperCase() }));
+  const online = new Set(['b', 'c']);
+  const on = (id) => online.has(id);
+  assert.strictEqual(G.handoverHost(h, on, () => G.CFG.HOST_HANDOVER_SEC - 1), false, 'host offline chưa đủ 60 giây thì giữ quyền');
+  assert.strictEqual(G.handoverHost(h, on, () => G.CFG.HOST_HANDOVER_SEC), true, 'host offline đủ 60 giây thì chuyển quyền');
+  assert.strictEqual(h.hostId, 'b', 'quyền host sang người online kế tiếp');
+  online.clear();
+  assert.strictEqual(G.handoverHost(h, on, () => 999), false, 'không ai online thì không chuyển');
+  online.add('a');
+  assert.strictEqual(G.handoverHost(h, on, () => 999), true);
+  assert.strictEqual(h.hostId, 'a', 'vòng lại đầu danh sách khi người phía sau đều offline');
+}
 G.removePlayer(s, 'host');
 assert.strictEqual(s.hostId, 'guest', 'host rời lobby phải chuyển quyền cho người kế tiếp');
 G.removePlayer(s, 'guest');
