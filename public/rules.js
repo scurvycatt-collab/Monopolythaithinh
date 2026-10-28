@@ -156,7 +156,7 @@
   // Danh sách map có thể chọn trong room. Map hiện tại là map mặc định;
   // thêm map mới vào đây trước khi nối renderer/asset tương ứng.
   const MAPS = [
-    { id: 'map-1', name: 'Map 1', description: 'Bản đồ Thái Thịnh mặc định', preview: 'maps/map-1-preview.svg', default: true },
+    { id: 'map-1', name: 'Map 1', description: 'Bản đồ Thái Thịnh mặc định', preview: 'maps/map-1/preview.svg', renderer: 'maps/map-1/renderer.js', default: true },
   ];
 
   /* ===================== LỚP 2 — SƠ ĐỒ TRẠNG THÁI ===================== */
