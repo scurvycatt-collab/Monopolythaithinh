@@ -56,7 +56,7 @@ function noise(duration, volume, filterType = 'lowpass', frequency = 900, at = a
 }
 function playInteractionSound(kind) {
   if (!soundPrefs.turn || !audioCtx || audioCtx.state !== 'running') return;
-  const v = soundPrefs.turnVolume / 100 * .48, at = audioCtx.currentTime;
+  const v = soundPrefs.turnVolume / 100 * .80, at = audioCtx.currentTime;
   if (kind === 'egg') { tone(240, .11, v, 'triangle', at); noise(.16, v * .8, 'lowpass', 700, at + .06); }
   else if (kind === 'rocket') { sweep(150, 1250, .58, v * .7, 'sawtooth', at); noise(.48, v * .32, 'highpass', 1400, at + .05); }
   else if (kind === 'tomato') { tone(145, .14, v, 'sine', at); noise(.22, v, 'lowpass', 520, at + .03); }
@@ -70,7 +70,7 @@ function playInteractionSound(kind) {
 }
 function playInteractionImpactSound(kind) {
   if (!soundPrefs.turn || !audioCtx || audioCtx.state !== 'running') return;
-  const v = soundPrefs.turnVolume / 100 * .4, at = audioCtx.currentTime;
+  const v = soundPrefs.turnVolume / 100 * .80, at = audioCtx.currentTime;
   if (kind === 'egg') { noise(.13, v, 'lowpass', 520, at); tone(190, .12, v * .65, 'triangle', at); }
   else if (kind === 'rocket') { noise(.34, v, 'lowpass', 430, at); sweep(180, 70, .3, v * .8, 'sawtooth', at); }
   else if (kind === 'tomato') { noise(.19, v * .95, 'lowpass', 360, at); tone(120, .14, v * .7, 'sine', at); }
@@ -103,7 +103,7 @@ function unlockAudio() {
 }
 function playTurnSound() {
   if (!soundPrefs.turn || !audioCtx || audioCtx.state !== 'running') return;
-  const volume = soundPrefs.turnVolume / 100 * 0.60, at = audioCtx.currentTime;
+  const volume = soundPrefs.turnVolume / 100 * 0.80, at = audioCtx.currentTime;
   tone(523.25, 0.2, volume, 'sine', at); tone(659.25, 0.24, volume * 0.88, 'sine', at + 0.12); tone(783.99, 0.38, volume * 0.82, 'sine', at + 0.25);
 }
 let timeWarningKey = '';
@@ -114,7 +114,7 @@ function playTimeWarning() {
   const second = Math.ceil(left / 1000), key = `${S.stepAt}:${second}`;
   if (key === timeWarningKey) return;
   timeWarningKey = key;
-  const volume = soundPrefs.turnVolume / 100 * 0.46;
+  const volume = soundPrefs.turnVolume / 100 * 0.80;
   tone(second <= 2 ? 880 : 659.25, second <= 2 ? 0.18 : 0.11, volume, second <= 2 ? 'square' : 'sine');
 }
 function renderSoundSettings() {

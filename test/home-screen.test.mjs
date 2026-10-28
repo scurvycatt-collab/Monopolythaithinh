@@ -67,10 +67,10 @@ assert.match(app, /turnVolume: 75/, 'effect volume must default to an audible le
 assert.match(app, /background-loop\.wav\?v=1/, 'background music must use the pre-rendered one-minute loop');
 assert.match(app, /backgroundMusic\.loop = true/, 'background music must loop continuously');
 assert.match(app, /soundPrefs\.musicVolume \/ 100 \* 2/, 'background music volume must be doubled');
-assert.match(app, /soundPrefs\.turnVolume \/ 100 \* 0\.60/, 'turn chime gain must be doubled');
-assert.match(app, /soundPrefs\.turnVolume \/ 100 \* 0\.46/, 'countdown warning gain must be doubled');
-assert.match(app, /soundPrefs\.turnVolume \/ 100 \* \.48/, 'interaction flight gain must be doubled');
-assert.match(app, /soundPrefs\.turnVolume \/ 100 \* \.4/, 'interaction impact gain must be doubled');
+assert.match(app, /soundPrefs\.turnVolume \/ 100 \* 0\.80/, 'turn chime gain must use the requested 0.8 effect level');
+assert.match(app, /function playTimeWarning[\s\S]*soundPrefs\.turnVolume \/ 100 \* 0\.80/, 'countdown warning must use the requested 0.8 effect level');
+assert.match(app, /soundPrefs\.turnVolume \/ 100 \* \.80, at = audioCtx\.currentTime;[\s\S]*function playInteractionImpactSound/, 'interaction flight gain must use the requested 0.8 effect level');
+assert.match(app, /function playInteractionImpactSound[\s\S]*soundPrefs\.turnVolume \/ 100 \* \.80/, 'interaction impact gain must use the requested 0.8 effect level');
 assert.match(app, /const GRAPHICS_KEY = 'tt-monopoly-graphics-v1'/);
 assert.match(app, /high: \{ ratio: 2, shadows: true, shadowSize: 2048, fps: 60, idleFps: 60, motionFps: 60/, 'high graphics must stay at 60 FPS before, during and after rolling');
 assert.match(app, /medium: \{ ratio: 1\.5, shadows: true, shadowSize: 1024, fps: 40, idleFps: 40, motionFps: 40/, 'medium graphics must stay at 40 FPS throughout a turn');
