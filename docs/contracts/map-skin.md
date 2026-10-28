@@ -118,7 +118,7 @@ ambient: { particles: { petals: {…}, snow: {…} }, animate: { fountain(pen, t
 
 ## 7. labels (tuỳ chọn)
 
-`{ start: 'START', island: 'LOST ISLAND', festival: 'CHAMPIONSHIPS', tour: 'WORLD TOUR' }` và font chữ ô. Tên thành phố và giá **luôn lấy từ `rules`**, skin không đổi.
+`{ start: 'START', island: 'LOST ISLAND', festival: 'CHAMPIONSHIPS', tour: 'WORLD TOUR' }` và font chữ ô. `resortLevels`: mảng 4 tên cấp nhà resort (tuỳ chọn); khung xương trả ra `board.meta.resortLevels` cùng `meta.buildMs` (PR #5). Tên thành phố và giá **luôn lấy từ `rules`**, skin không đổi.
 
 ## 8. Quy tắc
 

@@ -395,4 +395,5 @@ export default defineSkin({
     },
   },
   ambient: { animate: { fountain: fountainFx } },
+  labels: { resortLevels: ['Lều trại', 'Trại có hiên', 'Nhà gỗ', 'Glamping'] },
 });

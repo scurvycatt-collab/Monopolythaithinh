@@ -15,6 +15,7 @@ const REG = [(u, v) => [u, v], (u, v) => [-v, u], (u, v) => [u, -v], (u, v) => [
 const regionOf = (x, z) => (z >= Math.abs(x) ? 0 : -x > Math.abs(z) ? 1 : -z >= Math.abs(x) ? 2 : 3);
 const CORNER_LABEL = { start: [0.5, 0.5, 90, 0.92], island: [0.7, 0.8, 33, 0.5], festival: [0.7, 0.78, 33, 0.62], tour: [0.7, 0.78, 33, 0.62] };
 const DEFAULT_LABELS = { start: 'START', island: 'LOST ISLAND', festival: 'CHAMPIONSHIPS', tour: 'WORLD TOUR', chance: 'CHANCE', tax: 'TAX', hotel: 'HOTEL', resort: 'RESORT' };
+const SELL_MS = 380, BUILD_MS = 760, REBUILD_GAP = 420;   // hoạt ảnh bán / xây nhà
 const CONFETTI = ['#ff6fa0', '#ffc23a', '#5cc6e8', '#7fd6a0', '#a98af0', '#ffffff'];
 const shortK = (n) => (n >= 1000 ? (n / 1000).toFixed(n % 1000 ? 1 : 0).replace('.', ',') + 'M' : n + 'K');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -312,8 +313,8 @@ export async function createBoard2D(ctx, skin) {
       const sig = objSig(i), old = built[i]; if ((old ? old.sig : '') === sig) continue;
       const s = sig ? buildingSprite(i) : null; built[i] = sig ? { sig, s } : null; if (instant) continue;
       let wait = 0;
-      if (old && old.s) { anims.push({ i, kind: 'sell', t0: now, dur: 380, s: old.s }); wait = 420; }
-      if (s) { anims.push({ i, kind: 'build', t0: now + wait, dur: 760, s }); startAt = Math.max(startAt, wait); }
+      if (old && old.s) { anims.push({ i, kind: 'sell', t0: now, dur: SELL_MS, s: old.s }); wait = REBUILD_GAP; }
+      if (s) { anims.push({ i, kind: 'build', t0: now + wait, dur: BUILD_MS, s }); startAt = Math.max(startAt, wait); }
     }
     sceneDirty = true; dirty = true; return startAt;
   }
@@ -403,6 +404,8 @@ export async function createBoard2D(ctx, skin) {
   resize();
   /* ---------------- Board (docs/contracts/map-renderer.md) ---------------- */
   return {
+    // PR #5: app đọc thời lượng xây nhà và tên cấp nhà resort thay vì hằng của map-1
+    meta: { buildMs: BUILD_MS, resortLevels: LB.resortLevels || null },
     reset(v) { S = v; anims.length = 0; confetti.length = 0; for (const k in built) delete built[k]; for (const k in tok) delete tok[k]; syncObjects(true); placeTokens(true); highlight = null; },
     async sync(v) { S = v; const wait = syncObjects(false); placeTokens(false); return wait; },
     async moveToken(pid, path, opts = {}) {

@@ -64,7 +64,7 @@ export function defineSkin(skin) {
     if (amb.animate !== undefined) { if (!isObj(amb.animate)) err('ambient.animate', 'phải là object { tên: hàm(pen, t, c) }.'); for (const [n, f] of Object.entries(amb.animate)) if (typeof f !== 'function') err(`ambient.animate.${n}`, 'phải là hàm.'); }
     if (amb.particles !== undefined && !isObj(amb.particles)) err('ambient.particles', 'phải là object.');
   }
-  if (skin.labels !== undefined) { if (!isObj(skin.labels)) err('labels', 'phải là object.'); for (const [k, v] of Object.entries(skin.labels)) if (typeof v !== 'string') err(`labels.${k}`, 'phải là chuỗi.'); }
+  if (skin.labels !== undefined) { if (!isObj(skin.labels)) err('labels', 'phải là object.'); for (const [k, v] of Object.entries(skin.labels)) { if (k === 'resortLevels') { if (!Array.isArray(v) || v.length !== 4 || v.some((x) => typeof x !== 'string')) err('labels.resortLevels', 'phải là mảng 4 tên cấp nhà resort.'); } else if (typeof v !== 'string') err(`labels.${k}`, 'phải là chuỗi.'); } }
   return Object.freeze({ zones: null, sprites: {}, ambient: {}, labels: {}, ...skin, packs });
 }
 
