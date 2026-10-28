@@ -476,7 +476,7 @@
       case 'GOLDEN_LOTTERY': p.money = r2(p.money + c.amount); return finish(s);
       case 'VIP_SHIELD': p.shields = (p.shields || 0) + 1; return finish(s);
       case 'ESCAPE_ISLAND': p.escapeCards++; return finish(s);
-      case 'HOST_FESTIVAL': moveTo(s, p, CFG.FESTIVAL_IDX); return resolve(s, p);
+      case 'HOST_FESTIVAL': s.step = { kind: 'hostFestival' }; return;
       case 'FLIGHT_TICKET': s.step = { kind: 'flight' }; return;
       default: {
         const tiles = cardTargets(s, p, c.id, 1);
@@ -649,6 +649,12 @@
         moveTo(s, p, CFG.TOUR_IDX);
         return resolve(s, p);
 
+      case 'hostFestival':
+        need('hostFestival');
+        s.step = null;
+        moveTo(s, p, CFG.FESTIVAL_IDX);
+        return resolve(s, p);
+
       case 'card': {
         need('card');
         return applyCard(s, p, st, tileArg());
@@ -693,6 +699,7 @@
     switch (st.kind) {
       case 'roll': case 'island': return ['roll', {}];
       case 'flight': return ['flight', {}];
+      case 'hostFestival': return ['hostFestival', {}];
       case 'card': {
         // tấn công ô giá trị cao nhất; khi đổi đất thì đưa ra ô rẻ nhất của mình
         const byVal = st.tiles.slice().sort((a, b) => value(a, s.props[a].level) - value(b, s.props[b].level));

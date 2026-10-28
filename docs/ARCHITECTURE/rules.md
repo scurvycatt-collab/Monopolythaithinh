@@ -58,7 +58,7 @@ Code chính: `public/rules.js`, `public/game.js`
 
 ## Chance
 - Tám thẻ Chance cùng trọng số `w: 1` (12,5% mỗi thẻ).
-- Vé máy bay chuyển sang bước `flight`: server chỉ tạo chuyển động tới World Tour sau khi người rút bấm OK.
+- Vé máy bay chuyển sang bước `flight`; Tổ chức lễ hội chuyển sang `hostFestival`. Server chỉ tạo chuyển động tới World Tour/Championships sau khi người rút bấm OK, để renderer không nhận vị trí cuối quá sớm.
 - Hết giờ thì `autoAction` xác nhận để ván không bị kẹt.
 
 ## Vật phẩm và phản ứng

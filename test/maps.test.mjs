@@ -49,6 +49,10 @@ for (const [i, entry] of (Array.isArray(MAPS) ? MAPS : []).entries()) {
         try {
           const skin = (await import(pathToFileURL(skinPath).href)).default;
           if (!skin || skin.id !== entry.id) fail(id, `skin.js phải export default defineSkin({ id: '${entry.id}', … }).`);
+          if (entry.id === 'four-seasons') {
+            const winter = (skin.zones || []).find((zone) => zone.id === 'winter');
+            if (!winter || winter.labelText !== '#17212b') fail(id, 'cạnh Mùa Đông phải dùng chữ đen để đủ tương phản trên nền tuyết.');
+          }
           for (const p of Object.values(skin.sprites || {})) if (!isFile(path.join(PUBLIC, path.dirname(rendererRel), p))) fail(id, `sprite riêng không tồn tại: ${p}`);
           for (const pack of skin.packs) if (!existsSync(path.join(PUBLIC, 'assets/shared', pack, 'LICENSE.txt'))) fail(id, `pack dùng chung "${pack}" thiếu public/assets/shared/${pack}/LICENSE.txt.`);
         } catch (e) { fail(id, `skin.js không qua defineSkin: ${e.message}`); }

@@ -18,6 +18,9 @@ có thay đổi bản đồ.
 - Khi Chance làm nhân vật di chuyển: nhân vật tới ô Chance, thẻ được hiện và người chơi xác
   nhận, sau đó nhân vật mới đi tới đích. Ví dụ: thẻ tới Championships phải hiện trước khi
   quân bắt đầu đi tới Championships.
+- Đây là luật engine dùng chung: mỗi thẻ di chuyển phải có một `STATES` xác nhận riêng;
+  `drawCard` không được tạo sẵn movement tới đích trong cùng state rút thẻ. Map chỉ phát lại
+  movement mà server sinh sau nút OK, giống nhau trên Map 1, Bốn Mùa và mọi map mới.
 - Thẻ được sử dụng tự động (miễn tiền thuê, thoát đảo...) phải hiện thông báo. Các bước chọn
   mục tiêu của Chance, World Tour và Championships phải dùng `highlight` và không bị skin che.
 - Map không tự xử lý luật, bỏ popup hoặc tự đổi thứ tự sự kiện do `public/js/app.js` phát.

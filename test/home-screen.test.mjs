@@ -135,7 +135,8 @@ assert.match(app, /if \(me && S\.phase === 'lobby'\) await api\('api\/act', \{ t
 assert.match(app, /playTurnSound\(\);/);
 assert.match(app, /left > 5000/, 'time warning must start in the final five seconds');
 assert.match(app, /playTimeWarning\(\);/, 'turn timer must run the warning sound');
-assert.match(app, /st\.kind === 'flight'/, 'flight card must wait for confirmation');
+assert.match(app, /const CARD_CONFIRM_ACTION = \{ FLIGHT_TICKET: 'flight', HOST_FESTIVAL: 'hostFestival' \}/, 'movement cards must use an explicit confirmation step');
+assert.match(app, /act\(st\.kind, null, e\.currentTarget\)/, 'confirming a movement card must call its staged server action');
 assert.match(app, /const timeline = moves\.map\(\(move\) => \(\{ kind: 'move', seq: move\.seq, move \}\)\)/, 'card and movement playback must share one server-sequence timeline');
 assert.match(app, /timeline\.push\(\{ kind: 'card', seq: card\.seq, card \}\)/, 'Chance cards must be inserted into the playback timeline');
 assert.match(app, /timeline\.sort\(\(a, b\) => a\.seq - b\.seq\)/, 'Chance card must appear before movement caused by that card');

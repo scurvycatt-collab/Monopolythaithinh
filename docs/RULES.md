@@ -1,4 +1,4 @@
-# Luật chơi Thái Thịnh Monopoly — v1.8.1
+# Luật chơi Thái Thịnh Monopoly — v1.8.2
 
 > Tự sinh từ `public/rules.js` bằng `npm run rules:doc`. Không sửa tay file này: sửa `rules.js`, chạy `npm run verify`.
 
@@ -118,6 +118,7 @@ stateDiagram-v2
 | `island` | Đang kẹt ở Lost Island | **roll**: Ra đôi → thoát và đi luôn; không ra đôi → mất 1 lượt (hết 3 lượt thì tự rời đảo và đi).<br>**payIsland**: Trả phí rời đảo → về bước roll.<br>**useCard**: Dùng thẻ Thoát đảo → về bước roll. |
 | `tour` | Lượt sau khi dừng ở World Tour | **tour**: Trả vé, bay tới thành phố chưa có chủ; nếu không còn thành phố trống thì bay tới ô của mình.<br>**skip**: Không bay → về bước roll. |
 | `flight` | Vừa rút thẻ Vé máy bay | **flight**: Bấm OK trên thẻ → đi tới World Tour → giải quyết ô dừng. |
+| `hostFestival` | Vừa rút thẻ Tổ chức lễ hội | **hostFestival**: Bấm OK trên thẻ → đi tới Championships → giải quyết ô dừng. |
 | `buy` | Dừng ở ô chưa có chủ, đủ tiền mua đất | **buy**: Mua đất + xây tới cấp chọn (≤ giới hạn vòng) → kiểm tra thắng → kết thúc ô.<br>**skip**: Không mua → kết thúc ô. |
 | `upgrade` | Dừng ở ô của mình (hoặc vừa mua lại) còn nâng cấp được | **upgrade**: Nâng lên cấp chọn → kết thúc ô.<br>**skip**: Để sau → kết thúc ô. |
 | `takeover` | Vừa trả thuê ô người khác, đủ tiền mua lại | **takeover**: Trả 2× giá trị cho chủ, nhận nguyên cấp nhà → nếu còn nâng cấp được thì sang upgrade, không thì kết thúc ô.<br>**skip**: Không mua → kết thúc ô. |
@@ -214,6 +215,8 @@ stateDiagram-v2
 | K3 | Rút Cúp điện, đối thủ có thành phố | Chọn ô của đối thủ |
 | K4 | Rút Động đất | Hạ 1 cấp ô đối thủ |
 | K5 | Rút Vé máy bay | Hiện thẻ, bấm OK rồi đi tới World Tour |
+| K6 | Rút thẻ Tổ chức lễ hội | Dừng ở Chance, hiện thẻ và chờ bấm OK |
+| K6A | Bấm OK thẻ Tổ chức lễ hội | Sau khi xác nhận mới đi tới Championships |
 
 ### Thắng
 

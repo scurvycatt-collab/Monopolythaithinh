@@ -10,7 +10,7 @@
    ============================================================================ */
 (function (root) {
   'use strict';
-  const VERSION = '1.8.1';
+  const VERSION = '1.8.2';
 
   /* ===================== LỚP 1 — THÔNG SỐ ===================== */
   const CONFIG = {
@@ -167,6 +167,7 @@
     island: { desc: 'Đang kẹt ở Lost Island', actions: { roll: 'Ra đôi → thoát và đi luôn; không ra đôi → mất 1 lượt (hết 3 lượt thì tự rời đảo và đi).', payIsland: 'Trả phí rời đảo → về bước roll.', useCard: 'Dùng thẻ Thoát đảo → về bước roll.' } },
     tour: { desc: 'Lượt sau khi dừng ở World Tour', actions: { tour: 'Trả vé, bay tới thành phố chưa có chủ; nếu không còn thành phố trống thì bay tới ô của mình.', skip: 'Không bay → về bước roll.' } },
     flight: { desc: 'Vừa rút thẻ Vé máy bay', actions: { flight: 'Bấm OK trên thẻ → đi tới World Tour → giải quyết ô dừng.' } },
+    hostFestival: { desc: 'Vừa rút thẻ Tổ chức lễ hội', actions: { hostFestival: 'Bấm OK trên thẻ → đi tới Championships → giải quyết ô dừng.' } },
     buy: { desc: 'Dừng ở ô chưa có chủ, đủ tiền mua đất', actions: { buy: 'Mua đất + xây tới cấp chọn (≤ giới hạn vòng) → kiểm tra thắng → kết thúc ô.', skip: 'Không mua → kết thúc ô.' } },
     upgrade: { desc: 'Dừng ở ô của mình (hoặc vừa mua lại) còn nâng cấp được', actions: { upgrade: 'Nâng lên cấp chọn → kết thúc ô.', skip: 'Để sau → kết thúc ô.' } },
     takeover: { desc: 'Vừa trả thuê ô người khác, đủ tiền mua lại', actions: { takeover: 'Trả 2× giá trị cho chủ, nhận nguyên cấp nhà → nếu còn nâng cấp được thì sang upgrade, không thì kết thúc ô.', skip: 'Không mua → kết thúc ô.' } },
@@ -243,6 +244,8 @@
     D('Thẻ Chance', 'K3', 'Rút Cúp điện, đối thủ có thành phố', 'Chọn ô của đối thủ', { pos: 9, dice: [1, 2], card: 'POWER_OUTAGE', props: { 3: ['op', 1] } }, [['roll'], ['card', { tile: 3 }]], { outage: 3 }),
     D('Thẻ Chance', 'K4', 'Rút Động đất', 'Hạ 1 cấp ô đối thủ', { pos: 9, dice: [1, 2], card: 'EARTHQUAKE', props: { 3: ['op', 2] } }, [['roll'], ['card', { tile: 3 }]], { level: [3, 1] }),
     D('Thẻ Chance', 'K5', 'Rút Vé máy bay', 'Hiện thẻ, bấm OK rồi đi tới World Tour', { pos: 17, dice: [1, 2], card: 'FLIGHT_TICKET' }, [['roll'], ['flight']], { pos: 24, tourPending: true }),
+    D('Thẻ Chance', 'K6', 'Rút thẻ Tổ chức lễ hội', 'Dừng ở Chance, hiện thẻ và chờ bấm OK', { pos: 9, dice: [1, 2], card: 'HOST_FESTIVAL' }, [['roll']], { pos: 12, step: 'hostFestival' }),
+    D('Thẻ Chance', 'K6A', 'Bấm OK thẻ Tổ chức lễ hội', 'Sau khi xác nhận mới đi tới Championships', { pos: 9, dice: [1, 2], card: 'HOST_FESTIVAL' }, [['roll'], ['hostFestival']], { pos: 16, step: 'next' }),
     // ---- thắng
     D('Thắng', 'W1', 'Mua ô cuối cùng hoàn thành 3 nhóm màu', 'Thắng ngay', { dice: [1, 2], props: { 1: ['me', 0], 2: ['me', 0], 5: ['me', 0], 6: ['me', 0], 7: ['me', 0], 9: ['me', 0], 10: ['me', 0], 11: ['me', 0] } }, [['roll'], ['buy', { level: 0 }]], { phase: 'over', winner: 'me' }),
     D('Thắng', 'W2', 'Hết thời lượng ván', 'Ván dừng, người có tổng tài sản lớn nhất thắng', { money: 5000, timeUp: true }, [], { phase: 'over', winner: 'me' }),

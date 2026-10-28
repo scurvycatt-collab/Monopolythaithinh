@@ -9,7 +9,7 @@ const SEA = {
   spring: { id: 'spring', ground: '#bde69c', ground2: '#a7da86', ground3: '#d6f2bd', acc: '#f27aa6', particles: 'petals' },
   summer: { id: 'summer', ground: '#8fd06a', ground2: '#7fc35c', ground3: '#a8de8a', acc: '#ffbf1f', particles: 'sun' },
   autumn: { id: 'autumn', ground: '#dcc47a', ground2: '#cdb266', ground3: '#eedb9e', acc: '#f07a2a', particles: 'leaves' },
-  winter: { id: 'winter', ground: '#f1f6fa', ground2: '#dbe6f0', ground3: '#ffffff', acc: '#5aa9e6', particles: 'snow' },
+  winter: { id: 'winter', ground: '#f1f6fa', ground2: '#dbe6f0', ground3: '#ffffff', acc: '#5aa9e6', labelText: '#17212b', labelShadow: '#ffffff', particles: 'snow' },
 };
 const SS = ['spring', 'summer', 'autumn', 'winter'];
 const PL = ['#e53935', '#1e88e5', '#43a047', '#fb8c00', '#8e24aa', '#00acc1'];   // màu trang trí (khán giả, đèn), không phải màu người chơi

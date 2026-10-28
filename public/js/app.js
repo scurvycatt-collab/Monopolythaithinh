@@ -342,6 +342,8 @@ const CARD_LABEL = {
   EARTHQUAKE: 'chọn thành phố của đối thủ để hạ 1 cấp',
   FORCED_SWAP: ['chọn thành phố của bạn mang đi đổi', 'chọn thành phố của đối thủ để đổi lấy'],
 };
+// Các thẻ này phải chờ chính người rút bấm OK; server chỉ sinh chuyển động sau xác nhận.
+const CARD_CONFIRM_ACTION = { FLIGHT_TICKET: 'flight', HOST_FESTIVAL: 'hostFestival' };
 function renderHub() {
   const hub = $('#hub');
   clearPick(); endSell(); syncActive();
@@ -407,10 +409,11 @@ function renderModal() {
   }
   const st = S.step, p = S.players[S.turn];
   if (!myTurn()) { m.classList.remove('show'); m.innerHTML = ''; return; }
-  if (!busy && st && st.kind === 'flight') {
-    const card = G.CARDS.find((x) => x.id === 'FLIGHT_TICKET');
+  const confirmCardId = st && Object.keys(CARD_CONFIRM_ACTION).find((id) => CARD_CONFIRM_ACTION[id] === st.kind);
+  if (!busy && confirmCardId) {
+    const card = G.CARDS.find((x) => x.id === confirmCardId);
     m.innerHTML = sheet('#f5a20a', esc(card.title), 'Chance', `<div class="chance"><p>${esc(card.text)}</p></div>`, '<button class="pill" type="button" id="ok">OK</button>');
-    m.classList.remove('peek'); m.classList.add('show'); $('#ok').onclick = (e) => act('flight', null, e.currentTarget); return;
+    m.classList.remove('peek'); m.classList.add('show'); $('#ok').onclick = (e) => act(st.kind, null, e.currentTarget); return;
   }
   if (busy || !st || !['buy', 'upgrade', 'takeover'].includes(st.kind)) { m.classList.remove('show'); m.innerHTML = ''; return; }
   const col = seatOf[p.id].color;
@@ -678,8 +681,8 @@ async function playOut() {
   timeline.sort((a, b) => a.seq - b.seq);
   for (const event of timeline) {
     if (event.kind === 'card') {
-      // Người rút Vé máy bay xác nhận bằng modal trạng thái `flight`; sau OK server mới tạo bước di chuyển.
-      if (!(event.card.id === 'FLIGHT_TICKET' && isMe(event.card.pid))) await showCard(event.card);
+      // Người rút thẻ có bước xác nhận xem modal cố định; sau OK server mới tạo chuyển động.
+      if (!(CARD_CONFIRM_ACTION[event.card.id] && isMe(event.card.pid))) await showCard(event.card);
       continue;
     }
     const mv = event.move;

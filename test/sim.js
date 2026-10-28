@@ -18,6 +18,7 @@ function randomAction(s) {
       break;
     case 'tour': opts.push(['skip']); if (p.money >= G.CFG.TOUR_FEE) G.tourTargets(s, p).forEach((i) => opts.push(['tour', { tile: i }])); break;
     case 'flight': opts.push(['flight']); break;
+    case 'hostFestival': opts.push(['hostFestival']); break;
     case 'buy': {
       opts.push(['skip']);
       const t = G.TILES[p.pos];
