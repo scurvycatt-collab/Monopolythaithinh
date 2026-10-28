@@ -135,8 +135,9 @@ let MODE = 'local';
 let S = G.createState();  // trạng thái ván (bản công khai từ server, hoặc bản trong máy)
 let seatOf = {};          // id -> { color, pet, corner }
 let me = null;            // chế độ mạng: { id, token } của mình
-let presence = {}, viewers = [], skew = 0, proxySec = 15;
+let presence = {}, viewers = [], chatMessages = [], skew = 0, proxySec = 15;
 let ROOM = '', ROOM_GATE = false, WATCH_MODE = false, pendingJoinName = '', pendingRoomMap = '', joiningRoom = false;
+let chatOpen = !matchMedia('(max-width:760px)').matches, chatLastSeen = '', lastInteractionId = '';
 let boardReadyPromise = null;
 const now = () => Date.now() + skew;   // giờ theo server
 function seatSetup() {
@@ -291,7 +292,13 @@ function renderCards(delay = 0) {
     card.classList.toggle('cur', cur); card.classList.toggle('bk', p.bankrupt);
     card.classList.toggle('dim', S.phase === 'play' && !cur && !p.bankrupt);   // đến lượt ai thì người đó sáng, người khác tối đi
     card.classList.toggle('off', !online(p.id));
-    const av = card.querySelector('.av'); if (p.bankrupt && !av.querySelector('.stamp')) av.insertAdjacentHTML('beforeend', '<span class="stamp">PHÁ SẢN</span>');
+    const av = card.querySelector('.av');
+    const canInteract = MODE === 'net' && !!me && !p.bot && !isMe(p.id);
+    av.classList.toggle('can-interact', canInteract); av.tabIndex = canInteract ? 0 : -1; av.setAttribute('role', canInteract ? 'button' : 'img');
+    av.setAttribute('aria-label', canInteract ? `Tương tác với ${p.name}` : `Nhân vật ${p.name}`);
+    av.onclick = canInteract ? () => showInteractionMenu(p.id, av) : null;
+    av.onkeydown = canInteract ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showInteractionMenu(p.id, av); } } : null;
+    if (p.bankrupt && !av.querySelector('.stamp')) av.insertAdjacentHTML('beforeend', '<span class="stamp">PHÁ SẢN</span>');
     if (!p.bankrupt) av.querySelector('.stamp')?.remove();
     const n = G.ownedBy(S, p.id).length, tags = [`${n} thành phố`];
     if (!online(p.id)) tags.unshift('⚠ mất kết nối');
@@ -486,8 +493,11 @@ const NOTICE = {
   escapeUsed: (mine, n) => `${mine ? 'Bạn đã' : `${n} đã`} sử dụng thẻ Thoát đảo`,
 };
 async function showStatus(text, ms = 1900) {
-  const el = $('#status'); el.innerHTML = `<p>${esc(text)}</p>`;
-  el.classList.add('show'); await sleep(REDUCED ? 1200 : ms); el.classList.remove('show'); await sleep(260);
+  const length = [...String(text)].length;
+  const size = length >= 90 ? 'long' : length >= 55 ? 'medium' : '';
+  const readingMs = Math.min(5200, Math.max(ms, 1350 + length * 34));
+  const el = $('#status'); el.innerHTML = `<p class="${size}">${esc(text)}</p>`;
+  el.classList.add('show'); await sleep(REDUCED ? Math.min(2200, readingMs) : readingMs); el.classList.remove('show'); await sleep(260);
 }
 async function showAchievement(event) {
   const el = $('#achievement'), p = G.byId(S, event.pid), who = isMe(event.pid) ? 'Bạn' : (p ? p.name : 'Một người chơi');
@@ -748,7 +758,7 @@ function connect() {
   source.onerror = () => { if (epoch === connectionEpoch) $('#conn').classList.add('show'); };
   source.onmessage = (e) => {
     if (epoch !== connectionEpoch) return;
-    const d = JSON.parse(e.data); presence = d.presence || {}; viewers = d.viewers || []; proxySec = d.proxySec || 15; skew = d.now - Date.now(); renderWatchBadge();
+    const d = JSON.parse(e.data); presence = d.presence || {}; viewers = d.viewers || []; chatMessages = d.chat || []; proxySec = d.proxySec || 15; skew = d.now - Date.now(); renderWatchBadge(); renderChat(); receiveInteraction(d.interaction);
     if (ROOM_GATE && pendingJoinName && !me && d.state.players.length === 0) { autoJoinRoom(d.state); return; }
     onState(d.state, epoch);
     if (ROOM_GATE) autoJoinRoom(d.state);
@@ -843,12 +853,65 @@ function renderWatchBadge() {
   el.innerHTML = names.map((name) => `<div class="watcher-card${WATCH_MODE && name === lobbyDraftName ? ' me' : ''}"><span class="watcher-eye" aria-hidden="true">👁</span><span><b>${esc(name)}</b><small>Đang theo dõi${WATCH_MODE && name === lobbyDraftName ? ' · bạn' : ''}</small></span></div>`).join('');
   el.classList.toggle('show', names.length > 0);
 }
+const INTERACTION_ITEMS = [
+  ['egg', '🥚', 'Ném trứng'], ['rocket', '🚀', 'Tên lửa'], ['tomato', '🍅', 'Cà chua'], ['pie', '🥧', 'Bánh kem'], ['water', '💧', 'Bóng nước'],
+  ['pillow', '☁️', 'Ném gối'], ['flower', '💐', 'Tặng hoa'], ['gift', '🎁', 'Tặng quà'], ['applause', '👏', 'Vỗ tay'], ['congrats', '🎉', 'Chúc mừng'],
+];
+function showInteractionMenu(pid, anchor) {
+  const targetPlayer = G.byId(S, pid), menu = $('#interaction-menu'); if (!targetPlayer || !me) return;
+  menu.innerHTML = `<header><b>Tương tác với ${esc(targetPlayer.name)}</b><button type="button" aria-label="Đóng">×</button></header><div>${INTERACTION_ITEMS.map(([kind, icon, label]) => `<button type="button" data-kind="${kind}"><i>${icon}</i><span>${label}</span></button>`).join('')}</div>`;
+  const r = anchor.getBoundingClientRect(); menu.style.setProperty('--ax', `${r.left + r.width / 2}px`); menu.style.setProperty('--ay', `${r.top + r.height / 2}px`); menu.classList.add('show');
+  menu.querySelector('header button').onclick = hideInteractionMenu;
+  menu.querySelectorAll('[data-kind]').forEach((button) => { button.onclick = async () => {
+    hideInteractionMenu();
+    try { await api('api/interact', { token: me.token, target: pid, kind: button.dataset.kind }); } catch (e) { toast(e.message); }
+  }; });
+}
+function hideInteractionMenu() { $('#interaction-menu').classList.remove('show'); }
+$('#interaction-menu').addEventListener('click', (e) => { if (e.target.id === 'interaction-menu') hideInteractionMenu(); });
+function receiveInteraction(event) {
+  if (!event || event.id === lastInteractionId || Date.now() - Number(event.at || 0) > 10000) return;
+  lastInteractionId = event.id;
+  const from = document.querySelector(`.pcard[data-p="${CSS.escape(event.from)}"] .av`), to = document.querySelector(`.pcard[data-p="${CSS.escape(event.to)}"] .av`);
+  const item = INTERACTION_ITEMS.find(([kind]) => kind === event.kind); if (!from || !to || !item) return;
+  const a = from.getBoundingClientRect(), b = to.getBoundingClientRect(), x1 = a.left + a.width / 2, y1 = a.top + a.height / 2, x2 = b.left + b.width / 2, y2 = b.top + b.height / 2;
+  const fx = document.createElement('span'); fx.className = `interaction-fly ${event.kind}`; fx.textContent = item[1]; fx.style.left = `${x1}px`; fx.style.top = `${y1}px`; $('#interaction-fx').appendChild(fx);
+  const dx = x2 - x1, dy = y2 - y1, arc = Math.min(150, Math.max(55, Math.hypot(dx, dy) * .22));
+  fx.animate([
+    { transform: 'translate(-50%,-50%) scale(.45) rotate(0deg)', opacity: 0 },
+    { transform: `translate(calc(-50% + ${dx * .5}px),calc(-50% + ${dy * .5 - arc}px)) scale(1.25) rotate(${event.kind === 'rocket' ? 20 : 200}deg)`, opacity: 1, offset: .55 },
+    { transform: `translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) scale(.9) rotate(${event.kind === 'rocket' ? 35 : 380}deg)`, opacity: 1 },
+  ], { duration: event.kind === 'rocket' ? 650 : 900, easing: 'cubic-bezier(.2,.75,.25,1)', fill: 'forwards' }).finished.then(() => {
+    fx.remove(); const card = to.closest('.pcard'); card.classList.add('social-hit');
+    const burst = document.createElement('span'); burst.className = `interaction-burst ${event.kind}`; burst.textContent = ['flower', 'gift', 'applause', 'congrats'].includes(event.kind) ? '✨' : '💥'; burst.style.left = `${x2}px`; burst.style.top = `${y2}px`; $('#interaction-fx').appendChild(burst);
+    setTimeout(() => { burst.remove(); card.classList.remove('social-hit'); }, 900);
+  }).catch(() => fx.remove());
+}
+function renderChat() {
+  const panel = $('#roomchat'), canChat = MODE === 'net' && ROOM_GATE && !!ROOM && (!!me || (WATCH_MODE && lobbyDraftName));
+  panel.classList.toggle('show', canChat); panel.classList.toggle('open', chatOpen); $('#chat-toggle').setAttribute('aria-expanded', String(chatOpen));
+  if (!canChat) return;
+  const newest = chatMessages.length ? chatMessages[chatMessages.length - 1].id : '';
+  if (!chatOpen && newest && newest !== chatLastSeen) $('#chat-unread').classList.add('show');
+  if (chatOpen) { chatLastSeen = newest; $('#chat-unread').classList.remove('show'); }
+  const list = $('#chat-messages'), ownName = me ? (G.byId(S, me.id) || {}).name : lobbyDraftName;
+  list.innerHTML = chatMessages.map((m) => `<article class="${m.name === ownName ? 'mine' : ''}"><b>${esc(m.name)}${m.viewer ? ' · xem' : ''}</b><p>${esc(m.text)}</p></article>`).join('') || '<small>Chưa có tin nhắn</small>';
+  if (chatOpen) requestAnimationFrame(() => { list.scrollTop = list.scrollHeight; });
+}
+$('#chat-toggle').onclick = () => { chatOpen = !chatOpen; renderChat(); };
+$('#chat-form').onsubmit = async (e) => {
+  e.preventDefault(); const input = $('#chat-input'), text = input.value.trim(); if (!text) return;
+  const button = e.currentTarget.querySelector('button'); button.disabled = true;
+  try { await api('api/chat', { token: me && me.token, viewer: !me && WATCH_MODE ? lobbyDraftName : '', text }); input.value = ''; }
+  catch (err) { toast(err.message); } finally { button.disabled = false; input.focus(); }
+};
 const petGrid = (sel, taken, attr) => `<div class="pets">${G.PETS.map((x) => `<button type="button" class="pet${x.id === sel ? ' on' : ''}" ${attr}="${x.id}" ${taken.has(x.id) && x.id !== sel ? 'disabled' : ''} style="--c:${x.c}"><img alt="" src="${petImg(x.id)}"><span>${x.n}</span></button>`).join('')}</div>`;
 const timeRow = (cur, attr) => `<div class="times">${CFG.TIME_OPTIONS.map((m) => `<button type="button" class="pill ${m === cur ? '' : 'ghost'}" ${attr}="${m}">${timeLabel(m)}</button>`).join('')}</div>`;
 const turnRow = (cur, attr) => `<div class="times">${CFG.TURN_OPTIONS.map((v) => `<button type="button" class="pill ${v === cur ? '' : 'ghost'}" ${attr}="${v}">${v} giây</button>`).join('')}</div>`;
 function renderGateMapPreview() {
   const map = MAPS.find((item) => item.id === $('#gmap').value) || MAPS[0];
-  $('#gmap-preview').innerHTML = `<img src="${esc(map.preview)}" alt="Ảnh xem trước ${esc(map.name)}"><span><b>${esc(map.name)}${map.default ? ' (Mặc định)' : ''}</b><small>${esc(map.description)}</small></span>`;
+  const preview = `${map.preview}${map.preview.includes('?') ? '&' : '?'}v=2`;
+  $('#gmap-preview').innerHTML = `<img src="${esc(preview)}" alt="Ảnh xem trước ${esc(map.name)}"><span><b>${esc(map.name)}${map.default ? ' (Mặc định)' : ''}</b><small>${esc(map.description)}</small></span>`;
 }
 function lobbyNet(el) {
   const mine = me && G.byId(S, me.id), amHost = !!mine && S.hostId === mine.id, taken = new Set(S.players.map((p) => p.pet));
@@ -1028,7 +1091,12 @@ function exitRoom() {
   pendingRoomMap = '';
   presence = {};
   viewers = [];
+  chatMessages = [];
+  chatLastSeen = '';
+  lastInteractionId = '';
+  hideInteractionMenu();
   renderWatchBadge();
+  renderChat();
   S = G.createState();
   showRoomGate();
 }

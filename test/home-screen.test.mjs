@@ -21,6 +21,8 @@ assert.doesNotMatch(html, /Chơi cùng gia đình với một room code duy nh�
 assert.match(html, /class="gate-card"/);
 assert.match(html, /id="gmap"/, 'room creation screen must include map selection');
 assert.match(html, /id="gmap-preview"/, 'map selector must include an image preview area');
+assert.match(html, /id="roomchat"/, 'game must expose a left-side room chat window');
+assert.match(html, /id="interaction-menu"/, 'game must expose the player interaction picker');
 assert.match(html, /id="gwatch"/, 'home screen must offer spectator mode');
 assert.match(html, /id="soundbtn"/);
 assert.match(html, /id="music-enabled"/);
@@ -143,7 +145,7 @@ assert.match(app, /timeline\.sort\(\(a, b\) => a\.seq - b\.seq\)/, 'Chance card 
 assert.match(app, /side: THREE\.BackSide/, 'controlled character must have a silhouette glow');
 assert.match(app, /names\.map\(\(name\) => `<div class="watcher-card/, 'the left spectator rail must render one named card per viewer');
 assert.match(app, /Đang theo dõi\$\{WATCH_MODE && name === lobbyDraftName \? ' · bạn' : ''\}/, 'the current spectator card must be identified locally');
-assert.match(css, /#watchbadge\{[^}]*left:calc\(12px[^}]*top:50%/, 'spectator cards must occupy a dedicated rail on the left');
+assert.match(css, /#watchbadge\{[^}]*left:calc\(12px[^}]*bottom:calc\(385px/, 'spectator cards must occupy a dedicated rail above the left chat window');
 assert.match(css, /#watchbadge\.show\{display:flex\}/, 'the spectator rail must support multiple stacked names');
 assert.match(app, /id="lbot">🤖 \+ Thêm bot/, 'the host lobby must offer an add-bot control');
 assert.match(app, /data-remove-bot=/, 'bot seats must expose a host-only remove control');
@@ -179,7 +181,7 @@ assert.match(specials, /const th = ch \* 0\.78, tw = th \* 0\.94, tx = \(cw - tw
 assert.match(specials, /new THREE\.MeshBasicMaterial\(\{ map: tex \}\)/, 'Championships marker must remain bright under every camera-side light');
 assert.match(app, /pendingRoomMap = create \? mapId : ''/, 'only room creation may send the selected map');
 assert.match(app, /function renderGateMapPreview\(\)/, 'map preview must update with the selected map');
-assert.match(app, /src="\$\{esc\(map\.preview\)\}"/, 'map cards must use their registered preview image');
+assert.match(app, /const preview = `\$\{map\.preview\}/, 'map cards must use their registered preview image with an explicit cache version');
 assert.match(app, /#gwatch'\)\.onclick = \(\) => enterRoom\(false, true\)/, 'watch button must enter spectator mode');
 assert.match(app, /fetch\(roomEndpoint\(location\.href, 'api\/watch', room\)/, 'join and spectator modes must read room metadata before loading a board');
 assert.match(app, /loadMapId = mapEntry\(result\.mapId\)\.id/, 'an existing room must load its selected map directly without first building Map 1');

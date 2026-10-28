@@ -56,6 +56,14 @@ async function snapshot(token, viewer) {
   assert.deepStrictEqual([aAgain.id, aAgain.token, aAgain.rejoined], [a.id, a.token, true], 'username cũ + room cũ phải vào lại đúng ghế');
   assert.strictEqual((await post('api/join', { name: 'Mẹ', pet: 'animal-dog' })).status, 400, 'trùng nhân vật phải bị từ chối');
   const b = ok(await post('api/join', { name: 'Mẹ', pet: 'animal-cat' }));
+  ok(await post('api/chat', { token: a.token, text: '  Chào   cả nhà!  ' }));
+  let social = await snapshot();
+  assert.strictEqual(social.chat.at(-1).text, 'Chào cả nhà!', 'chat phải được làm sạch và phát realtime trong phòng');
+  assert.strictEqual(social.chat.at(-1).name, 'Bố', 'server phải lấy tên chat từ token, không tin tên do client gửi');
+  ok(await post('api/interact', { token: a.token, target: b.id, kind: 'egg' }));
+  social = await snapshot();
+  assert.deepStrictEqual([social.interaction.from, social.interaction.to, social.interaction.kind], [a.id, b.id, 'egg'], 'tương tác phải được phát từ người gửi tới đúng người nhận');
+  assert.strictEqual((await post('api/interact', { token: a.token, target: a.id, kind: 'rocket' })).status, 400, 'không được tự tương tác với chính mình');
   ok(await post('api/act', { token: b.token, type: 'pet', data: { pet: 'animal-fox' } }));
   const c0 = ok(await post('api/join', { name: 'Khách', pet: 'animal-panda' }));
   assert.strictEqual((await post('api/act', { token: b.token, type: 'settings', data: { timeLimitMin: 120 } })).status, 403, 'khách không được đổi cấu hình');

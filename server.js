@@ -24,6 +24,7 @@ const PUB = path.join(__dirname, 'public');
 // bản .exe lưu ván vào thư mục data cạnh file .exe
 const DATA_DIR = process.env.DATA_DIR || path.join(PACKED ? path.dirname(process.execPath) : __dirname, 'data');
 const SAVE = path.join(DATA_DIR, 'game.json');
+const CHAT_SAVE = path.join(DATA_DIR, 'chat.json');
 const MANUAL_PROXY_SEC = G.RULES.CONFIG.PROXY_SEC; // người chơi mất kết nối bao lâu thì người khác được bấm "Đi hộ" (bộ luật)
 const EMPTY_ROOM_TTL_MS = 2 * 60 * 1000;
 
@@ -44,10 +45,17 @@ function load() {
 }
 let state = load();
 G.ensureHost(state); // nâng cấp file lưu cũ chưa có hostId
+let chat = [];
+try { chat = JSON.parse(fs.readFileSync(CHAT_SAVE, 'utf8')).slice(-40); } catch (e) { chat = []; }
 function save() {
   const tmp = SAVE + '.tmp';
   fs.writeFileSync(tmp, JSON.stringify(state));
   fs.renameSync(tmp, SAVE);
+}
+function saveChat() {
+  const tmp = CHAT_SAVE + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(chat));
+  fs.renameSync(tmp, CHAT_SAVE);
 }
 
 /* ---------- kết nối thời gian thực (Server-Sent Events) ---------- */
@@ -65,12 +73,15 @@ function presence() {
   return o;
 }
 const viewers = () => [...new Set([...clients].filter((c) => !c.pid && c.viewer).map((c) => c.viewer))];
-const payload = () => `data: ${JSON.stringify({ state: G.publicView(state), presence: presence(), viewers: viewers(), now: Date.now(), proxySec: MANUAL_PROXY_SEC })}\n\n`;
+const INTERACTIONS = new Set(['egg', 'rocket', 'tomato', 'pie', 'water', 'pillow', 'flower', 'gift', 'applause', 'congrats']);
+let interaction = null;
+const interactionAt = new Map();
+const payload = () => `data: ${JSON.stringify({ state: G.publicView(state), presence: presence(), viewers: viewers(), chat, interaction, now: Date.now(), proxySec: MANUAL_PROXY_SEC })}\n\n`;
 function broadcast() { const msg = payload(); for (const c of clients) c.res.write(msg); }
 let emptyTimer = null;
 function deleteEmptyRoom() {
   if (hasOnlinePlayers()) return;
-  state = G.createState(); offlineSince.clear(); conns.clear(); save(); broadcast();
+  state = G.createState(); chat = []; offlineSince.clear(); conns.clear(); save(); saveChat(); broadcast();
 }
 function scheduleEmptyCleanup() {
   clearTimeout(emptyTimer); emptyTimer = null;
@@ -196,6 +207,28 @@ async function handleApi(req, res, url) {
       if (isOnline(p.id)) return sendJSON(res, 409, { error: `${p.name} đang online trên một thiết bị khác` });
       scheduleEmptyCleanup();
       return sendJSON(res, 200, { id: p.id, token: p.token });
+    }
+    if (url.pathname === '/api/chat') {
+      const p = byToken(body.token);
+      const viewer = String(body.viewer || '').replace(/\s+/g, ' ').trim().slice(0, 16);
+      const activeViewer = !p && viewer && viewers().some((name) => name.toLowerCase() === viewer.toLowerCase());
+      if (!p && !activeViewer) return sendJSON(res, 401, { error: 'Bạn cần vào phòng hoặc vào xem trước khi chat' });
+      const text = String(body.text || '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 240);
+      if (!text) return sendJSON(res, 400, { error: 'Tin nhắn đang trống' });
+      chat.push({ id: crypto.randomBytes(8).toString('hex'), name: p ? p.name : viewer, viewer: !p, text, at: Date.now() });
+      chat = chat.slice(-40); saveChat(); broadcast();
+      return sendJSON(res, 200, { ok: true });
+    }
+    if (url.pathname === '/api/interact') {
+      const p = byToken(body.token), target = G.byId(state, body.target), kind = String(body.kind || '');
+      if (!p) return sendJSON(res, 401, { error: 'Chỉ người chơi trong phòng mới dùng được tương tác' });
+      if (!target || target.bot || target.id === p.id) return sendJSON(res, 400, { error: 'Không thể tương tác với người chơi này' });
+      if (!INTERACTIONS.has(kind)) return sendJSON(res, 400, { error: 'Tương tác không hợp lệ' });
+      if (Date.now() - (interactionAt.get(p.id) || 0) < 1800) return sendJSON(res, 429, { error: 'Chờ một chút trước khi gửi tiếp' });
+      interactionAt.set(p.id, Date.now());
+      interaction = { id: crypto.randomBytes(8).toString('hex'), from: p.id, to: target.id, kind, at: Date.now() };
+      broadcast();
+      return sendJSON(res, 200, { ok: true });
     }
     if (url.pathname === '/api/act') {
       const p = byToken(body.token);

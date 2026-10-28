@@ -13,6 +13,7 @@ const EMPTY_ROOM_TTL_MS = 2 * 60 * 1000;
 const enc = new TextEncoder();
 const json = (code, obj) => new Response(JSON.stringify(obj), { status: code, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' } });
 const hex = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, '0')).join('');
+const INTERACTIONS = new Set(['egg', 'rocket', 'tomato', 'pie', 'water', 'pillow', 'flower', 'gift', 'applause', 'congrats']);
 
 export default {
   async fetch(req, env) {
@@ -46,12 +47,16 @@ export class GameRoom extends DurableObject {
     this.clients = new Set();          // { writer, pid }
     this.conns = new Map();            // id người chơi -> số kết nối đang mở
     this.offlineSince = new Map();     // id người chơi -> thời điểm mất kết nối
+    this.chat = [];
+    this.interaction = null;
+    this.interactionAt = new Map();
     this.emptySince = null;
     ctx.blockConcurrencyWhile(async () => {
-      const [saved, emptySince] = await Promise.all([ctx.storage.get('state'), ctx.storage.get('emptySince')]);
+      const [saved, emptySince, chat] = await Promise.all([ctx.storage.get('state'), ctx.storage.get('emptySince'), ctx.storage.get('chat')]);
       const base = G.createState();
       this.state = saved ? Object.assign(base, saved, { settings: Object.assign(base.settings, saved.settings || {}) }) : base;
       G.ensureHost(this.state); // nâng cấp room cũ chưa có hostId
+      this.chat = Array.isArray(chat) ? chat.slice(-40) : [];
       const now = Date.now();
       this.state.players.forEach((p) => this.offlineSince.set(p.id, now));
       if (this.state.players.length) {
@@ -72,7 +77,7 @@ export class GameRoom extends DurableObject {
     return o;
   }
   viewers() { return [...new Set([...this.clients].filter((c) => !c.pid && c.viewer).map((c) => c.viewer))]; }
-  payload() { return `data: ${JSON.stringify({ state: G.publicView(this.state), presence: this.presence(), viewers: this.viewers(), now: Date.now(), proxySec: C.PROXY_SEC })}\n\n`; }
+  payload() { return `data: ${JSON.stringify({ state: G.publicView(this.state), presence: this.presence(), viewers: this.viewers(), chat: this.chat, interaction: this.interaction, now: Date.now(), proxySec: C.PROXY_SEC })}\n\n`; }
   send(c, text) { c.writer.write(enc.encode(text)).catch(() => this.drop(c)); }
   broadcast() { const msg = this.payload(); for (const c of this.clients) this.send(c, msg); }
   async commit() {
@@ -233,6 +238,30 @@ export class GameRoom extends DurableObject {
         if (this.isOnline(p.id)) return json(409, { error: `${p.name} đang online trên một thiết bị khác` });
         await this.startEmptyGrace();
         return json(200, { id: p.id, token: p.token });
+      }
+      if (url.pathname === '/api/chat') {
+        const p = this.byToken(body.token);
+        const viewer = String(body.viewer || '').replace(/\s+/g, ' ').trim().slice(0, 16);
+        const activeViewer = !p && viewer && this.viewers().some((name) => name.toLowerCase() === viewer.toLowerCase());
+        if (!p && !activeViewer) return json(401, { error: 'Bạn cần vào phòng hoặc vào xem trước khi chat' });
+        const text = String(body.text || '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 240);
+        if (!text) return json(400, { error: 'Tin nhắn đang trống' });
+        this.chat.push({ id: hex(8), name: p ? p.name : viewer, viewer: !p, text, at: Date.now() });
+        this.chat = this.chat.slice(-40);
+        await this.ctx.storage.put('chat', this.chat);
+        this.broadcast();
+        return json(200, { ok: true });
+      }
+      if (url.pathname === '/api/interact') {
+        const p = this.byToken(body.token), target = G.byId(s, body.target), kind = String(body.kind || '');
+        if (!p) return json(401, { error: 'Chỉ người chơi trong phòng mới dùng được tương tác' });
+        if (!target || target.bot || target.id === p.id) return json(400, { error: 'Không thể tương tác với người chơi này' });
+        if (!INTERACTIONS.has(kind)) return json(400, { error: 'Tương tác không hợp lệ' });
+        if (Date.now() - (this.interactionAt.get(p.id) || 0) < 1800) return json(429, { error: 'Chờ một chút trước khi gửi tiếp' });
+        this.interactionAt.set(p.id, Date.now());
+        this.interaction = { id: hex(8), from: p.id, to: target.id, kind, at: Date.now() };
+        this.broadcast();
+        return json(200, { ok: true });
       }
       if (url.pathname === '/api/act') {
         const p = this.byToken(body.token);

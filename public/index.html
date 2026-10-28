@@ -51,6 +51,15 @@
 <div id="status" role="alert"></div>
 <div id="achievement" role="alert" aria-live="assertive"></div>
 <div id="watchbadge" aria-live="polite"></div>
+<aside id="roomchat" aria-label="Chat phòng">
+  <button type="button" id="chat-toggle" aria-expanded="true" aria-controls="chat-body"><span>Chat phòng</span><i id="chat-unread" aria-label="Tin nhắn chưa đọc"></i></button>
+  <div id="chat-body">
+    <div id="chat-messages" aria-live="polite"></div>
+    <form id="chat-form"><input id="chat-input" maxlength="240" autocomplete="off" placeholder="Nhập tin nhắn…" aria-label="Tin nhắn"><button type="submit" aria-label="Gửi tin nhắn">Gửi</button></form>
+  </div>
+</aside>
+<div id="interaction-menu" role="dialog" aria-modal="false" aria-label="Chọn tương tác"></div>
+<div id="interaction-fx" aria-hidden="true"></div>
 <div id="sellbox"></div>
 <div id="selltags"></div>
 <div id="gate" role="dialog" aria-modal="true" aria-label="Chọn người chơi và phòng">
