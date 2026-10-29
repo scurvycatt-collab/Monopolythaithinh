@@ -9,6 +9,7 @@ import { colosseum, worldTour, lostIsland, startGate, chanceBox, beachHouse, fes
 import { centerWorld, preloadWorldAssets } from '../../js/world.js';
 import { PROPERTY_THUMBNAIL_VERSION } from '../../thumbnails/property/version.js';
 import { diceRollDuration, diceRollFrame } from '../../js/render-common/dice-roll.js';
+import { TOKEN_HEIGHT, PROPERTY_LEVEL_SCALE } from '../../js/render-common/visual-scale.js';
 const HK = { loadKit, building: houseBuilding, colosseum, worldTour, lostIsland, startGate, chanceBox, beachHouse, festivalFlag, festivalPlaque, preloadSpecialAssets, BEACH_LEVELS };
 
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -478,6 +479,8 @@ export default async function createRenderer(ctx) {
       p = local(i, 0, far ? 0.81 : -0.81);
     } else { grp.add(graphicsLevel === 'low' ? lowDetailBuilding(pr.level, hex) : HK.building('suburb', pr.level, hex)); p = local(i, 0, lay(i).grassZ); }
     // mặt tiền luôn hướng về dải xám (phía người nhìn)
+    const visualLevel = t.type === 'resort' ? Math.max(1, beachLevel(pr.owner)) : pr.level;
+    grp.scale.multiplyScalar(PROPERTY_LEVEL_SCALE[visualLevel] || 1);
     grp.position.set(p.x, TOPY, p.z); grp.rotation.y = tileFrame(i).rot + (far ? Math.PI : 0);
     return grp;
   }
@@ -579,8 +582,7 @@ export default async function createRenderer(ctx) {
 
   /* quân cờ: thú khối */
   const FACE_CAM = Math.PI / 4; // quay mặt về phía người nhìn
-  // Mọi nhân vật dùng cùng chiều cao hiển thị; 1.08 = kích thước cũ xấp xỉ 0.9, tăng 20%.
-  const TOKEN_HEIGHT = 1.08;
+  // TOKEN_HEIGHT lấy từ chuẩn thị giác chung, nguồn chuẩn là tỷ lệ Map 1.
   const tokens = {};
   function tokenSpot(pid, pos) {
     const here = S.players.filter((p) => !p.bankrupt && (dispPos[p.id] ?? p.pos) === pos);

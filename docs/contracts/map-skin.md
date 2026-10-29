@@ -1,5 +1,14 @@
 # Contract: Map Skin (khung xương 2D)
 
+## Ranh giới dữ liệu hiển thị
+
+- Giá, tiền thuê, nhóm màu, loại ô và mọi luật thuộc dữ liệu chung theo index
+  trong `TILES`; skin không được sao chép hoặc ghi đè.
+- Tên địa danh được thay theo chủ đề bằng `MAPS[].tileNames[index]`. Renderer/UI
+  dùng tên này để hiển thị, engine vẫn định danh ô và tính tiền bằng index.
+- Map mới phải hoàn tất [`map-build-checklist.md`](./map-build-checklist.md)
+  trước khi commit/deploy.
+
 Mọi map 2D mới = **khung xương chung** + **một skin**. Khung xương (`public/js/render-common/board2d/`) lo hình học bàn, camera, quân cờ, xúc xắc, hoạt ảnh, sở hữu, lễ hội, mất điện, overlay, và hiện thực sẵn `docs/contracts/map-renderer.md`. Skin chỉ khai báo **trông như thế nào**.
 
 Người làm map chỉ đọc file này + `public/js/render-common/board2d/PEN.md` (bút vẽ). Không đọc code khung xương.

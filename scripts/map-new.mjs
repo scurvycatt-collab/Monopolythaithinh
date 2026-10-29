@@ -177,7 +177,8 @@ Bước tiếp theo:
   1. Sửa ${rel(path.join(dir, 'skin.js'))} (thay từng slot có chú thích "THAY:"), docs/contracts/map-skin.md, public/js/render-common/board2d/PEN.md.
   2. Điền ${rel(path.join(dir, 'README.md'))}; làm lại ${rel(path.join(dir, 'preview.svg'))}.
   3. Xem thử: PORT=3100 node server.js, mở http://localhost:3100, tạo phòng và chọn map "${name}".
-  4. Kiểm tra docs/contracts/map-parity.md rồi chạy npm run verify trước khi commit. Dọn khi thử xong: npm run map:new -- --remove ${id}`);
+  4. Hoàn tất toàn bộ docs/contracts/map-build-checklist.md và docs/contracts/map-parity.md.
+  5. Chạy npm run verify, chụp ảnh review thực tế và chỉ commit/deploy sau khi được duyệt. Dọn khi thử xong: npm run map:new -- --remove ${id}`);
 }
 
 function doRemove(o) {

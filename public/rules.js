@@ -167,13 +167,34 @@
     { id: 'ben10-02-rook', n: 'Rook', c: '#38d79b', img: 'maps/ben-10-02/assets/characters/rook.png' },
   ];
 
+  // Tên là lớp trình bày theo map, được ánh xạ bằng index. Giá, tiền thuê,
+  // nhóm monopoly và loại ô vẫn chỉ có một nguồn duy nhất là TILES[index].
+  const HANOI_TILE_NAMES = [
+    'Hồ Gươm', 'Ba Đình', 'Hoàn Kiếm', 'Hai Bà Trưng', 'Hồ Tây', 'Đống Đa', 'Cầu Giấy', 'Tây Hồ',
+    'Đảo Giữa Hồ', 'Long Biên', 'Hà Đông', 'Thanh Xuân', 'Cơ Hội', 'Nam Từ Liêm', 'Đường Lâm', 'Bắc Từ Liêm',
+    'Lễ Hội Hà Nội', 'Gia Lâm', 'Bát Tràng', 'Đông Anh', 'Cơ Hội', 'Sóc Sơn', 'Mê Linh', 'Sơn Tây',
+    'Du Ngoạn Hà Nội', 'Ba Vì', 'Thanh Trì', 'Hoài Đức', 'Cơ Hội', 'Quốc Oai', 'Thuế Đô Thị', 'Phúc Thọ',
+  ];
+  const BEN10_TILE_NAMES = [
+    'Hero Start', 'Bellwood', 'Undertown', 'Plumber HQ', 'Galvan Prime', 'Khoros', 'Kylmyys', 'Pyros',
+    'Null Void', 'Ledgerdomain', 'Anur Transyl', 'Anur Phaetos', 'Omnitrix Chance', 'Petropia', 'Piscciss', 'Galvan Mark II',
+    'Galactic Cup', 'Revonnah', 'Aldabra', 'Terradino', 'Omnitrix Chance', 'Encephalonus IV', 'Turrawuste', 'Xenon',
+    'Plumber Tour', 'Primus', 'Aranhascimmia', 'Hathor', 'Omnitrix Chance', 'Osmos V', 'Plumber Tax', 'Luna Lobo',
+  ];
+  const BEN10_SPACE_TILE_NAMES = [
+    'Omnitrix Start', 'Bellwood Orbit', 'Undertown Station', 'Plumber Command', 'Galvan Prime', 'Khoros Forge', 'Kylmyys', 'Pyros',
+    'Null Void', 'Ledgerdomain', 'Anur Transyl', 'Anur Phaetos', 'Omnitrix Charge', 'Petropia', 'Piscciss', 'Galvan Mark II',
+    'Galactic Championship', 'Revonnah', 'Aldabra', 'Terradino', 'Omnitrix Charge', 'Encephalonus IV', 'Turrawuste', 'Xenon',
+    'Plumber Tour', 'Primus', 'Aranhascimmia', 'Hathor', 'Omnitrix Charge', 'Osmos V', 'Plumber Tax', 'Luna Lobo',
+  ];
+
   // Danh sách map có thể chọn trong room. Map hiện tại là map mặc định;
   // thêm map mới vào đây trước khi nối renderer/asset tương ứng.
   const MAPS = [
     { id: 'map-1', name: 'Map 1', description: 'Bản đồ Thái Thịnh mặc định', preview: 'maps/map-1/preview.svg', renderer: 'maps/map-1/renderer.js', default: true },
-    { id: 'four-seasons', name: 'Bốn Mùa', description: 'Mỗi cạnh một mùa: Xuân, Hạ, Thu, Đông. Hội chợ bốn mùa và đài phun nước giữa bàn. Bàn 2D nhẹ, hợp máy yếu.', preview: 'maps/four-seasons/preview.svg', renderer: 'maps/four-seasons/renderer.js' },
-    { id: 'ben-10', name: 'Map 3: Ben10', description: 'Căn cứ Plumber thống nhất, trung tâm Omnitrix và bốn bộ công trình riêng cho Ben, Gwen, Kevin, Ông Max.', preview: 'maps/ben-10/preview.svg', renderer: 'maps/ben-10/renderer.js', pets: BEN10_PETS },
-    { id: 'ben-10-02', name: 'Map 4: Ben10-02', description: 'Phiên bản không gian: Omnitrix phát sáng giữa bốn khu hành tinh, bộ riêng Ben, Gwen, Kevin và Rook.', preview: 'maps/ben-10-02/preview.svg', renderer: 'maps/ben-10-02/renderer.js', pets: BEN10_SPACE_PETS },
+    { id: 'four-seasons', name: 'Bốn Mùa Hà Nội', description: 'Hà Nội qua bốn mùa: Xuân, Hạ, Thu, Đông. Hội chợ bốn mùa và đài phun nước giữa bàn. Bàn 2D nhẹ, hợp máy yếu.', preview: 'maps/four-seasons/preview.svg', renderer: 'maps/four-seasons/renderer.js', tileNames: HANOI_TILE_NAMES },
+    { id: 'ben-10', name: 'Map 3: Ben10', description: 'Căn cứ Plumber thống nhất, trung tâm Omnitrix và bốn bộ công trình riêng cho Ben, Gwen, Kevin, Ông Max.', preview: 'maps/ben-10/preview.webp', renderer: 'maps/ben-10/renderer.js', pets: BEN10_PETS, tileNames: BEN10_TILE_NAMES },
+    { id: 'ben-10-02', name: 'Map 4: Ben10-02', description: 'Phiên bản không gian: Omnitrix phát sáng giữa bốn khu hành tinh, bộ riêng Ben, Gwen, Kevin và Rook.', preview: 'maps/ben-10-02/preview.webp', renderer: 'maps/ben-10-02/renderer.js', pets: BEN10_SPACE_PETS, tileNames: BEN10_SPACE_TILE_NAMES },
   ];
 
   /* ===================== LỚP 2 — SƠ ĐỒ TRẠNG THÁI ===================== */

@@ -23,6 +23,7 @@ if (/[?&]low\b/.test(location.search)) graphicsLevel = 'low'; // tương thích 
 const money = (n) => Math.round(n * 1000).toLocaleString('vi-VN');
 const shortK = (n) => (n >= 1000 ? (n / 1000).toFixed(n % 1000 ? 1 : 0).replace('.', ',') + 'M' : n + 'K');
 const outageRounds = (i) => Math.max(0, Number(S.outage && S.outage[i] || 0) - Number(S.round || 0));
+const tileName = (i) => G.tileName(S, i);
 
 /* ---------------- âm thanh ---------------- */
 const SOUND_KEY = 'tt-monopoly-sound-v1';
@@ -382,7 +383,7 @@ function renderCards(delay = 0) {
     card.querySelector('small').textContent = tags.join(' · ');
     const powerCuts = G.ownedBy(S, p.id).filter((i) => G.outaged(S, i));
     const power = card.querySelector('.power');
-    power.textContent = powerCuts.length ? `⚡ Mất điện · ${powerCuts.map((i) => `${TILES[i].name}: ${outageRounds(i)} vòng`).join(' · ')}` : '';
+    power.textContent = powerCuts.length ? `⚡ Mất điện · ${powerCuts.map((i) => `${tileName(i)}: ${outageRounds(i)} vòng`).join(' · ')}` : '';
     power.classList.toggle('show', powerCuts.length > 0);
     if (target[p.id] === undefined) { target[p.id] = shown[p.id] = p.money; moneyEl(p.id).textContent = money(Math.max(0, p.money)); return; }
     if (Math.abs(target[p.id] - p.money) > 1e-6) {
@@ -465,7 +466,7 @@ function renderHub() {
   if (st.kind === 'debt') startSell(p);
   if (st.kind === 'card') {
     const lb = CARD_LABEL[st.card], label = Array.isArray(lb) ? lb[st.stage - 1] : lb;
-    setPick('card', new Set(st.tiles), (i) => { clearPick(); act('card', { tile: i }); }, `${esc(p.name)}: ${label}${st.stage === 2 ? ` (${esc(TILES[st.mine].name)})` : ''}`, 'Bỏ qua');
+    setPick('card', new Set(st.tiles), (i) => { clearPick(); act('card', { tile: i }); }, `${esc(p.name)}: ${label}${st.stage === 2 ? ` (${esc(tileName(st.mine))})` : ''}`, 'Bỏ qua');
   }
   renderModal();
 }
@@ -530,7 +531,7 @@ function renderModal() {
       <div class="sum"><div>Tiền thuê<strong>${money(rentAt(pickLevel))}</strong></div><div style="text-align:right">Bạn có<strong>${money(p.money)}</strong></div></div>
       ${resort || pickLevel >= CFG.LANDMARK ? '' : `<div class="kv"><span>Giá mua lại</span><b>${money(G.value(i, pickLevel) * CFG.BUYOUT_MULT)}</b></div>`}`;
     const verb = st.kind === 'buy' ? 'Mua với giá' : cur === 3 ? 'Xây khách sạn ·' : 'Nâng cấp ·';
-    m.innerHTML = sheet(t.group ? GROUPS[t.group].color : RESORT_COLOR, esc(t.name), esc(t.group ? GROUPS[t.group].name : 'Bãi biển'), body,
+    m.innerHTML = sheet(t.group ? GROUPS[t.group].color : RESORT_COLOR, esc(tileName(i)), esc(t.group ? GROUPS[t.group].name : 'Bãi biển'), body,
       `<button class="pill ghost" type="button" id="no">${st.kind === 'buy' ? 'Không mua' : 'Để sau'}</button><button class="pill" type="button" id="yes" ${can(pickLevel) ? '' : 'disabled'}>${verb} ${money(price)}</button>`);
     m.querySelectorAll('[data-l]').forEach((b) => { b.onclick = () => { const l = Number(b.dataset.l); if (can(l)) { pickLevel = l; renderModal(); } }; });
     $('#no').onclick = (e) => act('skip', null, e.currentTarget);
@@ -538,7 +539,7 @@ function renderModal() {
   } else if (st.kind === 'takeover') {
     const pr = S.props[st.tile], owner = G.byId(S, pr.owner);
     const imageUrl = propertyThumbnail('city', pr.level, seatOf[owner.id].color, owner.pet);
-    m.innerHTML = sheet('#f5a20a', 'Mua lại?', `${esc(TILES[st.tile].name)} của ${esc(owner.name)}`, `<div class="tinfo"><div class="pic"><img alt="" src="${imageUrl}"></div><div>
+    m.innerHTML = sheet('#f5a20a', 'Mua lại?', `${esc(tileName(st.tile))} của ${esc(owner.name)}`, `<div class="tinfo"><div class="pic"><img alt="" src="${imageUrl}"></div><div>
       <p style="margin:2px 0 6px">Nhận luôn <b>${G.LEVEL_NAMES[pr.level]}</b></p>
       <div class="kv"><span>Giá mua lại</span><b>${money(st.price)}</b></div><div class="kv"><span>Bạn có</span><b>${money(p.money)}</b></div>
       </div></div>`,
@@ -564,8 +565,8 @@ const NOTICE = {
   cantPay: (mine, n) => (mine ? 'Bạn không có đủ tiền thanh toán' : `${n} không có đủ tiền thanh toán`),
   noTakeover: (mine, n) => (mine ? 'Bạn không có đủ tiền mua tài sản này' : `${n} không có đủ tiền mua tài sản này`),
   tour: (mine, n) => (mine ? `World Tour! Lượt sau bạn được bay tới ${G.RULES.RULE_TEXT.TOUR_DESTINATION}` : `${n} tới World Tour — lượt sau được bay tới ${G.RULES.RULE_TEXT.TOUR_DESTINATION}`),
-  festival: (mine, n, x) => `Lễ hội ở ${TILES[x.tile].name}! Tiền thuê x${x.mult}`,
-  vipUsed: (mine, n, x) => `${mine ? 'Bạn đã' : `${n} đã`} sử dụng thẻ miễn tiền thuê tại ${TILES[x.tile].name} — miễn ${money(x.amount)}`,
+  festival: (mine, n, x) => `Lễ hội ở ${tileName(x.tile)}! Tiền thuê x${x.mult}`,
+  vipUsed: (mine, n, x) => `${mine ? 'Bạn đã' : `${n} đã`} sử dụng thẻ miễn tiền thuê tại ${tileName(x.tile)} — miễn ${money(x.amount)}`,
   escapeUsed: (mine, n) => `${mine ? 'Bạn đã' : `${n} đã`} sử dụng thẻ Thoát đảo`,
 };
 async function showStatus(text, ms = 1900) {
@@ -577,7 +578,7 @@ async function showStatus(text, ms = 1900) {
 }
 async function showAchievement(event) {
   const el = $('#achievement'), p = G.byId(S, event.pid), who = isMe(event.pid) ? 'Bạn' : (p ? p.name : 'Một người chơi');
-  const missing = (event.missing || []).map((i) => TILES[i] && TILES[i].name).filter(Boolean).join(', ');
+  const missing = (event.missing || []).map((i) => TILES[i] && tileName(i)).filter(Boolean).join(', ');
   let icon = '🏆', title = 'MONOPOLY!', detail = `${who} đã hoàn thành một Monopoly.`;
   if (event.kind === 'monopoly') detail = `${who} hoàn thành độc quyền ${GROUPS[event.group] ? GROUPS[event.group].name : 'một vùng'}.`;
   if (event.kind === 'tripleReady') { icon = '⚠️'; title = 'SẮP THẮNG!'; detail = `${who} đã có 2/3 Monopoly — chỉ còn một vùng để thắng Triple Monopoly.`; }
@@ -693,7 +694,7 @@ function showInfo(i) {
       ${pr ? `<div class="kv"><span>Tiền thuê hiện tại</span><b>${money(G.rentOf(S, i))}</b></div>` : ''}
     </div></div>`;
   } else {
-    const fest = S.festival !== null && S.festival !== undefined ? `Hiện đang có lễ hội x${G.festMult(S)} ở ${esc(TILES[S.festival].name)}.` : 'Hiện chưa có lễ hội nào.';
+    const fest = S.festival !== null && S.festival !== undefined ? `Hiện đang có lễ hội x${G.festMult(S)} ở ${esc(tileName(S.festival))}.` : 'Hiện chưa có lễ hội nào.';
     const nextMult = CFG.FEST_MULT[Math.min(CFG.FEST_MULT.length - 1, (S.festLevel || 0) + 1)];
     const taxNow = p ? Math.max(CFG.TAX_MIN, Math.round(G.taxBase(S, p) * CFG.TAX_RATE / 10) * 10) : 0;
     const info = G.RULES.TILE_INFO[t.type];
@@ -712,7 +713,7 @@ function showInfo(i) {
     body = `<ul class="rules">${lines.map((x) => `<li>${x}</li>`).join('')}</ul>`;
   }
   const el = $('#info');
-  el.innerHTML = `<div class="sheet" style="--rc:${color}"><div class="ribbon">${esc(t.type === 'chance' ? 'CHANCE' : t.name.toUpperCase())}<small>${sub}</small></div>${xBtn}
+  el.innerHTML = `<div class="sheet" style="--rc:${color}"><div class="ribbon">${esc(t.type === 'chance' ? 'CHANCE' : tileName(i).toUpperCase())}<small>${sub}</small></div>${xBtn}
     <div class="body">${body}${notes.length ? `<div style="margin-top:10px">${notes.map((n) => `<p class="note" style="margin:4px 0">${n}</p>`).join('')}</div>` : ''}</div></div>`;
   el.classList.add('show');
   $('#infox').onclick = hideInfo; $('#infox').focus();

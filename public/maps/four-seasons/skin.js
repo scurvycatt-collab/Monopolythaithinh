@@ -396,5 +396,9 @@ export default defineSkin({
     },
   },
   ambient: { animate: { fountain: fountainFx } },
-  labels: { resortLevels: ['Lều trại', 'Trại có hiên', 'Nhà gỗ', 'Glamping'] },
+  labels: {
+    start: 'HỒ GƯƠM', island: 'ĐẢO GIỮA HỒ', festival: 'LỄ HỘI HÀ NỘI',
+    tour: 'DU NGOẠN HÀ NỘI', chance: 'CƠ HỘI', tax: 'THUẾ ĐÔ THỊ',
+    resortLevels: ['Lều trại', 'Trại có hiên', 'Nhà gỗ', 'Glamping'],
+  },
 });

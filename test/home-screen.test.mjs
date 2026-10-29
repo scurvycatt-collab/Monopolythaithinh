@@ -6,6 +6,7 @@ const css = fs.readFileSync(new URL('../public/style.css', import.meta.url), 'ut
 const appOnly = fs.readFileSync(new URL('../public/js/app.js', import.meta.url), 'utf8');
 // T06: phần vẽ 3D chuyển sang renderer của map-1; các kiểm tra mã nguồn bên dưới đọc cả hai file.
 const mapRenderer = fs.readFileSync(new URL('../public/maps/map-1/renderer.js', import.meta.url), 'utf8');
+const visualScale = fs.readFileSync(new URL('../public/js/render-common/visual-scale.js', import.meta.url), 'utf8');
 const app = appOnly + '\n' + mapRenderer;
 const houses = fs.readFileSync(new URL('../public/js/houses.js', import.meta.url), 'utf8');
 const specials = fs.readFileSync(new URL('../public/js/specials.js', import.meta.url), 'utf8');
@@ -49,7 +50,10 @@ assert.match(css, /@media \(max-width:850px\)\{#gate\{[^}]*overflow-x:hidden;ove
 const gateFirst = app.indexOf("if (MODE === 'net' && ROOM_GATE) { showRoomGate(); return; }");
 const prepareAfterGate = app.indexOf('await prepareBoard();', gateFirst);
 assert.ok(gateFirst >= 0 && prepareAfterGate > gateFirst, 'cloud home must return before preparing the 3D board');
-assert.match(app, /const TOKEN_HEIGHT = 1\.08;/, 'all characters must share the enlarged token height');
+assert.match(visualScale, /TOKEN_HEIGHT = 1\.08;/, 'all characters must share the enlarged token height');
+assert.match(mapRenderer, /visual-scale\.js/, 'Map 1 must consume the shared visual scale');
+assert.match(visualScale, /PROPERTY_LEVEL_SCALE/, 'all property levels must share the Map 1 scale standard');
+assert.match(visualScale, /PROPERTY_TILE_RATIO/, 'property size must be expressed relative to its tile');
 assert.match(app, /place\(seatOf\[p\.id\]\.pet, TOKEN_HEIGHT, \{ byHeight: true \}\)/, 'tokens must be normalized by height');
 assert.match(app, /Đến lượt bạn!/);
 assert.match(app, /MODE === 'net' && !isMe\(p\.id\)/, 'network clients must not announce another player turn');

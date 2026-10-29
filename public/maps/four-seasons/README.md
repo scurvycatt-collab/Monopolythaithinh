@@ -1,4 +1,8 @@
-# Bốn Mùa (2D, khung xương board2d)
+# Bốn Mùa Hà Nội (2D, khung xương board2d)
+
+Tên 32 ô là lớp hiển thị Hà Nội trong `MAPS[].tileNames[index]`. Giá, tiền thuê,
+nhóm monopoly và luật vẫn lấy duy nhất từ `TILES[index]`, nên skin không làm lệch
+kinh tế so với các map khác.
 
 Bàn isometric vẽ bằng canvas 2D. Mỗi cạnh một mùa: 0 Xuân, 1 Hạ, 2 Thu, 3 Đông.
 Giữa bàn là hội chợ bốn mùa (chợ hoa Tết, bãi thả diều, phố đèn lồng, chợ Giáng sinh) quanh đài phun 3 tầng.

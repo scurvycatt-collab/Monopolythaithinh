@@ -185,11 +185,23 @@ function centerGround(g, c) {
 
 function biome(pen, c) {
   const add = (u, v, fn, d = 0) => { const [x, z] = c.toWorld(u, v); c.add(x, z, (p) => fn(p, x, z), d); };
-  const tower = (p, x, z, col, h) => { p.ellipseShadow(x, z, 0.28, 0.13); p.box(x - 0.18, 0, z - 0.18, 0.36, h, 0.36, '#293d36', { top: '#40564d', edge: null }); p.box(x - 0.13, h * 0.3, z + 0.182, 0.26, 0.12, 0.02, col, { edge: null }); p.box(x - 0.13, h * 0.62, z + 0.182, 0.26, 0.12, 0.02, col, { edge: null }); };
-  if (c.zone.id === 'bellwood') { add(-1.65, 4.0, (p, x, z) => tower(p, x, z, '#9cff2e', 0.95)); add(1.35, 4.6, (p, x, z) => tower(p, x, z, '#83e3ba', 0.68)); }
-  if (c.zone.id === 'pyronite') { add(-1.5, 4.1, (p, x, z) => { p.cyl(x, 0, z, 0.42, 0.5, '#3a3530'); p.flatEllipse(x, 0.52, z, 0.36, 0.28, '#ff762d'); p.cone(x, 0.52, z, 0.18, 0.5, '#ffd04c'); }); add(1.45, 4.7, (p, x, z) => tower(p, x, z, '#ff7a2e', 0.72)); }
-  if (c.zone.id === 'petropia') { add(-1.65, 4.15, (p, x, z) => { p.cyl(x, 0, z, 0.44, 0.28, '#27434a'); p.flatEllipse(x, 0.3, z, 0.38, 0.28, '#58e8ff'); crystal(p, x, z, 0.92, '#8df4ff'); }); add(1.3, 4.75, (p, x, z) => tower(p, x, z, '#58e8ff', 0.64)); }
-  if (c.zone.id === 'null-void') { add(-1.55, 4.15, (p, x, z) => { energyRing(p, x, 0.03, z, 0.48, '#c765ff', 10); p.line3([[x - 0.38, 0.08, z], [x, 0.9, z], [x + 0.38, 0.08, z]], '#c765ff', 0.07); p.ball(x, 0.78, z, 0.13, '#f0b5ff'); }); add(1.4, 4.7, (p, x, z) => tower(p, x, z, '#c765ff', 0.72)); }
+  const landmark = (name, h) => (p, x, z) => p.img(name, x, z, h);
+  if (c.zone.id === 'bellwood') {
+    add(-1.55, 3.72, landmark('bellwood', 3.65), .2);
+    add(1.55, 4.75, (p, x, z) => alienTree(p, x, z, 1.15), .05);
+  }
+  if (c.zone.id === 'pyronite') {
+    add(-1.55, 3.72, landmark('pyron', 3.65), .2);
+    add(1.55, 4.75, (p, x, z) => flameVent(p, x, z, 1.15), .05);
+  }
+  if (c.zone.id === 'petropia') {
+    add(-1.55, 3.72, landmark('petropia', 3.65), .2);
+    add(1.55, 4.75, (p, x, z) => crystal(p, x, z, .85, '#8df4ff'), .05);
+  }
+  if (c.zone.id === 'null-void') {
+    add(-1.55, 3.72, landmark('nullvoid', 3.7), .2);
+    add(1.55, 4.75, (p, x, z) => { energyRing(p, x, .03, z, .42, '#c765ff', 10); p.ball(x, .62, z, .13, '#f0b5ff'); }, .05);
+  }
 }
 
 function omnitrixCore(p) {
@@ -206,6 +218,10 @@ function energyFx(p, t) {
 export default defineSkin({
   id: 'ben-10',
   packs: [],
+  sprites: {
+    bellwood: 'assets/landmarks/bellwood.png', pyron: 'assets/landmarks/pyron.png',
+    petropia: 'assets/landmarks/petropia.png', nullvoid: 'assets/landmarks/nullvoid.png',
+  },
   cityLabelBand: 0.18,
   palette: {
     groups: { A: '#a8ef45', B: '#4dd47a', C: '#32c6b7', D: '#45a8df', E: '#6775e8', F: '#a55cdf', G: '#e65d9c', H: '#ff8b38' },

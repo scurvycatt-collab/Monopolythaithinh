@@ -6,6 +6,7 @@
 import { Pen, P, CX, CY, swapPen, bake, canvas, fitText, shade, mix, light, rgb, rng, hash, wp, FONT } from './pen.js';
 import { loadAssets, composeKit } from './assets.js';
 import { diceRollDuration, diceRollFrame } from '../dice-roll.js';
+import { TOKEN_HEIGHT, PROPERTY_LEVEL_SCALE, PROPERTY_TILE_RATIO } from '../visual-scale.js';
 
 const REDUCED = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -19,7 +20,6 @@ const regionOf = (x, z) => (z >= Math.abs(x) ? 0 : -x > Math.abs(z) ? 1 : -z >= 
 const CORNER_LABEL = { start: [0.5, 0.5, 90, 0.92], island: [0.7, 0.8, 33, 0.5], festival: [0.7, 0.78, 33, 0.62], tour: [0.7, 0.78, 33, 0.62] };
 const DEFAULT_LABELS = { start: 'START', island: 'LOST ISLAND', festival: 'CHAMPIONSHIPS', tour: 'WORLD TOUR', chance: 'CHANCE', tax: 'TAX', hotel: 'HOTEL', resort: 'RESORT' };
 const SELL_MS = 380, BUILD_MS = 760, REBUILD_GAP = 420;   // hoạt ảnh bán / xây nhà
-const TOKEN_HEIGHT = 1.08; // parity Map 1: mọi nhân vật cùng chiều cao hiển thị
 const CONFETTI = ['#ff6fa0', '#ffc23a', '#5cc6e8', '#7fd6a0', '#a98af0', '#ffffff'];
 const shortK = (n) => (n >= 1000 ? (n / 1000).toFixed(n % 1000 ? 1 : 0).replace('.', ',') + 'M' : n + 'K');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -38,6 +38,8 @@ const raw = (pen) => (pen.swapped ? pen.raw : pen);
 
 export async function createBoard2D(ctx, skin) {
   const R = ctx.rules, G = ctx.game, TILES = R.TILES, CFG = R.CONFIG, PETS = G.petsForMap ? G.petsForMap(skin.id) : (R.PETS || []);
+  const MAP = (R.MAPS || []).find((m) => m.id === skin.id);
+  const displayName = (i) => (MAP && MAP.tileNames && MAP.tileNames[i]) || TILES[i].name;
   const cv = ctx.canvas, g = cv.getContext('2d');
   const SL = skin.slots, ZONES = skin.zones, LB = { ...DEFAULT_LABELS, ...skin.labels };
   let Q = QUALITY[ctx.quality] ? ctx.quality : 'high', q = QUALITY[Q];
@@ -62,10 +64,10 @@ export async function createBoard2D(ctx, skin) {
     for (let n = 0; n < 16; n++) { c2.globalAlpha = 0.55; c2.fillStyle = r() < 0.5 ? (p.ground2 || shade(p.ground, 0.93)) : (p.ground3 || light(p.ground, 0.25)); const ww = 8 + r() * 26; c2.fillRect(x + r() * w, y + r() * h, ww, ww * 0.6); }
     c2.globalAlpha = 1;
   };
-  const U = { rng, hash, shade, mix, light, wp, font: FONT, layer: () => new Layer(), grass, fitText };
+  const U = { rng, hash, shade, mix, light, wp, font: FONT, layer: () => new Layer(), grass, fitText, propertyRatio: PROPERTY_TILE_RATIO };
   function cOf(i, extra = {}) {
     const t = TILES[i], f = frame(i), z = zoneOf(i);
-    return { ...U, tile: i, type: t.type, group: t.group, name: t.name, side: f.side, zone: z, zones: zonesOf(i), seed: i * 3 + 1,
+    return { ...U, tile: i, type: t.type, group: t.group, name: displayName(i), side: f.side, zone: z, zones: zonesOf(i), seed: i * 3 + 1,
       w: f.corner ? C3 : TW, d: f.corner ? C3 : TD, gz: GZ, strip: STRIP, palette: palOf(z), grass: (c2, x, y, w, h, s = i * 3 + 1, zz = z) => grass(c2, x, y, w, h, s, zz), ...extra };
   }
   const slotOf = (t) => ({ city: 'tile', resort: 'resort', chance: 'chance', tax: 'tax', start: 'start', island: 'island', festival: 'festival', tour: 'tour' }[t.type]);
@@ -123,7 +125,7 @@ export async function createBoard2D(ctx, skin) {
     if (f.corner) {
       const c = cOf(i), cw = Math.round(C3 * PX), tex = canvas(cw, cw), c2 = tex.getContext('2d');
       if (slot.paint) slot.paint(c2, { ...c, cw, ch: cw, px: PX }); else grass(c2, 0, 0, cw, cw, i, c.zones[1]);
-      const [lx, ly, ls, lw] = slot.label || CORNER_LABEL[t.type]; if (slot.label !== false) fitText(c2, LB[t.type] || t.name.toUpperCase(), cw * lx, cw * ly, ls, cw * lw, -Math.PI / 4, c.palette.labelText || '#fff', c.palette.labelShadow);
+      const [lx, ly, ls, lw] = slot.label || CORNER_LABEL[t.type]; if (slot.label !== false) fitText(c2, LB[t.type] || displayName(i).toUpperCase(), cw * lx, cw * ly, ls, cw * lw, -Math.PI / 4, c.palette.labelText || '#fff', c.palette.labelShadow);
       return tex;
     }
     const c = cOf(i), tex = canvas(TW * PX, TD * PX), c2 = tex.getContext('2d'), cw = tex.width, ch = tex.height, gH = Math.round(ch * GR), sH = ch - gH, pal = c.palette;
@@ -136,7 +138,7 @@ export async function createBoard2D(ctx, skin) {
     if (t.price) {
       const nameInk = cityBandH ? contrastOn(band) : pal.labelText || '#fff';
       const nameShadow = cityBandH ? (nameInk === '#ffffff' ? 'rgba(0,0,0,.38)' : 'rgba(255,255,255,.48)') : pal.labelShadow;
-      fitText(c2, t.name.toUpperCase(), cw / 2, gH - 26, 34, cw - 12, 0, nameInk, nameShadow);
+      fitText(c2, displayName(i).toUpperCase(), cw / 2, gH - 26, 34, cw - 12, 0, nameInk, nameShadow);
       if (out) fitText(c2, `${outRounds(i)} ⚡`, cw / 2, sy, 60, cw - 16, 0, '#ffd23a', 'rgba(0,0,0,.45)');
       else if (own) fitText(c2, shortK(G.rentOf(S, i)), cw / 2, sy, 58, cw - 16, 0, '#ffffff', 'rgba(0,0,0,.35)');
     } else fitText(c2, LB[t.type] || t.type.toUpperCase(), cw / 2, sy, 40, cw - 16, 0, ink, inkSh);
@@ -171,12 +173,15 @@ export async function createBoard2D(ctx, skin) {
     const list = [], busy = new Set(anims.map((a) => a.i));
     CENTER = centerSprite(); if (CENTER) list.push({ x: 0, z: 0, d: 0, s: CENTER });
     for (let i = 0; i < 32; i++) {
-      const t = TILES[i], f = frame(i), at = (s, d) => s && list.push({ x: f.x, z: f.z, d, s }), owned = !!objSig(i);
+      const t = TILES[i], f = frame(i), at = (s, d, scale = 1) => s && list.push({ x: f.x, z: f.z, d, s, scale }), owned = !!objSig(i);
       if (f.corner) { at(spriteFor(slotOf(t), i), 0); continue; }
       if (t.type === 'city' && SL.deco) at(spriteFor('deco', i), -1.2);
       if (t.type === 'resort' && !owned) at(spriteFor('resort', i), 0);
       if (t.type === 'chance' || t.type === 'tax') at(spriteFor(t.type, i), 0);
-      if (owned && !busy.has(i)) at(buildingSprite(i), GZ);
+      if (owned && !busy.has(i)) {
+        const pr = S.props[i], level = t.type === 'resort' ? resortLevel(pr.owner) : pr.level;
+        at(buildingSprite(i), GZ, PROPERTY_LEVEL_SCALE[level] || 1);
+      }
       if (S && (S.bonus || []).includes(i)) at(bonusSprite(i), -1.3);
       if (S && S.festival === i && S.props[i]) at(festSprite(i, G.festMult(S)), 0.8);
     }
@@ -207,7 +212,7 @@ export async function createBoard2D(ctx, skin) {
       if (!f.swap) pen.paintTex(tx, [f.x - w, f.z - d], [2 * w / tx.width, 0], [0, 2 * d / tx.height]);
       else pen.paintTex(tx, [f.x - w, f.z + d], [0, -2 * d / tx.width], [2 * w / tx.height, 0]);
     });
-    for (const o of ORDER) pen.sprite(o.s, o.x, o.z);
+    for (const o of ORDER) pen.sprite(o.s, o.x, o.z, 0, o.scale || 1);
     sv = { K: view.K, ox: view.ox, oy: view.oy, w: cv.width, h: cv.height }; sceneDirty = false;
     perf.buildMs = performance.now() - t0; perf.builds++;
   }

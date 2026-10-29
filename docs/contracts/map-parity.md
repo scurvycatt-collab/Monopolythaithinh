@@ -1,5 +1,9 @@
 # Checklist parity bắt buộc cho mọi bản đồ
 
+Quy trình thiết kế, ma trận asset và cổng nghiệm thu đầy đủ nằm tại
+[`map-build-checklist.md`](./map-build-checklist.md). Parity test không thay thế
+việc duyệt đủ asset và ảnh thực tế theo checklist đó.
+
 Mọi bản đồ mới phải giữ nguyên luật chơi và hành vi giao diện của Map 1. Skin/renderer
 chỉ thay phần trình bày. Checklist này phải được kiểm tra trước mỗi lần commit hoặc deploy
 có thay đổi bản đồ.

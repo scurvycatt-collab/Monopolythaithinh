@@ -11,6 +11,11 @@
     return map && Array.isArray(map.pets) && map.pets.length ? map.pets : PETS;
   }
   const petsForState = (s) => petsForMap(s && s.settings ? s.settings.mapId : MAPS[0].id);
+  function tileName(s, index) {
+    const mapId = s && s.settings ? s.settings.mapId : MAPS[0].id;
+    const map = MAPS.find((x) => x.id === mapId) || MAPS[0];
+    return (map.tileNames && map.tileNames[index]) || (TILES[index] && TILES[index].name) || '';
+  }
 
   const isBuyable = (t) => t.type === 'city' || t.type === 'resort';
   const RESORTS = TILES.filter((t) => t.type === 'resort').map((t) => t.i);
@@ -412,7 +417,7 @@
         const pr = s.props[i];
         if (!pr) {
           if (p.money >= t.price) { s.step = { kind: 'buy', tile: i }; return; }
-          log(s, `${p.name} không đủ tiền mua ${t.name}`);
+          log(s, `${p.name} không đủ tiền mua ${tileName(s, i)}`);
           return finish(s);
         }
         if (pr.owner === p.id) {
@@ -422,16 +427,16 @@
         const owner = byId(s, pr.owner);
         const rent = rentOf(s, i);
         let usedVip = false;
-        if (outaged(s, i)) log(s, `${t.name} đang mất điện — ${p.name} không phải trả tiền thuê`);
+        if (outaged(s, i)) log(s, `${tileName(s, i)} đang mất điện — ${p.name} không phải trả tiền thuê`);
         else if (p.shields > 0 && rent > 0) {
           p.shields--;
           usedVip = true;
           s.notice = { seq: nextSeq(s), pid: p.id, kind: 'vipUsed', tile: i, amount: rent };
-          log(s, `🛡️ ${p.name} dùng thẻ VIP, miễn ${k(rent)} tiền thuê ở ${t.name}`);
+          log(s, `🛡️ ${p.name} dùng thẻ VIP, miễn ${k(rent)} tiền thuê ở ${tileName(s, i)}`);
         } else {
-          if (!pay(s, p, owner, rent, `tiền thuê ${t.name} cho ${owner.name}`)) return finish(s);
+          if (!pay(s, p, owner, rent, `tiền thuê ${tileName(s, i)} cho ${owner.name}`)) return finish(s);
           if (rent > 0) s.reaction = { seq: nextSeq(s), pid: owner.id, kind: 'happyRent' };
-          log(s, `${p.name} trả ${owner.name} ${k(rent)} tiền thuê ở ${t.name}${s.festival === i ? ` (lễ hội x${festMult(s)})` : ''}`);
+          log(s, `${p.name} trả ${owner.name} ${k(rent)} tiền thuê ở ${tileName(s, i)}${s.festival === i ? ` (lễ hội x${festMult(s)})` : ''}`);
         }
         if (canTakeover(s, i)) {
           if (p.money >= takeoverPrice(s, i)) { s.step = { kind: 'takeover', tile: i, price: takeoverPrice(s, i) }; return; }
@@ -500,15 +505,15 @@
     if (st.card === 'POWER_OUTAGE') {
       s.outage[i] = s.round + CFG.OUTAGE_ROUNDS;
       if (s.festival === i) s.festival = null;
-      log(s, `⚡ ${t.name} của ${owner.name} mất điện ${CFG.OUTAGE_ROUNDS} vòng`);
+      log(s, `⚡ ${tileName(s, i)} của ${owner.name} mất điện ${CFG.OUTAGE_ROUNDS} vòng`);
     } else if (st.card === 'EARTHQUAKE') {
       pr.level--;
-      log(s, `🌋 Động đất! ${t.name} của ${owner.name} xuống ${LEVEL_NAMES[pr.level].toLowerCase()}`);
+      log(s, `🌋 Động đất! ${tileName(s, i)} của ${owner.name} xuống ${LEVEL_NAMES[pr.level].toLowerCase()}`);
     } else if (st.card === 'FORCED_SWAP') {
       if (st.stage === 1) { s.step = { kind: 'card', card: st.card, stage: 2, mine: i, tiles: cardTargets(s, p, st.card, 2) }; return; }
       const mine = s.props[st.mine];
       mine.owner = pr.owner; pr.owner = p.id;
-      log(s, `🔁 ${p.name} đổi ${TILES[st.mine].name} lấy ${t.name} của ${owner.name}`);
+      log(s, `🔁 ${p.name} đổi ${tileName(s, st.mine)} lấy ${tileName(s, i)} của ${owner.name}`);
       s.step = null;
       if (checkWin(s, p) || checkWin(s, owner)) return;
     }
@@ -584,7 +589,7 @@
         if (p.money < cost) fail('Không đủ tiền');
         transfer(p, null, cost);
         s.props[i] = { owner: p.id, level };
-        log(s, `${p.name} mua ${t.name}${level ? ` và xây ${LEVEL_NAMES[level].toLowerCase()}` : ''} (${k(cost)})`);
+        log(s, `${p.name} mua ${tileName(s, i)}${level ? ` và xây ${LEVEL_NAMES[level].toLowerCase()}` : ''} (${k(cost)})`);
         s.step = null;
         if (checkWin(s, p)) return;
         return finish(s);
@@ -600,7 +605,7 @@
         if (p.money < cost) fail('Không đủ tiền');
         transfer(p, null, cost);
         pr.level = level;
-        log(s, `${p.name} nâng ${TILES[i].name} lên ${LEVEL_NAMES[level].toLowerCase()} (${k(cost)})`);
+        log(s, `${p.name} nâng ${tileName(s, i)} lên ${LEVEL_NAMES[level].toLowerCase()} (${k(cost)})`);
         s.step = null;
         return finish(s);
       }
@@ -612,7 +617,7 @@
         const owner = byId(s, pr.owner);
         transfer(p, owner, price);
         pr.owner = p.id;
-        log(s, `${p.name} mua lại ${TILES[i].name} từ ${owner.name} với giá ${k(price)}`);
+        log(s, `${p.name} mua lại ${tileName(s, i)} từ ${owner.name} với giá ${k(price)}`);
         s.step = null;
         if (checkWin(s, p)) return;
         if (canUpgrade(s, p, i)) { s.step = { kind: 'upgrade', tile: i }; return; }
@@ -632,7 +637,7 @@
         s.festival = i;
         s.festLevel = Math.min(CFG.FEST_MULT.length - 1, (s.festLevel || 0) + 1);
         delete s.outage[i];
-        log(s, `🎉 ${p.name} ${moving ? `trả ${k(CFG.CHAMP_MOVE_FEE)} chuyển Championships tới` : 'tăng hệ số Championships tại'} ${TILES[i].name} — tiền thuê x${festMult(s)}`);
+        log(s, `🎉 ${p.name} ${moving ? `trả ${k(CFG.CHAMP_MOVE_FEE)} chuyển Championships tới` : 'tăng hệ số Championships tại'} ${tileName(s, i)} — tiền thuê x${festMult(s)}`);
         s.notice = { seq: nextSeq(s), pid: p.id, kind: 'festival', tile: i, mult: festMult(s) };
         s.step = null;
         return finish(s);
@@ -645,7 +650,7 @@
         if (p.money < CFG.TOUR_FEE) fail('Không đủ tiền mua vé');
         p.tourPending = false;
         transfer(p, null, CFG.TOUR_FEE);
-        log(s, `✈️ ${p.name} trả ${k(CFG.TOUR_FEE)} bay tới ${TILES[i].name}`);
+        log(s, `✈️ ${p.name} trả ${k(CFG.TOUR_FEE)} bay tới ${tileName(s, i)}`);
         s.step = null;
         moveTo(s, p, i);
         return resolve(s, p);
@@ -686,7 +691,7 @@
         delete s.props[i]; delete s.outage[i];
         if (s.festival === i) s.festival = null;
         p.money = r2(p.money + v);
-        log(s, `${p.name} bán ${TILES[i].name} được ${k(v)}`);
+        log(s, `${p.name} bán ${tileName(s, i)} được ${k(v)}`);
         if (settle(s)) { s.step = null; return finish(s); }
         if (!ownedBy(s, p.id).length) log(s, `${p.name} đã bán hết mà vẫn chưa đủ — chỉ còn cách phá sản`);
         return;
@@ -785,7 +790,7 @@
 
   const api = {
     RULES: R, STATES, stepLeft, checkTurn,
-    GROUPS, TILES, CFG, COLORS, PETS, MAPS, CARDS, LEVEL_NAMES, RESORTS, SIDES, GameError, petsForMap,
+    GROUPS, TILES, CFG, COLORS, PETS, MAPS, CARDS, LEVEL_NAMES, RESORTS, SIDES, GameError, petsForMap, tileName,
     setRng, createState, publicView, ensureHost, isHost, byName, addPlayer, addBot, removePlayer, removeBot, setPet, setReady, renamePlayer, setSettings, startGame, resetGame, checkWin,
     act, autoAction, botAction, checkTime, cur, byId, value, invested, toll, upgradeCost, rentOf, rentMultiplier, takeoverPrice, canTakeover, sellValue, ownedBy, networth,
     ownsGroup, canUpgrade, nextLevel, isBuyable, maxBuild, villaLocked, taxBase, outaged, festMult, tourTargets, festivalTargets, cardTargets,

@@ -13,8 +13,14 @@ Map 2D tối ưu dùng khung xương chung `board2d`. Toàn bộ mặt bàn là 
 
 ## Asset và hiệu năng
 
+- Bốn landmark trung tâm Bellwood, Pyron, Petropia và Null Void trong
+  `assets/landmarks/` được OpenAI ImageGen tạo riêng theo prompt cel-shaded,
+  isometric, nền trong suốt; sau đó được resize/nén 512×512 bằng Sharp. Đây là
+  asset riêng của Map 3 và không được Map 4 tham chiếu.
 - Ben, Gwen, Kevin và Ông Max có bốn silhouette công trình riêng, mỗi bộ gồm cọc sở hữu và bốn cấp xây dựng. Công trình trên bàn được Pen dựng trong `skin.js` và cache theo chủ + cấp + màu.
 - 20 thumbnail popup 512×512 có alpha nằm trong `assets/buildings/`; `npm run ben10:buildings` tạo trước và kiểm tra manifest, không dựng thumbnail lúc chơi.
 - Bốn ảnh nhân vật nằm trong `assets/characters/`, mỗi file 512×512 và tổng dung lượng dưới 1,5 MB.
 - Map không tải Kenney pack hay model 3D; mức đồ hoạ thấp bỏ hiệu ứng ambient theo khung xương chung.
 - Luật, giá, thông báo Chance/World Tour/Championships, mất điện, lễ hội và kích thước quân cờ dùng chung với Map 1 theo `docs/contracts/map-parity.md`.
+- Tên địa danh của skin được ánh xạ theo index bằng `MAPS[].tileNames`; giá và
+  tiền thuê vẫn chỉ lấy từ `TILES[index]`.

@@ -29,6 +29,10 @@ for (const [i, entry] of (Array.isArray(MAPS) ? MAPS : []).entries()) {
   seen.add(entry.id);
   if (entry.default === true) defaults++;
   if (typeof entry.name !== 'string' || !entry.name.trim()) fail(id, 'thiếu `name`.');
+  if (entry.tileNames !== undefined) {
+    if (!Array.isArray(entry.tileNames) || entry.tileNames.length !== 32) fail(id, '`tileNames` phải có đúng 32 tên ánh xạ theo index.');
+    else if (entry.tileNames.some((name) => typeof name !== 'string' || !name.trim())) fail(id, '`tileNames` không được có tên trống.');
+  }
 
   if (entry.pets !== undefined) {
     if (!Array.isArray(entry.pets) || entry.pets.length !== 4) fail(id, '`pets` riêng phải có đúng 4 nhân vật.');
@@ -134,13 +138,23 @@ for (const [i, entry] of (Array.isArray(MAPS) ? MAPS : []).entries()) {
   if (!/scheduleFrame\(active \?[^:]+: 250\)/.test(src)) errors.push('Khung 2D phải giảm nhịp đánh thức khi cảnh đứng yên.');
   if (!/document\.hidden/.test(src) || !/visibilitychange/.test(src)) errors.push('Khung 2D phải dừng render khi tab bị ẩn như Map 1.');
   if (!/const sprites = new Map\(\)/.test(src) || !/function cached\(key, fn\)/.test(src)) errors.push('Khung 2D phải cache sprite đã nướng thay vì tạo lại mỗi frame.');
-  if (!/const TOKEN_HEIGHT = 1\.08;/.test(src) || !/H = TOKEN_HEIGHT \* K/.test(src)) errors.push('Khung 2D phải chuẩn hoá kích thước nhân vật bằng Map 1 (1.08).');
+  if (!/visual-scale\.js/.test(src) || !/H = TOKEN_HEIGHT \* K/.test(src) || !/PROPERTY_LEVEL_SCALE\[level\]/.test(src) || !/propertyRatio: PROPERTY_TILE_RATIO/.test(src)) errors.push('Khung 2D phải dùng chuẩn tỷ lệ quân, cấp nhà và ô đất chung của Map 1.');
   if (/t\.price \+ 'K'/.test(src)) errors.push('Khung 2D không được hiện giá mua trên ô chưa có chủ.');
   if (!/own\.pet/.test(src) || !/\|\$\{pet\}/.test(src)) errors.push('Cache công trình phải gồm pet của chủ để bốn bộ nhà Ben 10 không dùng nhầm sprite.');
   for (const doc of ['PEN.md', 'KINDS.md']) if (!isFile(path.join(PUBLIC, path.dirname(BOARD2D), doc))) errors.push(`Khung xương thiếu ${doc}.`);
   // defineSkin phải bắt lỗi: thiếu slot bắt buộc
   const { defineSkin } = await import(pathToFileURL(path.join(PUBLIC, 'js/render-common/board2d/skin.js')).href);
   try { defineSkin({ id: 'x', palette: { groups: {} }, slots: {} }); errors.push('defineSkin không báo lỗi skin thiếu palette/slot.'); } catch (e) { /* đúng: phải lỗi */ }
+}
+{
+  const scalePath = path.join(PUBLIC, 'js/render-common/visual-scale.js');
+  if (!isFile(scalePath)) errors.push('Thiếu chuẩn tỷ lệ thị giác chung visual-scale.js.');
+  else {
+    const scale = readFileSync(scalePath, 'utf8');
+    if (!/TOKEN_HEIGHT = 1\.08/.test(scale) || !/PROPERTY_LEVEL_SCALE = Object\.freeze\(\[1, 1, 1\.03, 1\.06, 1\.08\]\)/.test(scale) || !/tileWidth: 1\.7/.test(scale) || !/tileDepth: 3\.1/.test(scale) || !/maxFootprintWidth: 0\.84/.test(scale) || !/maxFootprintDepth: 0\.58/.test(scale) || !/maxHeight: 1\.25/.test(scale)) errors.push('visual-scale.js thiếu tỷ lệ quân/cấp nhà/ô chuẩn Map 1.');
+    const map1 = readFileSync(path.join(PUBLIC, DEFAULT_RENDERER), 'utf8');
+    if (!/visual-scale\.js/.test(map1) || /const TOKEN_HEIGHT\s*=/.test(map1)) errors.push('Map 1 phải dùng visual-scale.js, không khai báo kích thước quân riêng.');
+  }
 }
 {
   const dicePath = path.join(PUBLIC, 'js', 'render-common', 'dice-roll.js');
@@ -161,6 +175,14 @@ for (const [i, entry] of (Array.isArray(MAPS) ? MAPS : []).entries()) {
     const parity = readFileSync(parityPath, 'utf8');
     for (const rule of ['không hiện giá mua', 'thẻ tới Championships', '1.08', 'npm run thumbnails', 'npm run ben10:buildings', 'npm run verify']) {
       if (!parity.includes(rule)) errors.push(`Checklist parity thiếu quy tắc: ${rule}`);
+    }
+  }
+  const buildChecklistPath = path.join(ROOT, 'docs/contracts/map-build-checklist.md');
+  if (!isFile(buildChecklistPath)) errors.push('Thiếu cổng nghiệm thu docs/contracts/map-build-checklist.md.');
+  else {
+    const checklist = readFileSync(buildChecklistPath, 'utf8');
+    for (const rule of ['20 biến thể', 'tileNames[index]', 'World Tour', 'delta-time', 'Trang chủ chỉ tải preview nhẹ', 'Điều kiện commit/deploy']) {
+      if (!checklist.includes(rule)) errors.push(`Checklist build map thiếu quy tắc: ${rule}`);
     }
   }
   const map1 = readFileSync(path.join(PUBLIC, DEFAULT_RENDERER), 'utf8');

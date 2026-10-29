@@ -4,6 +4,7 @@ import { spawn } from 'node:child_process';
 
 const [url, target] = process.argv.slice(2);
 const checkRoll = process.argv.includes('--roll');
+const canvasOnly = process.argv.includes('--canvas');
 if (!url || !target) throw new Error('Dùng: node scripts/capture-map-review.mjs <url> <file.png>');
 const browser = process.env.BROWSER_PATH || 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
 const port = 9329;
@@ -30,14 +31,22 @@ try {
   await call('Page.navigate', { url }); await delay(3500);
   const beforeRoom = await call('Runtime.evaluate', { expression: `({screen:document.body.dataset.screen,count:performance.getEntriesByType('resource').filter((e)=>e.name.includes('/thumbnails/property/')||e.name.includes('/maps/ben-10/assets/buildings/')||e.name.includes('/maps/ben-10-02/assets/buildings/')).length})`, returnByValue: true });
   await call('Runtime.evaluate', { expression: `document.querySelector('#lwatch')?.click()` });
-  await delay(5500);
+  await delay(2500);
+  // Link xem có thể mở qua hai lớp: chọn phòng rồi xác nhận "Chỉ xem" ở lobby.
+  await call('Runtime.evaluate', { expression: `document.querySelector('#lwatch')?.click()` });
+  await delay(3000);
   let rollMs = null;
   if (checkRoll) {
     const rolled = await call('Runtime.evaluate', { expression: `(async()=>{const t=performance.now();await window.__TT.board.rollDice(2,5);return Math.round(performance.now()-t)})()`, awaitPromise: true, returnByValue: true });
     rollMs = rolled.result.value;
   }
   const errors = await call('Runtime.evaluate', { expression: `({screen:document.body.dataset.screen,map:document.body.dataset.map,loading:!document.querySelector('#loading').classList.contains('hidden'),perf:window.__TT&&window.__TT.perf,thumbnailAssets:performance.getEntriesByType('resource').filter((e)=>e.name.includes('/thumbnails/property/')||e.name.includes('/maps/ben-10/assets/buildings/')||e.name.includes('/maps/ben-10-02/assets/buildings/')).length})`, returnByValue: true });
-  const shot = await call('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
+  let shot;
+  if (canvasOnly) {
+    const rendered = await call('Runtime.evaluate', { expression: `document.querySelector('#stage canvas')?.toDataURL('image/png').split(',')[1] || ''`, returnByValue: true });
+    shot = { data: rendered.result.value };
+  } else shot = await call('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
+  if (!shot.data) throw new Error('Không lấy được ảnh canvas bản đồ.');
   fs.mkdirSync(path.dirname(path.resolve(target)), { recursive: true }); fs.writeFileSync(target, Buffer.from(shot.data, 'base64'));
   const homeThumbnailAssets = beforeRoom.result.value && beforeRoom.result.value.screen === 'gate' ? beforeRoom.result.value.count : null;
   console.log(JSON.stringify({ ...errors.result.value, homeThumbnailAssets, rollMs })); console.log(path.resolve(target)); ws.close();
