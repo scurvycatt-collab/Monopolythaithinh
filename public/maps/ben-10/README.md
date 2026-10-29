@@ -1,6 +1,6 @@
 # Ben 10 · Omnitrix
 
-Map 2D tối ưu dùng khung xương chung `board2d`. Bốn cạnh đại diện Bellwood, Pyronite, Petropia và Null Void; trung tâm là Omnitrix cùng bốn vùng cảnh quan ngoài hành tinh.
+Map 2D tối ưu dùng khung xương chung `board2d`. Toàn bộ mặt bàn là một căn cứ Plumber liên tục; Bellwood, lò Pyronite, phòng thí nghiệm Petropia và cổng Null Void là các cơ sở cục bộ, không còn chia mặt bàn thành bốn mảng kiểu Bốn Mùa.
 
 ## Bộ nhân vật
 
@@ -13,7 +13,8 @@ Map 2D tối ưu dùng khung xương chung `board2d`. Bốn cạnh đại diện
 
 ## Asset và hiệu năng
 
-- Công trình, cổng, tàu, đấu trường, địa hình và Omnitrix được tự dựng bằng Pen trong `skin.js`; sprite được cache, không dựng thumbnail lúc chạy.
+- Ben, Gwen, Kevin và Ông Max có bốn silhouette công trình riêng, mỗi bộ gồm cọc sở hữu và bốn cấp xây dựng. Công trình trên bàn được Pen dựng trong `skin.js` và cache theo chủ + cấp + màu.
+- 20 thumbnail popup 512×512 có alpha nằm trong `assets/buildings/`; `npm run ben10:buildings` tạo trước và kiểm tra manifest, không dựng thumbnail lúc chơi.
 - Bốn ảnh nhân vật nằm trong `assets/characters/`, mỗi file 512×512 và tổng dung lượng dưới 1,5 MB.
 - Map không tải Kenney pack hay model 3D; mức đồ hoạ thấp bỏ hiệu ứng ambient theo khung xương chung.
 - Luật, giá, thông báo Chance/World Tour/Championships, mất điện, lễ hội và kích thước quân cờ dùng chung với Map 1 theo `docs/contracts/map-parity.md`.

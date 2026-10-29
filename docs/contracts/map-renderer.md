@@ -52,7 +52,7 @@ export default async function createRenderer(ctx) → Board
 | ★ `reset(view)` | ván mới, vào giữa ván, đổi người | Dựng lại toàn bộ theo `view`, **không** hoạt ảnh |
 | ★ `sync(view) → Promise<ms>` | sau mỗi hành động | Cập nhật nhà, chủ đất, lễ hội, mất điện, Championships; trả về số ms hoạt ảnh xây nhà còn chạy (để UI hoãn đếm tiền) |
 | ★ `moveToken(pid, path, opts) → Promise` | quân đi | `path`: mảng ô (0–31). `opts.jump`: đặt thẳng, không nhảy. `opts.onStep(tile)` gọi khi chạm từng ô. `opts.view` (tuỳ chọn): `view` mới nhất, để xếp chỗ đứng với các quân khác trên ô đích |
-| ★ `rollDice(a, b) → Promise` | đổ xúc xắc | Resolve khi xúc xắc dừng |
+| ★ `rollDice(a, b) → Promise` | đổ xúc xắc | Dùng `public/js/render-common/dice-roll.js`; hai viên nảy/lăn tại chỗ theo chuẩn Map 2 và resolve khi cả hai dừng |
 | ★ `tileScreen(i, lift = 0) → {x, y}` | đặt overlay DOM | Toạ độ CSS px trong canvas của tâm ô `i`; `lift` (đơn vị thế giới, tuỳ chọn) nâng điểm lên trên mặt ô — dùng cho nhãn giá khi bán đất. Map 2D được bỏ qua `lift` |
 | ★ `pick(x, y) → i \| null` | chạm / click | Ô dưới điểm CSS px |
 | `tokenScreen(pid) → {x, y}` | đặt mũi tên, mặt cười | |

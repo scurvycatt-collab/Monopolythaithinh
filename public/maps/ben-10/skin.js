@@ -3,10 +3,10 @@
 import { defineSkin } from '../../js/render-common/board2d/skin.js';
 
 const ZONES = [
-  { id: 'bellwood', ground: '#83bd54', ground2: '#6fa947', ground3: '#a2d873', acc: '#99ed35', particles: 'leaves' },
-  { id: 'pyronite', ground: '#7b3028', ground2: '#61231f', ground3: '#a5442d', acc: '#ff9c24', particles: 'sun' },
-  { id: 'petropia', ground: '#315f73', ground2: '#264c61', ground3: '#4d8497', acc: '#64e8ff', particles: 'snow' },
-  { id: 'null-void', ground: '#49336e', ground2: '#372653', ground3: '#65488f', acc: '#d071ff', particles: 'petals' },
+  { id: 'bellwood', ground: '#153329', ground2: '#1a3d30', ground3: '#224b3a', acc: '#9cff2e', particles: 'none' },
+  { id: 'pyronite', ground: '#153329', ground2: '#1a3d30', ground3: '#224b3a', acc: '#ff7a2e', particles: 'none' },
+  { id: 'petropia', ground: '#153329', ground2: '#1a3d30', ground3: '#224b3a', acc: '#58e8ff', particles: 'none' },
+  { id: 'null-void', ground: '#153329', ground2: '#1a3d30', ground3: '#224b3a', acc: '#c765ff', particles: 'none' },
 ];
 const zoneId = (c) => (c.zone ? c.zone.id : 'bellwood');
 const flat = (color) => (g, c) => { g.fillStyle = color; g.fillRect(0, 0, c.cw, c.ch); };
@@ -71,20 +71,63 @@ function windowBand(p, x, y, z, w, color) {
   for (let i = 0; i < n; i++) p.box(x + 0.035 + i * (w - 0.07) / n, y + 0.025, z + 0.027, (w - 0.12) / n, 0.075, 0.012, color, { edge: null });
 }
 
+function claimPad(p, c, shape) {
+  const z = c.gz, col = c.color; p.ellipseShadow(0, z, 0.34, 0.14);
+  if (shape === 'ben') { energyRing(p, 0, 0.01, z, 0.27, col, 8); p.box(-0.04, 0.04, z - 0.2, 0.08, 0.34, 0.4, '#111a17', { edge: null }); }
+  if (shape === 'gwen') { p.flatEllipse(0, 0.02, z, 0.29, 0.22, '#20243a'); for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3; p.disc(Math.cos(a) * 0.22, 0.05, z + Math.sin(a) * 0.17, 0.045, i % 2 ? '#7ae8ff' : col); } crystal(p, 0, z, 0.28, '#85f2ff'); }
+  if (shape === 'kevin') { p.box(-0.29, 0, z - 0.22, 0.58, 0.1, 0.44, '#343945', { top: '#525866', edge: null }); p.rbox(0, 0.1, z, 0.18, 0.11, 0.18, col, 0.55); p.line3([[-0.25, 0.15, z - 0.18], [0.25, 0.15, z + 0.18]], '#aeb8bd', 0.035); }
+  if (shape === 'max') { p.box(-0.3, 0, z - 0.22, 0.6, 0.12, 0.44, '#b8c5c1', { top: '#e7efeb', edge: null }); p.cyl(0, 0.11, z, 0.1, 0.3, '#263a35'); p.ball(0, 0.48, z, 0.11, col); p.disc(0, 0.49, z, 0.055, '#fff4d6'); }
+  p.flagC(-0.48, z - 0.18, 0.8, col);
+}
+
+function benBuilding(p, c) {
+  const lv = c.level, z = c.gz, col = c.color; if (!lv) return claimPad(p, c, 'ben');
+  const h = 0.22 + lv * 0.2, w = 0.48 + lv * 0.08; p.ellipseShadow(0, z, 0.42 + lv * 0.05, 0.16);
+  p.cyl(0, 0, z, w * 0.52, h, '#263a34'); p.flatEllipse(0, h, z, w * 0.5, w * 0.38, col); energyRing(p, 0, h + 0.03, z, 0.18 + lv * 0.015, '#b8ff58', 8);
+  for (let i = 0; i < lv; i++) { const a = (i / lv) * Math.PI * 2; p.cyl(Math.cos(a) * w * 0.44, 0, z + Math.sin(a) * w * 0.32, 0.055, h * 0.78, i % 2 ? '#d5dfda' : col); }
+  if (lv >= 2) windowBand(p, -w * 0.34, h * 0.38, z + w * 0.38, w * 0.68, '#aaff73');
+  if (lv >= 3) { p.cyl(0, h, z, 0.1, 0.28 + lv * 0.06, '#18241f'); p.ball(0, h + 0.36 + lv * 0.06, z, 0.11, '#caff7c'); }
+  if (lv === 4) { for (const x of [-0.46, 0.46]) p.line3([[x, 0.08, z], [x * 0.8, 1.18, z]], col, 0.07); p.flatEllipse(0, 1.18, z, 0.46, 0.18, '#111a17'); p.textD('HERO', 0, 1.2, z, 0.13, '#b8ff58'); }
+}
+
+function gwenBuilding(p, c) {
+  const lv = c.level, z = c.gz, col = c.color; if (!lv) return claimPad(p, c, 'gwen');
+  const h = 0.18 + lv * 0.17, r = 0.32 + lv * 0.045; p.ellipseShadow(0, z, r + 0.18, 0.15);
+  p.cyl(0, 0, z, r, h, '#e9eef2'); p.flatEllipse(0, h, z, r * 0.92, r * 0.72, '#252841');
+  for (let i = 0; i < 3 + lv; i++) { const a = i * Math.PI * 2 / (3 + lv); p.cyl(Math.cos(a) * r * 0.78, h, z + Math.sin(a) * r * 0.62, 0.035, 0.2 + lv * 0.05, i % 2 ? col : '#e66fe8'); p.ball(Math.cos(a) * r * 0.78, h + 0.24 + lv * 0.05, z + Math.sin(a) * r * 0.62, 0.055, '#8ff5ff'); }
+  crystal(p, 0, z, 0.28 + lv * 0.12, '#75e9ff');
+  if (lv >= 2) { p.line3([[-r, h + 0.1, z], [0, h + 0.58, z], [r, h + 0.1, z]], col, 0.055); p.disc(0, h + 0.58, z, 0.09, '#f09cff'); }
+  if (lv === 4) { p.flatEllipse(0, 1.18, z, 0.48, 0.18, '#272540'); for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; p.disc(Math.cos(a) * 0.37, 1.2, z + Math.sin(a) * 0.14, 0.045, i % 2 ? col : '#f09cff'); } }
+}
+
+function kevinBuilding(p, c) {
+  const lv = c.level, z = c.gz, col = c.color; if (!lv) return claimPad(p, c, 'kevin');
+  const w = 0.52 + lv * 0.1, h = 0.2 + lv * 0.15; p.ellipseShadow(0, z, w * 0.7, 0.17);
+  p.box(-w / 2, 0, z - 0.3, w, h, 0.6, '#59616a', { top: '#7b838b', left: '#3d434b', right: '#4a5159', edge: '#24282d' });
+  p.box(-w * 0.38, 0.03, z + 0.305, w * 0.76, h * 0.55, 0.025, '#20252b', { edge: null });
+  for (let i = 0; i < lv; i++) { const x = -w * 0.35 + i * (w * 0.7 / Math.max(1, lv - 1)); p.cyl(x, h, z - 0.18, 0.055, 0.2 + i * 0.04, i % 2 ? '#b5bec2' : col); }
+  p.line3([[-w / 2, h + 0.05, z + 0.28], [w / 2, h + 0.05, z + 0.28]], col, 0.055);
+  if (lv >= 2) { p.box(w * 0.18, h, z - 0.18, 0.2, 0.32 + lv * 0.08, 0.22, '#30363e', { top: col, edge: null }); p.line3([[w * 0.28, h + 0.28, z], [w * 0.55, h + 0.58, z + 0.08]], '#b6c0c5', 0.045); }
+  if (lv === 4) { p.box(-0.48, h + 0.56, z - 0.04, 0.96, 0.18, 0.08, '#262b31', { edge: null }); p.textZ('FORGE', 0, h + 0.65, z + 0.045, 0.13, '#d7dce0'); }
+}
+
+function maxBuilding(p, c) {
+  const lv = c.level, z = c.gz, col = c.color; if (!lv) return claimPad(p, c, 'max');
+  const w = 0.5 + lv * 0.09, h = 0.2 + lv * 0.17; p.ellipseShadow(0, z, w * 0.68, 0.16);
+  p.box(-w / 2, 0, z - 0.3, w, h, 0.6, '#c9d4cf', { top: '#edf3ef', left: '#8fa09a', right: '#aebdb7', edge: null });
+  p.box(-w / 2 - 0.04, 0, z - 0.32, 0.08, h * 0.8, 0.64, col, { edge: null }); p.box(w / 2 - 0.04, 0, z - 0.32, 0.08, h * 0.8, 0.64, col, { edge: null });
+  windowBand(p, -w * 0.36, h * 0.38, z + 0.305, w * 0.72, '#9df3d2');
+  p.box(-0.08, 0, z + 0.31, 0.16, h * 0.42, 0.025, '#24352f', { edge: null });
+  if (lv >= 2) { p.cyl(-w * 0.3, h, z - 0.12, 0.055, 0.26 + lv * 0.05, '#61736c'); p.ball(-w * 0.3, h + 0.3 + lv * 0.05, z - 0.12, 0.08, col); }
+  if (lv >= 3) { p.line3([[w * 0.22, h, z], [w * 0.22, h + 0.5, z]], '#3c4e47', 0.045); p.flatEllipse(w * 0.22, h + 0.5, z, 0.18, 0.07, '#edf3ef'); }
+  if (lv === 4) { p.box(-0.45, h + 0.58, z - 0.04, 0.9, 0.2, 0.08, col, { edge: null }); p.textZ('PLUMBER', 0, h + 0.68, z + 0.045, 0.1, '#ffffff'); p.flagC(-0.56, z - 0.18, 1.18, col); p.flagC(0.56, z - 0.18, 1.18, col); }
+}
+
 function techHouse(p, c) {
-  const lv = c.level, col = c.color, z = c.gz;
-  p.ellipseShadow(0, z, 0.44 + lv * 0.07, 0.16);
-  if (lv === 0) { energyRing(p, 0, 0.01, z, 0.25, col, 6); p.flagC(-0.48, z - 0.18, 0.82, col); return; }
-  const h = 0.28 + lv * 0.22, w = 0.48 + lv * 0.1;
-  p.box(-w / 2, 0, z - 0.28, w, h, 0.56, '#d7e0dc', { top: '#f0f7f1', left: '#a8b8b2', right: '#c3d0cb', edge: null });
-  p.box(-w / 2 - 0.04, 0, z - 0.32, 0.08, h * 0.72, 0.64, col, { edge: null });
-  p.box(w / 2 - 0.04, 0, z - 0.32, 0.08, h * 0.72, 0.64, col, { edge: null });
-  windowBand(p, -w / 2 + 0.08, h * 0.42, z + 0.285, w - 0.16, zoneId(c) === 'pyronite' ? '#ffb243' : '#88f5ff');
-  p.box(-0.08, 0, z + 0.292, 0.16, h * 0.34, 0.025, '#1b272c', { edge: null });
-  energyRing(p, 0, h + 0.02, z, 0.15 + lv * 0.025, lv === 4 ? '#aaff32' : col, 6);
-  if (lv >= 2) { p.cyl(-w * 0.28, h, z - 0.12, 0.075, 0.22 + lv * 0.06, '#9db1aa'); p.ball(-w * 0.28, h + 0.25 + lv * 0.06, z - 0.12, 0.09, col); }
-  if (lv >= 3) { p.cyl(w * 0.28, h, z - 0.12, 0.075, 0.33 + lv * 0.06, '#9db1aa'); p.ball(w * 0.28, h + 0.36 + lv * 0.06, z - 0.12, 0.09, '#aaff32'); }
-  if (lv === 4) { p.box(-0.42, h + 0.62, z - 0.03, 0.84, 0.22, 0.05, '#101a17', { edge: null }); p.textZ('OMNITRIX', 0, h + 0.73, z + 0.025, 0.13, '#aaff32'); p.flagC(-0.58, z - 0.18, 1.2, col); p.flagC(0.58, z - 0.18, 1.2, col); }
+  if (c.pet === 'ben10-gwen') return gwenBuilding(p, c);
+  if (c.pet === 'ben10-kevin') return kevinBuilding(p, c);
+  if (c.pet === 'ben10-max') return maxBuilding(p, c);
+  return benBuilding(p, c);
 }
 
 function portalPad(p, c) {
@@ -133,18 +176,20 @@ function plumberTax(p, c) {
 }
 
 function centerGround(g, c) {
-  const W = (x, z) => c.T(x, z); g.save(); g.globalAlpha = 0.34; g.strokeStyle = '#aaff32'; g.lineWidth = 5;
-  for (let r = 1; r <= 4; r++) { const [x, y] = W(0, 0); g.beginPath(); g.arc(x, y, r * 62, 0, Math.PI * 2); g.stroke(); }
-  for (let i = 0; i < 12; i++) { const a = (i / 12) * Math.PI * 2, a0 = W(Math.cos(a) * 1.1, Math.sin(a) * 1.1), a1 = W(Math.cos(a) * 5.4, Math.sin(a) * 5.4); g.beginPath(); g.moveTo(...a0); g.lineTo(...a1); g.stroke(); }
+  const W = (x, z) => c.T(x, z); g.save(); g.fillStyle = '#132c24'; g.fillRect(0, 0, g.canvas.width, g.canvas.height); g.globalAlpha = 0.52; g.strokeStyle = '#78d934'; g.lineWidth = 5;
+  for (let r = 1; r <= 5; r++) { const [x, y] = W(0, 0); g.beginPath(); g.arc(x, y, r * 58, 0, Math.PI * 2); g.stroke(); }
+  for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2, a0 = W(Math.cos(a) * 1.05, Math.sin(a) * 1.05), a1 = W(Math.cos(a) * 6.2, Math.sin(a) * 6.2); g.beginPath(); g.moveTo(...a0); g.lineTo(...a1); g.stroke(); }
+  g.globalAlpha = 0.28; g.strokeStyle = '#8bc9b0'; g.lineWidth = 18; for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2, a0 = W(Math.cos(a) * 1.5, Math.sin(a) * 1.5), a1 = W(Math.cos(a) * 6.1, Math.sin(a) * 6.1); g.beginPath(); g.moveTo(...a0); g.lineTo(...a1); g.stroke(); }
   g.restore();
 }
 
 function biome(pen, c) {
   const add = (u, v, fn, d = 0) => { const [x, z] = c.toWorld(u, v); c.add(x, z, (p) => fn(p, x, z), d); };
-  if (c.zone.id === 'bellwood') { add(-1.7, 3.8, (p, x, z) => alienTree(p, x, z, 1.3)); add(1.4, 4.5, (p, x, z) => alienTree(p, x, z, 0.9)); }
-  if (c.zone.id === 'pyronite') { add(-1.5, 4.0, (p, x, z) => flameVent(p, x, z, 1.4)); add(1.4, 4.8, (p, x, z) => crystal(p, x, z, 0.8, '#ff7d25')); }
-  if (c.zone.id === 'petropia') { add(-1.7, 4.1, (p, x, z) => crystal(p, x, z, 1.2, '#53e6ff')); add(1.2, 4.7, (p, x, z) => crystal(p, x, z, 0.8, '#a2f6ff')); }
-  if (c.zone.id === 'null-void') { add(-1.6, 4.1, (p, x, z) => { p.cyl(x, 0, z, 0.13, 0.8, '#4e356d'); p.ball(x, 0.95, z, 0.24, '#d66eff'); }); add(1.4, 4.7, (p, x, z) => energyRing(p, x, 0.02, z, 0.34, '#d071ff', 6)); }
+  const tower = (p, x, z, col, h) => { p.ellipseShadow(x, z, 0.28, 0.13); p.box(x - 0.18, 0, z - 0.18, 0.36, h, 0.36, '#293d36', { top: '#40564d', edge: null }); p.box(x - 0.13, h * 0.3, z + 0.182, 0.26, 0.12, 0.02, col, { edge: null }); p.box(x - 0.13, h * 0.62, z + 0.182, 0.26, 0.12, 0.02, col, { edge: null }); };
+  if (c.zone.id === 'bellwood') { add(-1.65, 4.0, (p, x, z) => tower(p, x, z, '#9cff2e', 0.95)); add(1.35, 4.6, (p, x, z) => tower(p, x, z, '#83e3ba', 0.68)); }
+  if (c.zone.id === 'pyronite') { add(-1.5, 4.1, (p, x, z) => { p.cyl(x, 0, z, 0.42, 0.5, '#3a3530'); p.flatEllipse(x, 0.52, z, 0.36, 0.28, '#ff762d'); p.cone(x, 0.52, z, 0.18, 0.5, '#ffd04c'); }); add(1.45, 4.7, (p, x, z) => tower(p, x, z, '#ff7a2e', 0.72)); }
+  if (c.zone.id === 'petropia') { add(-1.65, 4.15, (p, x, z) => { p.cyl(x, 0, z, 0.44, 0.28, '#27434a'); p.flatEllipse(x, 0.3, z, 0.38, 0.28, '#58e8ff'); crystal(p, x, z, 0.92, '#8df4ff'); }); add(1.3, 4.75, (p, x, z) => tower(p, x, z, '#58e8ff', 0.64)); }
+  if (c.zone.id === 'null-void') { add(-1.55, 4.15, (p, x, z) => { energyRing(p, x, 0.03, z, 0.48, '#c765ff', 10); p.line3([[x - 0.38, 0.08, z], [x, 0.9, z], [x + 0.38, 0.08, z]], '#c765ff', 0.07); p.ball(x, 0.78, z, 0.13, '#f0b5ff'); }); add(1.4, 4.7, (p, x, z) => tower(p, x, z, '#c765ff', 0.72)); }
 }
 
 function omnitrixCore(p) {
@@ -164,7 +209,7 @@ export default defineSkin({
   cityLabelBand: 0.18,
   palette: {
     groups: { A: '#a8ef45', B: '#4dd47a', C: '#32c6b7', D: '#45a8df', E: '#6775e8', F: '#a55cdf', G: '#e65d9c', H: '#ff8b38' },
-    ground: '#18251f', ground2: '#22372c', ground3: '#2b4437', priceStrip: '#202d29', priceText: '#d9f6df', labelText: '#ffffff', labelShadow: '#101914',
+    ground: '#153329', ground2: '#1a3d30', ground3: '#224b3a', priceStrip: '#202d29', priceText: '#d9f6df', labelText: '#ffffff', labelShadow: '#101914',
     boardSide: '#17231f', boardSideDark: '#0d1512', boardTop: '#273a32', tileSide: '#50635b', tileSideDark: '#34443d', water: '#64419a', sand: '#8651a8', resortBand: '#9aed32',
   },
   zones: ZONES,

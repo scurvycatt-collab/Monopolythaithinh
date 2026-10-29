@@ -207,6 +207,8 @@ table.lvl tr.cur .ck{color:#fff}
   .pill.big{font-size:22px;padding:12px 30px}
   .lv img{width:60px;height:60px}
 }
+body[data-screen="game"][data-map="ben-10"],body[data-screen="game"][data-map="ben-10"] #stage{background-color:#0b2119;background-image:linear-gradient(rgba(102,255,147,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(102,255,147,.045) 1px,transparent 1px),radial-gradient(circle at 50% 45%,rgba(91,255,134,.13),transparent 42%),#0b2119;background-size:42px 42px,42px 42px,auto,auto}
+body[data-screen="game"][data-map="ben-10-02"],body[data-screen="game"][data-map="ben-10-02"] #stage{background-color:#020711;background-image:radial-gradient(circle at 18% 22%,rgba(42,109,181,.22),transparent 28%),radial-gradient(circle at 82% 66%,rgba(32,175,92,.15),transparent 25%),radial-gradient(circle at 20% 30%,#fff 0 1px,transparent 1.5px),radial-gradient(circle at 70% 20%,#b9edff 0 1px,transparent 1.5px),radial-gradient(circle at 42% 76%,#fff 0 1px,transparent 1.5px),#020711;background-size:auto,auto,73px 73px,101px 101px,137px 137px,auto}
 @media (prefers-reduced-motion: reduce){ *{animation:none!important;transition:none!important} }
 
 /* phòng chờ */

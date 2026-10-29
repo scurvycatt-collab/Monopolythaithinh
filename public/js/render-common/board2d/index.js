@@ -5,6 +5,9 @@
    hoạt ảnh xây nhà, pháo giấy, làm tối khi chọn ô. Bàn trống ở low = một lần drawImage + quân. */
 import { Pen, P, CX, CY, swapPen, bake, canvas, fitText, shade, mix, light, rgb, rng, hash, wp, FONT } from './pen.js';
 import { loadAssets, composeKit } from './assets.js';
+import { diceRollDuration, diceRollFrame } from '../dice-roll.js';
+
+const REDUCED = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // kích thước bàn (đơn vị thế giới): mặt ô ở y = 0, đế bên dưới. Ô Start là góc gần màn hình, đi về −x.
 const TOPY = 0.34, TW = 1.7, TD = 3.1, C3 = 3.1, GR = 0.76, L = 2 * C3 + 7 * TW, H2 = L / 2, WH = H2 - TD;
@@ -93,9 +96,9 @@ export async function createBoard2D(ctx, skin) {
     }
     if (slot.over) slot.over(p, { ...c, w });
   }
-  const spriteFor = (name, i, lv = '', color = '') => cached(`${name}|${i}|${lv}|${color}`, () => {
+  const spriteFor = (name, i, lv = '', color = '', pet = '') => cached(`${name}|${i}|${lv}|${color}|${pet}`, () => {
     const slot = SL[name]; if (!slot) return null;
-    const c = cOf(i, { slot: name, level: lv === '' ? undefined : lv, color: color || undefined });
+    const c = cOf(i, { slot: name, level: lv === '' ? undefined : lv, color: color || undefined, pet: pet || undefined });
     return frame(i).corner ? bake((pen) => drawKind(slot, pen, c), WIN_CORNER, q.k) : bakeTile(i, (pen) => drawKind(slot, pen, c));
   });
   // băng rôn lễ hội ×2 (view.bonus) và bảng Championships (view.festival)
@@ -147,11 +150,11 @@ export async function createBoard2D(ctx, skin) {
   function objSig(i) {
     const t = TILES[i], pr = S && S.props && S.props[i], own = ownerOf(i);
     if (!pr || !own) return '';
-    return t.type === 'resort' ? `r:${resortLevel(own.id)}:${colorOf(own)}` : `h:${pr.level}:${colorOf(own)}`;
+    return t.type === 'resort' ? `r:${resortLevel(own.id)}:${colorOf(own)}:${own.pet}` : `h:${pr.level}:${colorOf(own)}:${own.pet}`;
   }
   function buildingSprite(i) {
     const t = TILES[i], pr = S.props[i], own = ownerOf(i);
-    return t.type === 'resort' ? spriteFor('resortHouse', i, resortLevel(own.id), colorOf(own)) : spriteFor('house', i, pr.level, colorOf(own));
+    return t.type === 'resort' ? spriteFor('resortHouse', i, resortLevel(own.id), colorOf(own), own.pet) : spriteFor('house', i, pr.level, colorOf(own), own.pet);
   }
   let CENTER = null, ORDER = [];
   function centerSprite() {
@@ -293,10 +296,9 @@ export async function createBoard2D(ctx, skin) {
   }, { L: -0.8, R: 0.8, B: -0.6, T: 1.1 }, 120));
   const DICE_AT = [[1.75, 0.55], [0.55, 1.75]];
   function drawDice(now) {
-    const u = dice.t0 < 0 ? 1 : Math.min(1, (now - dice.t0) / dice.dur);
     [dice.a, dice.b].forEach((n, k) => {
-      const [x, z] = DICE_AT[k], roll = u < 1, face = roll ? 1 + (Math.floor(now / 70 + k * 3) % 6) : n, hgt = roll ? Math.abs(Math.sin(u * Math.PI * 3)) * (1 - u) * 1.2 : 0, j = roll ? Math.sin(now / 50 + k) * 0.15 * (1 - u) : 0;
-      const s = dieSprite(face), p = scr(x + j, hgt, z - j), f = (view.K / s.k) * 0.6;
+      const [x, z] = DICE_AT[k], frame = diceRollFrame(now, dice.t0, dice.dur, k, n);
+      const s = dieSprite(frame.face), p = scr(x + frame.jitter, frame.height, z - frame.jitter), f = (view.K / s.k) * 0.6;
       g.drawImage(s.canvas, p.x - s.ax * f, p.y - s.ay * f, s.canvas.width * f, s.canvas.height * f);
     });
   }
@@ -436,7 +438,7 @@ export async function createBoard2D(ctx, skin) {
       if (opts.jump) { const o = tok[pid], last = path[path.length - 1]; o.moving = true; o.tile = last; const [x, z] = spot(pid, last, posOf); Object.assign(o, { x, z, y: 0 }); delete o.tx; o.moving = false; placeTokens(false); return; }
       await hop(pid, path, opts.onStep);
     },
-    async rollDice(a, b) { Object.assign(dice, { a, b, t0: performance.now(), dur: Q === 'low' ? 650 : 1000 }); wake(); await sleep(dice.dur); wake(); },
+    async rollDice(a, b) { Object.assign(dice, { a, b, t0: performance.now(), dur: diceRollDuration(Q, REDUCED) }); wake(); await sleep(dice.dur); wake(); },
     tileScreen(i, lift = 0) { const f = frame(i), [x, z] = f.corner ? [f.x, f.z] : toWorld(i, 0, GZ); return scr(x, lift, z); },
     pick(cx, cy) {
       const r = cv.getBoundingClientRect(), a = (cx - r.left - view.ox) / (CX * view.K), b = (cy - r.top - view.oy) / (CY * view.K), x = (a + b) / 2, z = (b - a) / 2;

@@ -33,13 +33,20 @@ có thay đổi bản đồ.
   cùng danh sách qua `Game.petsForMap(mapId)`, không trộn nhân vật từ map khác.
 - Mũi tên theo màu người chơi; quân của người đang điều khiển có viền sáng.
 - Nhiều quân trên cùng ô phải được tách vị trí, không che hoàn toàn nhau.
+- Mỗi map giữ phong cách và asset hiển thị độc lập. Map chỉ được dùng chung engine/contract trong
+  `public/js/render-common/` và luật gameplay; không import skin, nhân vật hay công trình từ thư mục map khác.
 
 ## 4. Thumbnail và asset
 
 - Preview map và thumbnail nhà/resort/cấp nhà/màu phải là file tĩnh sinh trước khi chạy game.
 - Không chụp Canvas/WebGL, đổi màu model hoặc dựng thumbnail lúc người chơi mở popup.
+- Chỉ sau khi người chơi vào phòng, client phải nạp và giải mã trước đúng bộ thumbnail của map đã chọn;
+  không tải thumbnail map ở trang chủ và không để popup đầu tiên chờ tải ảnh.
 - Khi thêm nhà, cấp nhà, màu hoặc model: cập nhật generator, chạy `npm run thumbnails`, rồi
   commit cả asset sinh ra và manifest/hash tương ứng.
+- Map có bộ công trình riêng theo nhân vật phải đưa `pet` của chủ vào chữ ký cache sprite, sinh đủ thumbnail
+  cho từng `pet × cấp`, và route popup tới đúng thư mục map. Hai skin Ben 10 dùng `npm run ben10:buildings`
+  để tạo và kiểm tra 20 PNG cho mỗi skin trước khi commit.
 - Chỉ dùng asset CC0 hoặc tự dựng; ghi nguồn trong README của map.
 
 ## 5. Tải và hiệu năng
@@ -50,6 +57,10 @@ có thay đổi bản đồ.
 - Khi cảnh đứng yên phải giảm đánh thức; khi tab ẩn phải dừng render. `destroy()` phải giải
   phóng listener, timer, Canvas/GPU resource.
 - Các mức đồ hoạ có cùng luật và kích thước tương đối; chỉ giảm hiệu ứng, độ phân giải hoặc bóng.
+- Map 1–4 dùng chung quỹ đạo và thời lượng xúc xắc từ `public/js/render-common/dice-roll.js`. Chuẩn là kiểu
+  Map 2: hai xúc xắc nảy/lăn tại chỗ, không rơi từ trên cao và Promise chỉ resolve khi cả hai đã dừng.
+- Skin/renderer không được chứa logic nhận thẻ, xác nhận thẻ, thông báo hay thay đổi state. Các luồng đó chỉ
+  tồn tại trong `public/game.js` và `public/js/app.js`; map chỉ phát lại hình ảnh qua Board contract.
 
 ## 6. Cổng kiểm tra trước commit/deploy
 

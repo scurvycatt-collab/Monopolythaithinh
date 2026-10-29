@@ -65,6 +65,9 @@ for (const [i, entry] of (Array.isArray(MAPS) ? MAPS : []).entries()) {
     fail(id, `file renderer không tồn tại: public/${rendererRel}`);
   } else {
     const src = readFileSync(rendererPath, 'utf8');
+    for (const forbidden of ['showCard', 'showStatus', 'CARD_CONFIRM_ACTION', 'lastCard', 'notice.kind', 'Game.act', 'G.act']) {
+      if (src.includes(forbidden)) fail(id, `renderer không được xử lý luật/thông báo dùng chung (${forbidden}).`);
+    }
     if (!/^\s*export\s+default\b/m.test(src)) fail(id, `renderer public/${rendererRel} thiếu \`export default\` (createRenderer).`);
     if (/\bcreateBoard2D\s*\(/.test(src)) {
       const lines = src.split('\n').filter((l) => l.trim()).length;
@@ -73,6 +76,16 @@ for (const [i, entry] of (Array.isArray(MAPS) ? MAPS : []).entries()) {
       if (!isFile(skinPath)) fail(id, `renderer 2D thiếu public/${path.dirname(rendererRel)}/skin.js.`);
       else {
         try {
+          const skinSource = readFileSync(skinPath, 'utf8');
+          for (const forbidden of ['showCard', 'showStatus', 'CARD_CONFIRM_ACTION', 'lastCard', 'notice.kind', 'Game.act', 'G.act']) {
+            if (skinSource.includes(forbidden)) fail(id, `skin không được xử lý luật/thông báo dùng chung (${forbidden}).`);
+          }
+          for (const other of MAPS.filter((map) => map.id !== entry.id)) {
+            const escaped = other.id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            if (new RegExp(`(?:from\\s+['"]|assets?\\/)(?:\\.\\.\\/)*${escaped}(?:\\/|['"])`).test(skinSource)) {
+              fail(id, `skin/asset phải độc lập, không được dùng visual của map "${other.id}".`);
+            }
+          }
           const skin = (await import(pathToFileURL(skinPath).href)).default;
           if (!skin || skin.id !== entry.id) fail(id, `skin.js phải export default defineSkin({ id: '${entry.id}', … }).`);
           if (entry.id === 'four-seasons') {
@@ -80,10 +93,23 @@ for (const [i, entry] of (Array.isArray(MAPS) ? MAPS : []).entries()) {
             if (!winter || winter.labelText !== '#17212b') fail(id, 'cạnh Mùa Đông phải dùng chữ đen để đủ tương phản trên nền tuyết.');
             if (skin.cityLabelBand !== 0.18) fail(id, 'dải màu Monopoly phải phủ nền tên địa danh với tỷ lệ 0.18 chiều sâu ô.');
           }
-          if (entry.id === 'ben-10') {
-            if ((skin.zones || []).length !== 4) fail(id, 'phải có đủ bốn vùng Bellwood, Pyronite, Petropia và Null Void.');
+          if (entry.id === 'ben-10' || entry.id === 'ben-10-02') {
+            if ((skin.zones || []).length !== 4) fail(id, 'phải có đủ bốn khu Ben 10.');
             if (skin.cityLabelBand !== 0.18) fail(id, 'dải màu Monopoly phải phủ nền tên địa danh với tỷ lệ 0.18 chiều sâu ô.');
-            if ((skin.packs || []).length) fail(id, 'map Ben 10 phải giữ thiết kế Pen nhẹ, không tải asset pack ngoài.');
+            if ((skin.packs || []).length) fail(id, 'skin Ben 10 phải giữ thiết kế Pen nhẹ, không tải asset pack ngoài.');
+            const buildingDir = path.join(PUBLIC, 'maps', entry.id, 'assets', 'buildings');
+            const manifestPath = path.join(buildingDir, 'manifest.json');
+            if (!isFile(manifestPath)) fail(id, 'thiếu manifest 20 thumbnail công trình tĩnh.');
+            else {
+              const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+              if (manifest.mapId !== entry.id || !Array.isArray(manifest.files) || manifest.files.length !== 20) fail(id, 'manifest công trình phải đúng map và đủ 20 file.');
+              for (const file of manifest.files || []) {
+                const full = path.join(buildingDir, file);
+                if (!isFile(full)) { fail(id, `thiếu thumbnail công trình: ${file}`); continue; }
+                const png = readFileSync(full);
+                if (png.toString('ascii', 1, 4) !== 'PNG' || png.readUInt32BE(16) !== 512 || png.readUInt32BE(20) !== 512) fail(id, `thumbnail công trình ${file} phải là PNG 512×512.`);
+              }
+            }
           }
           for (const p of Object.values(skin.sprites || {})) if (!isFile(path.join(PUBLIC, path.dirname(rendererRel), p))) fail(id, `sprite riêng không tồn tại: ${p}`);
           for (const pack of skin.packs) if (!existsSync(path.join(PUBLIC, 'assets/shared', pack, 'LICENSE.txt'))) fail(id, `pack dùng chung "${pack}" thiếu public/assets/shared/${pack}/LICENSE.txt.`);
@@ -110,17 +136,30 @@ for (const [i, entry] of (Array.isArray(MAPS) ? MAPS : []).entries()) {
   if (!/const sprites = new Map\(\)/.test(src) || !/function cached\(key, fn\)/.test(src)) errors.push('Khung 2D phải cache sprite đã nướng thay vì tạo lại mỗi frame.');
   if (!/const TOKEN_HEIGHT = 1\.08;/.test(src) || !/H = TOKEN_HEIGHT \* K/.test(src)) errors.push('Khung 2D phải chuẩn hoá kích thước nhân vật bằng Map 1 (1.08).');
   if (/t\.price \+ 'K'/.test(src)) errors.push('Khung 2D không được hiện giá mua trên ô chưa có chủ.');
+  if (!/own\.pet/.test(src) || !/\|\$\{pet\}/.test(src)) errors.push('Cache công trình phải gồm pet của chủ để bốn bộ nhà Ben 10 không dùng nhầm sprite.');
   for (const doc of ['PEN.md', 'KINDS.md']) if (!isFile(path.join(PUBLIC, path.dirname(BOARD2D), doc))) errors.push(`Khung xương thiếu ${doc}.`);
   // defineSkin phải bắt lỗi: thiếu slot bắt buộc
   const { defineSkin } = await import(pathToFileURL(path.join(PUBLIC, 'js/render-common/board2d/skin.js')).href);
   try { defineSkin({ id: 'x', palette: { groups: {} }, slots: {} }); errors.push('defineSkin không báo lỗi skin thiếu palette/slot.'); } catch (e) { /* đúng: phải lỗi */ }
 }
 {
+  const dicePath = path.join(PUBLIC, 'js', 'render-common', 'dice-roll.js');
+  if (!isFile(dicePath)) errors.push('Thiếu quỹ đạo xúc xắc dùng chung public/js/render-common/dice-roll.js.');
+  else {
+    const dice = readFileSync(dicePath, 'utf8');
+    if (!/export function diceRollFrame/.test(dice) || !/export const diceRollDuration/.test(dice)) errors.push('Module xúc xắc chung thiếu duration/frame chuẩn.');
+    const map1Dice = readFileSync(path.join(PUBLIC, 'maps/map-1/renderer.js'), 'utf8');
+    const board2dDice = readFileSync(path.join(PUBLIC, BOARD2D), 'utf8');
+    if (!/render-common\/dice-roll\.js/.test(map1Dice) || !/dice-roll\.js/.test(board2dDice)) errors.push('Map 1 và khung Map 2–4 phải cùng gọi module xúc xắc chuẩn.');
+    if (/const startP\s*=/.test(map1Dice)) errors.push('Map 1 không được thả xúc xắc từ trên cao; phải dùng quỹ đạo nảy tại chỗ chuẩn Map 2.');
+  }
+}
+{
   const parityPath = path.join(ROOT, 'docs/contracts/map-parity.md');
   if (!isFile(parityPath)) errors.push('Thiếu checklist parity bắt buộc docs/contracts/map-parity.md.');
   else {
     const parity = readFileSync(parityPath, 'utf8');
-    for (const rule of ['không hiện giá mua', 'thẻ tới Championships', '1.08', 'npm run thumbnails', 'npm run verify']) {
+    for (const rule of ['không hiện giá mua', 'thẻ tới Championships', '1.08', 'npm run thumbnails', 'npm run ben10:buildings', 'npm run verify']) {
       if (!parity.includes(rule)) errors.push(`Checklist parity thiếu quy tắc: ${rule}`);
     }
   }

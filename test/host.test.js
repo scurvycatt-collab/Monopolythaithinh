@@ -27,6 +27,12 @@ assert.deepStrictEqual(benPets.map((pet) => pet.id), ['ben10-ben', 'ben10-gwen',
 benPets.forEach((pet, i) => G.addPlayer(benRoom, { id: `ben-${i}`, token: `tb-${i}`, name: pet.n, pet: pet.id }));
 assert.deepStrictEqual(benRoom.players.map((p) => p.color), benPets.map((pet) => pet.c), 'màu ghế Ben 10 phải đi theo từng nhân vật');
 assert.throws(() => G.setPet(benRoom, 'ben-0', 'animal-dog'), /không hợp lệ/, 'Map Ben 10 không được nhận Cube Pet của map khác');
+const spaceRoom = G.createState();
+G.setSettings(spaceRoom, { mapId: 'ben-10-02' });
+const spacePets = G.petsForMap('ben-10-02');
+assert.deepStrictEqual(spacePets.map((pet) => pet.id), ['ben10-02-ben', 'ben10-02-gwen', 'ben10-02-kevin', 'ben10-02-rook'], 'Map 4 phải dùng bộ nhân vật độc lập Ben, Gwen, Kevin, Rook');
+spacePets.forEach((pet, i) => G.addPlayer(spaceRoom, { id: `space-${i}`, token: `ts-${i}`, name: pet.n, pet: pet.id }));
+assert.throws(() => G.setPet(spaceRoom, 'space-0', 'ben10-ben'), /không hợp lệ/, 'Map 4 không được dùng nhân vật visual của Map 3');
 const bot = G.addBot(s, { id: 'bot1' });
 assert.strictEqual(bot.bot, true, 'bot phải được đánh dấu riêng trong state');
 assert.strictEqual(bot.ready, true, 'bot phải luôn sẵn sàng trong phòng chờ');

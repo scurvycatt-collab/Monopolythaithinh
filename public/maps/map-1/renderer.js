@@ -8,6 +8,7 @@ import { loadKit, building as houseBuilding } from '../../js/houses.js';
 import { colosseum, worldTour, lostIsland, startGate, chanceBox, beachHouse, festivalFlag, festivalPlaque, preloadSpecialAssets, BEACH_LEVELS } from '../../js/specials.js';
 import { centerWorld, preloadWorldAssets } from '../../js/world.js';
 import { PROPERTY_THUMBNAIL_VERSION } from '../../thumbnails/property/version.js';
+import { diceRollDuration, diceRollFrame } from '../../js/render-common/dice-roll.js';
 const HK = { loadKit, building: houseBuilding, colosseum, worldTour, lostIsland, startGate, chanceBox, beachHouse, festivalFlag, festivalPlaque, preloadSpecialAssets, BEACH_LEVELS };
 
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -665,19 +666,17 @@ export default async function createRenderer(ctx) {
   }
   async function rollDice(a, b) {
     const land = [new THREE.Vector3(-0.4, DIE_Y, 1.9), new THREE.Vector3(0.9, DIE_Y, 2.3)];
-    const startP = [new THREE.Vector3(-3.2, 4.5, -2.4), new THREE.Vector3(-2.4, 5, -3.1)];
     const finalQ = [a, b].map((v, k) => new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), (k ? 0.5 : -0.3) + Math.random() * 0.6).multiply(new THREE.Quaternion().setFromEuler(FACE_UP[v])));
     const axes = [0, 1].map(() => new THREE.Vector3(Math.random() - .5, Math.random() - .5, Math.random() - .5).normalize());
-    const dur = REDUCED ? 650 : 1150, t0 = performance.now();
+    const dur = diceRollDuration(graphicsLevel, REDUCED), t0 = performance.now();
     requestActiveRender(dur + 300);
     await new Promise((res) => {
       const step = () => {
         const k = Math.min(1, (performance.now() - t0) / dur);
         dice.forEach((d, n) => {
-          const e = 1 - Math.pow(1 - k, 3);
-          d.position.lerpVectors(startP[n], land[n], e);
-          d.position.y = DIE_Y + (k < 0.55 ? (1 - k / 0.55) * 4.3 : Math.abs(Math.sin((k - 0.55) / 0.45 * Math.PI * 2)) * (1 - k) * 1.2);
-          const spin = new THREE.Quaternion().setFromAxisAngle(axes[n], Math.pow(1 - k, 2) * Math.PI * 7);
+          const pose = diceRollFrame(performance.now(), t0, dur, n, n ? b : a);
+          d.position.set(land[n].x + pose.jitter, DIE_Y + pose.height, land[n].z - pose.jitter);
+          const spin = new THREE.Quaternion().setFromAxisAngle(axes[n], pose.spin);
           d.quaternion.copy(finalQ[n]).multiply(spin);
         });
         if (k < 1) requestAnimationFrame(step); else res();

@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "mapId": "ben-10",
+  "variant": "ground",
+  "sourceHash": "24277da0e352c865800b78a416962fe03f56376fe6d97b7b40b9f113a0d07adc",
+  "width": 512,
+  "height": 512,
+  "pets": [
+    {
+      "id": "ben10-ben",
+      "name": "Ben",
+      "color": "#70c83d",
+      "secondary": "#b9ff59"
+    },
+    {
+      "id": "ben10-gwen",
+      "name": "Gwen",
+      "color": "#4c8ee8",
+      "secondary": "#e66fe8"
+    },
+    {
+      "id": "ben10-kevin",
+      "name": "Kevin",
+      "color": "#6f668c",
+      "secondary": "#b7c0c5"
+    },
+    {
+      "id": "ben10-max",
+      "name": "Ông Max",
+      "color": "#df5a3f",
+      "secondary": "#9df3d2"
+    }
+  ],
+  "levels": [
+    "Cọc sở hữu",
+    "Cấp 1",
+    "Cấp 2",
+    "Cấp 3",
+    "Khách sạn"
+  ],
+  "files": [
+    "ben10-ben-0.png",
+    "ben10-ben-1.png",
+    "ben10-ben-2.png",
+    "ben10-ben-3.png",
+    "ben10-ben-4.png",
+    "ben10-gwen-0.png",
+    "ben10-gwen-1.png",
+    "ben10-gwen-2.png",
+    "ben10-gwen-3.png",
+    "ben10-gwen-4.png",
+    "ben10-kevin-0.png",
+    "ben10-kevin-1.png",
+    "ben10-kevin-2.png",
+    "ben10-kevin-3.png",
+    "ben10-kevin-4.png",
+    "ben10-max-0.png",
+    "ben10-max-1.png",
+    "ben10-max-2.png",
+    "ben10-max-3.png",
+    "ben10-max-4.png"
+  ]
+}

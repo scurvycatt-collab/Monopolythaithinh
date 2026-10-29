@@ -1,25 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" role="img" aria-labelledby="title desc">
-  <title id="title">Bản đồ Ben 10 · Omnitrix</title><desc id="desc">Bàn cờ isometric công nghệ ngoài hành tinh với Omnitrix ở trung tâm</desc>
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#101b17"/><stop offset="1" stop-color="#263b31"/></linearGradient>
-    <linearGradient id="top" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#497356"/><stop offset="1" stop-color="#213a2c"/></linearGradient>
-    <filter id="glow"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-    <pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M0 14L14 0 28 14 14 28Z" fill="none" stroke="#9aed32" stroke-opacity=".08"/></pattern>
-  </defs>
+  <title id="title">Map 3: Ben10</title><desc id="desc">Căn cứ Plumber thống nhất với Omnitrix ở trung tâm</desc>
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#17372c"/><stop offset="1" stop-color="#07130f"/></linearGradient><filter id="glow"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter><pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M0 14 14 0 28 14 14 28Z" fill="none" stroke="#8eff4d" stroke-opacity=".08"/></pattern></defs>
   <rect width="640" height="400" rx="28" fill="url(#bg)"/><rect width="640" height="400" rx="28" fill="url(#grid)"/>
-  <g transform="translate(320 202)">
-    <path d="M0-143 236-25 0 104-236-25Z" fill="#0c1411" opacity=".8" transform="translate(0 18)"/>
-    <path d="M0-143 236-25 0 104-236-25Z" fill="url(#top)" stroke="#9aed32" stroke-width="5"/>
-    <path d="M0-116 187-20 0 80-187-20Z" fill="#17261e" stroke="#52675d" stroke-width="26"/>
-    <g fill="none" stroke-width="12">
-      <path d="M-187-20 0-116" stroke="#85bd54"/><path d="M0-116 187-20" stroke="#a5442d"/><path d="M187-20 0 80" stroke="#4d8497"/><path d="M0 80-187-20" stroke="#65488f"/>
-    </g>
-    <g filter="url(#glow)"><ellipse cy="-12" rx="66" ry="37" fill="#101914" stroke="#aaff32" stroke-width="8"/><ellipse cy="-12" rx="42" ry="23" fill="#aaff32"/><path d="M-28-30 0-12-28 6ZM28-30 0-12 28 6Z" fill="#101914"/></g>
-    <g fill="#dce7e1" stroke="#17231f" stroke-width="3">
-      <path d="M-139-55h38l15 30-34 18-34-18Z"/><path d="M105-53h38l14 29-34 18-33-18Z"/>
-      <path d="M100 27h40l13 29-35 18-33-19Z"/><path d="M-143 26h40l14 29-35 18-33-19Z"/>
-    </g>
+  <g transform="translate(320 205)">
+    <path d="M0-143 236-25 0 108-236-25Z" fill="#07100d" transform="translate(0 18)"/>
+    <path d="M0-143 236-25 0 108-236-25Z" fill="#1a3b2e" stroke="#8be846" stroke-width="5"/>
+    <path d="M0-116 187-20 0 82-187-20Z" fill="#12261e" stroke="#334b42" stroke-width="26"/>
+    <g opacity=".65" stroke="#72d643" stroke-width="5"><path d="M0-94V64"/><path d="M-150-20H150"/><ellipse cy="-14" rx="118" ry="65" fill="none"/><ellipse cy="-14" rx="86" ry="47" fill="none"/></g>
+    <g filter="url(#glow)"><ellipse cy="-14" rx="66" ry="37" fill="#101914" stroke="#aaff32" stroke-width="8"/><ellipse cy="-14" rx="42" ry="23" fill="#aaff32"/><path d="M-28-32 0-14-28 4ZM28-32 0-14 28 4Z" fill="#101914"/></g>
+    <g stroke="#17231f" stroke-width="3"><path d="M-149-59h43l16 31-38 20-37-20Z" fill="#365044"/><path d="M105-57h43l15 30-37 20-36-20Z" fill="#405b50"/><path d="M102 27h43l15 31-38 20-36-20Z" fill="#263e4a"/><path d="M-148 27h43l15 31-38 20-36-20Z" fill="#4b315e"/></g>
+    <g fill="#9cff55"><circle cx="-128" cy="-30" r="7"/><circle cx="127" cy="-29" r="7"/><circle cx="123" cy="48" r="7"/><circle cx="-126" cy="48" r="7"/></g>
   </g>
-  <g font-family="Arial Black,Arial,sans-serif" text-anchor="middle"><text x="320" y="56" font-size="34" fill="#fff" stroke="#101914" stroke-width="7" paint-order="stroke">BEN 10</text><text x="320" y="87" font-size="20" letter-spacing="5" fill="#aaff32">OMNITRIX MAP</text></g>
-  <rect x="125" y="344" width="390" height="34" rx="17" fill="#aaff32"/><text x="320" y="367" font-family="Arial Black,Arial,sans-serif" font-size="15" letter-spacing=".5" text-anchor="middle" fill="#132018">CHỌN ANH HÙNG · CỨU THẾ GIỚI</text>
+  <g font-family="Arial Black,Arial,sans-serif" text-anchor="middle"><text x="320" y="52" font-size="33" fill="#fff" stroke="#07130f" stroke-width="7" paint-order="stroke">MAP 3: BEN10</text><text x="320" y="82" font-size="17" letter-spacing="4" fill="#aaff32">PLUMBER COMMAND</text></g>
 </svg>

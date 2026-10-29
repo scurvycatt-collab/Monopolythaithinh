@@ -111,9 +111,12 @@ assert.match(app, /preloadSpecialAssets\(CFG\.BONUS_MULT\)/, 'fixed Chance and f
 assert.match(specials, /generatedTexture\('chance-card'\)/, 'Chance card texture must be generated before gameplay');
 assert.match(specials, /generatedTexture\(`festival-banner-\$\{mult\}`\)/, 'festival banner texture must be generated before gameplay');
 assert.match(app, /PROPERTY_THUMBNAIL_VERSION/, 'property thumbnails must use a generated cache version');
-assert.match(app, /const propertyThumbnail = \(kind, level, color\) => `thumbnails\/property\//, 'property dialogs must use prebuilt static thumbnails');
-assert.match(app, /propertyThumbnail\('city', pr\.level, col\)/, 'purchase and takeover dialogs must use the matching static city thumbnail');
-assert.match(app, /propertyThumbnail\('city', Math\.max\(0, lv\), hex\)/, 'city info cards must use prebuilt thumbnails');
+assert.match(app, /const propertyThumbnail = \(kind, level, color, pet = '', mapId =/, 'property dialogs must use prebuilt static thumbnails, including map-specific character sets');
+assert.match(app, /async function preloadMapPropertyThumbnails\(mapId\)/, 'selected map thumbnails must be preloaded after entering a room');
+assert.match(app, /const thumbnails = preloadMapPropertyThumbnails\(entry\.id\);[\s\S]*await createBoard\(entry\);[\s\S]*await thumbnails;/, 'board and selected-map thumbnails must load together');
+assert.match(app, /maps\/\$\{mapId\}\/assets\/buildings\/\$\{pet\}-\$\{level\}\.png/, 'Ben 10 dialogs must route to prebuilt map-specific thumbnails');
+assert.match(app, /propertyThumbnail\('city', pr\.level, seatOf\[owner\.id\]\.color, owner\.pet\)/, 'takeover dialog must use the original owner character thumbnail');
+assert.match(app, /propertyThumbnail\('city', Math\.max\(0, lv\), hex, owner && owner\.pet\)/, 'city info cards must use prebuilt owner-specific thumbnails');
 assert.match(app, /propertyThumbnail\('resort', Math\.max\(1, n\), hex\)/, 'resort info cards must use prebuilt thumbnails');
 assert.doesNotMatch(app, /deferredSnapshotAttrs|SNAP_PLACEHOLDER|prewarmPropertySnapshots/, 'property thumbnails must not be rendered again in the browser');
 assert.match(app, /sourceButton\.textContent = 'Đang xử lý…'/, 'network actions must show immediate button feedback');

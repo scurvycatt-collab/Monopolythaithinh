@@ -160,13 +160,20 @@
     { id: 'ben10-kevin', n: 'Kevin', c: '#6f668c', img: 'maps/ben-10/assets/characters/kevin.png' },
     { id: 'ben10-max', n: 'Ông Max', c: '#df5a3f', img: 'maps/ben-10/assets/characters/max.png' },
   ];
+  const BEN10_SPACE_PETS = [
+    { id: 'ben10-02-ben', n: 'Ben', c: '#62e642', img: 'maps/ben-10-02/assets/characters/ben.png' },
+    { id: 'ben10-02-gwen', n: 'Gwen', c: '#42b8ef', img: 'maps/ben-10-02/assets/characters/gwen.png' },
+    { id: 'ben10-02-kevin', n: 'Kevin', c: '#8b64d8', img: 'maps/ben-10-02/assets/characters/kevin.png' },
+    { id: 'ben10-02-rook', n: 'Rook', c: '#38d79b', img: 'maps/ben-10-02/assets/characters/rook.png' },
+  ];
 
   // Danh sách map có thể chọn trong room. Map hiện tại là map mặc định;
   // thêm map mới vào đây trước khi nối renderer/asset tương ứng.
   const MAPS = [
     { id: 'map-1', name: 'Map 1', description: 'Bản đồ Thái Thịnh mặc định', preview: 'maps/map-1/preview.svg', renderer: 'maps/map-1/renderer.js', default: true },
     { id: 'four-seasons', name: 'Bốn Mùa', description: 'Mỗi cạnh một mùa: Xuân, Hạ, Thu, Đông. Hội chợ bốn mùa và đài phun nước giữa bàn. Bàn 2D nhẹ, hợp máy yếu.', preview: 'maps/four-seasons/preview.svg', renderer: 'maps/four-seasons/renderer.js' },
-    { id: 'ben-10', name: 'Ben 10 · Omnitrix', description: 'Bốn vùng ngoài hành tinh, trung tâm Omnitrix và bộ nhân vật Ben, Gwen, Kevin, Ông Max. Bản 2D nhẹ.', preview: 'maps/ben-10/preview.svg', renderer: 'maps/ben-10/renderer.js', pets: BEN10_PETS },
+    { id: 'ben-10', name: 'Map 3: Ben10', description: 'Căn cứ Plumber thống nhất, trung tâm Omnitrix và bốn bộ công trình riêng cho Ben, Gwen, Kevin, Ông Max.', preview: 'maps/ben-10/preview.svg', renderer: 'maps/ben-10/renderer.js', pets: BEN10_PETS },
+    { id: 'ben-10-02', name: 'Map 4: Ben10-02', description: 'Phiên bản không gian: Omnitrix phát sáng giữa bốn khu hành tinh, bộ riêng Ben, Gwen, Kevin và Rook.', preview: 'maps/ben-10-02/preview.svg', renderer: 'maps/ben-10-02/renderer.js', pets: BEN10_SPACE_PETS },
   ];
 
   /* ===================== LỚP 2 — SƠ ĐỒ TRẠNG THÁI ===================== */
