@@ -34,7 +34,7 @@ export class Layer { constructor() { this.a = []; } add(x, z, fn, d = 0) { this.
 const raw = (pen) => (pen.swapped ? pen.raw : pen);
 
 export async function createBoard2D(ctx, skin) {
-  const R = ctx.rules, G = ctx.game, TILES = R.TILES, CFG = R.CONFIG, PETS = R.PETS || [];
+  const R = ctx.rules, G = ctx.game, TILES = R.TILES, CFG = R.CONFIG, PETS = G.petsForMap ? G.petsForMap(skin.id) : (R.PETS || []);
   const cv = ctx.canvas, g = cv.getContext('2d');
   const SL = skin.slots, ZONES = skin.zones, LB = { ...DEFAULT_LABELS, ...skin.labels };
   let Q = QUALITY[ctx.quality] ? ctx.quality : 'high', q = QUALITY[Q];
@@ -250,7 +250,7 @@ export async function createBoard2D(ctx, skin) {
       const o = tok[p.id] || (tok[p.id] = { x: 0, z: 0, y: 0, tile: p.pos, moving: false });
       if (o.moving) continue; o.tile = p.pos; const [x, z] = spot(p.id, p.pos, posOf); if (snap || !o.init) Object.assign(o, { x, z, y: 0, init: true }); else Object.assign(o, { tx: x, tz: z });
       const pet = p.pet || (PETS[seats().indexOf(p) % PETS.length] || {}).id;
-      if (pet && !petImg[pet]) { const im = new Image(); petImg[pet] = im; im.onload = () => (dirty = true); im.src = new URL(`thumbnails/static/pet-${pet}.png`, document.baseURI).href; }
+      if (pet && !petImg[pet]) { const def = PETS.find((x) => x.id === pet), im = new Image(); petImg[pet] = im; im.onload = () => (dirty = true); im.src = new URL(def && def.img ? def.img : `thumbnails/static/pet-${pet}.png`, document.baseURI).href; }
       o.pet = pet; o.color = colorOf(p); o.hidden = !!p.bankrupt;
     }
     for (const id of Object.keys(tok)) if (!seats().some((p) => p.id === id)) delete tok[id];

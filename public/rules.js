@@ -153,11 +153,20 @@
     { id: 'animal-fox', n: 'Cáo', c: '#3cb043' }, { id: 'animal-panda', n: 'Gấu trúc', c: '#f4c430' },
   ];
 
+  // Bộ nhân vật riêng của Map Ben 10. `img` là thumbnail đã dựng sẵn để không phát sinh Canvas/WebGL lúc vào phòng.
+  const BEN10_PETS = [
+    { id: 'ben10-ben', n: 'Ben', c: '#70c83d', img: 'maps/ben-10/assets/characters/ben.png' },
+    { id: 'ben10-gwen', n: 'Gwen', c: '#4c8ee8', img: 'maps/ben-10/assets/characters/gwen.png' },
+    { id: 'ben10-kevin', n: 'Kevin', c: '#6f668c', img: 'maps/ben-10/assets/characters/kevin.png' },
+    { id: 'ben10-max', n: 'Ông Max', c: '#df5a3f', img: 'maps/ben-10/assets/characters/max.png' },
+  ];
+
   // Danh sách map có thể chọn trong room. Map hiện tại là map mặc định;
   // thêm map mới vào đây trước khi nối renderer/asset tương ứng.
   const MAPS = [
     { id: 'map-1', name: 'Map 1', description: 'Bản đồ Thái Thịnh mặc định', preview: 'maps/map-1/preview.svg', renderer: 'maps/map-1/renderer.js', default: true },
     { id: 'four-seasons', name: 'Bốn Mùa', description: 'Mỗi cạnh một mùa: Xuân, Hạ, Thu, Đông. Hội chợ bốn mùa và đài phun nước giữa bàn. Bàn 2D nhẹ, hợp máy yếu.', preview: 'maps/four-seasons/preview.svg', renderer: 'maps/four-seasons/renderer.js' },
+    { id: 'ben-10', name: 'Ben 10 · Omnitrix', description: 'Bốn vùng ngoài hành tinh, trung tâm Omnitrix và bộ nhân vật Ben, Gwen, Kevin, Ông Max. Bản 2D nhẹ.', preview: 'maps/ben-10/preview.svg', renderer: 'maps/ben-10/renderer.js', pets: BEN10_PETS },
   ];
 
   /* ===================== LỚP 2 — SƠ ĐỒ TRẠNG THÁI ===================== */

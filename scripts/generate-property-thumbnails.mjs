@@ -17,7 +17,10 @@ const MANIFEST = path.join(OUT, 'manifest.json');
 const STATIC_MANIFEST = path.join(STATIC_OUT, 'manifest.json');
 const VERSION_MODULE = path.join(OUT, 'version.js');
 const G = require(path.join(PUBLIC, 'game.js'));
-const COLORS = [...new Set([...G.PETS.map((pet) => pet.c.toLowerCase()), '#9aa4b1'])];
+// Popup tài sản dùng màu chủ sở hữu của mọi map, kể cả map có bộ nhân vật riêng.
+// Avatar riêng đã là PNG tĩnh trong map; chỉ cần sinh thêm biến thể nhà/resort theo màu của họ.
+const ALL_PETS = G.MAPS.flatMap((map) => Array.isArray(map.pets) && map.pets.length ? map.pets : G.PETS);
+const COLORS = [...new Set([...ALL_PETS.map((pet) => pet.c.toLowerCase()), '#9aa4b1'])];
 const CITY_LEVELS = G.LEVEL_NAMES.map((_, level) => level);
 const RESORT_LEVELS = G.CFG.RESORT_TOLL.map((_, level) => level).filter(Boolean);
 const colorId = (color) => color.replace('#', '').toLowerCase();

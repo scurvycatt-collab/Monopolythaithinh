@@ -217,8 +217,8 @@ async function handleApi(req, res, url) {
       const wasEmpty = state.players.length === 0;
       const id = 'p' + crypto.randomBytes(4).toString('hex');
       const token = crypto.randomBytes(18).toString('hex');
-      G.addPlayer(state, { id, token, name: body.name, pet: body.pet });
       if (wasEmpty && body.mapId) G.setSettings(state, { mapId: body.mapId });
+      G.addPlayer(state, { id, token, name: body.name, pet: body.pet });
       offlineSince.set(id, Date.now());
       touchPlayer();
       commit();

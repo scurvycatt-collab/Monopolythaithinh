@@ -184,9 +184,13 @@ let ROOM = '', ROOM_GATE = false, WATCH_MODE = false, pendingJoinName = '', pend
 let chatOpen = !matchMedia('(max-width:760px)').matches, chatLastSeen = '', lastInteractionId = '';
 let boardReadyPromise = null;
 const now = () => Date.now() + skew;   // giờ theo server
+const currentPets = (mapId = S.settings && S.settings.mapId) => G.petsForMap ? G.petsForMap(mapId) : G.PETS;
+const petDef = (id, mapId) => currentPets(mapId).find((x) => x.id === id);
+const petImg = (id, mapId) => { const pet = petDef(id, mapId); return pet && pet.img ? pet.img : `thumbnails/static/pet-${id}.png?v=${PROPERTY_THUMBNAIL_VERSION.slice(0, 12)}`; };
 function seatSetup() {
   seatOf = {};
-  S.players.forEach((p, k) => { const pet = p.pet || G.PETS[k % G.PETS.length].id, def = G.PETS.find((x) => x.id === pet); p.color = def ? def.c : p.color; seatOf[p.id] = { color: p.color, pet, corner: CORNERS[k % 4] }; });
+  const pets = currentPets();
+  S.players.forEach((p, k) => { const pet = p.pet || pets[k % pets.length].id, def = pets.find((x) => x.id === pet); p.color = def ? def.c : p.color; seatOf[p.id] = { color: p.color, pet, corner: CORNERS[k % 4] }; });
 }
 const curP = () => (S.phase === 'play' ? S.players[S.turn] : null);
 const isMe = (pid) => MODE === 'local' || (!!me && me.id === pid);
@@ -826,8 +830,8 @@ async function autoJoinRoom(state) {
   const existing = state.players.find((p) => p.name.toLowerCase() === cleanPending);
   if (state.phase !== 'lobby' && !existing) { lobbyDraftName = pendingJoinName; pendingJoinName = ''; return; }
   if (state.players.length >= CFG.MAX_PLAYERS && !existing) { lobbyDraftName = pendingJoinName; pendingJoinName = ''; return; }
-  const pet = (G.PETS.find((x) => !state.players.some((p) => p.pet === x.id)) || {}).id;
   const name = pendingJoinName, mapId = pendingRoomMap;
+  const pet = (currentPets(mapId || (state.settings && state.settings.mapId)).find((x) => !state.players.some((p) => p.pet === x.id)) || {}).id;
   joiningRoom = true;
   try {
     acceptSession(await api('api/join', { name, pet, mapId }));
@@ -890,7 +894,6 @@ function inviteBox() {
     ${invite.map((l, k) => `<a href="${esc(l.url)}" target="_blank" rel="noopener"${k ? ' class="sub"' : ''}>${esc(l.url)}</a>${k ? '' : `<em>${esc(l.kind)}</em>`}`).join('')}</div></div>`;
 }
 const timeLabel = (m) => (m % 60 ? `${Math.floor(m / 60)} giờ ${m % 60}` : `${m / 60} giờ`);
-const petImg = (id) => `thumbnails/static/pet-${id}.png?v=${PROPERTY_THUMBNAIL_VERSION.slice(0, 12)}`;
 let localDraft = null;   // chế độ một máy: [{ name, pet }]
 let lobbyOpen = false;   // chế độ một máy: đang mở phòng chờ
 let lobbyDraftName = ''; // chế độ mạng: tên đang gõ dở khi đổi nhân vật
@@ -980,7 +983,7 @@ $('#chat-form').onsubmit = async (e) => {
   try { await api('api/chat', { token: me && me.token, viewer: !me && WATCH_MODE ? lobbyDraftName : '', text }); input.value = ''; }
   catch (err) { toast(err.message); } finally { button.disabled = false; input.focus(); }
 };
-const petGrid = (sel, taken, attr) => `<div class="pets">${G.PETS.map((x) => `<button type="button" class="pet${x.id === sel ? ' on' : ''}" ${attr}="${x.id}" ${taken.has(x.id) && x.id !== sel ? 'disabled' : ''} style="--c:${x.c}"><img alt="" src="${petImg(x.id)}"><span>${x.n}</span></button>`).join('')}</div>`;
+const petGrid = (sel, taken, attr) => `<div class="pets">${currentPets().map((x) => `<button type="button" class="pet${x.id === sel ? ' on' : ''}" ${attr}="${x.id}" ${taken.has(x.id) && x.id !== sel ? 'disabled' : ''} style="--c:${x.c}"><img alt="" src="${petImg(x.id)}"><span>${x.n}</span></button>`).join('')}</div>`;
 const timeRow = (cur, attr) => `<div class="times">${CFG.TIME_OPTIONS.map((m) => `<button type="button" class="pill ${m === cur ? '' : 'ghost'}" ${attr}="${m}">${timeLabel(m)}</button>`).join('')}</div>`;
 const turnRow = (cur, attr) => `<div class="times">${CFG.TURN_OPTIONS.map((v) => `<button type="button" class="pill ${v === cur ? '' : 'ghost'}" ${attr}="${v}">${v} giây</button>`).join('')}</div>`;
 function renderGateMapPreview() {
@@ -990,7 +993,7 @@ function renderGateMapPreview() {
   $('#gmap-preview').innerHTML = `<img src="${esc(preview)}" alt="Ảnh xem trước ${esc(map.name)}"><span><b>${esc(map.name)}${map.default ? ' (Mặc định)' : ''}</b><small>${esc(map.description)}</small></span>`;
 }
 function lobbyNet(el) {
-  const mine = me && G.byId(S, me.id), amHost = !!mine && S.hostId === mine.id, taken = new Set(S.players.map((p) => p.pet));
+  const pets = currentPets(), mine = me && G.byId(S, me.id), amHost = !!mine && S.hostId === mine.id, taken = new Set(S.players.map((p) => p.pet));
   const allReady = S.players.length >= 2 && S.players.every((p) => p.bot || p.id === S.hostId || p.ready);
   const list = S.players.map((p) => {
     const on = !!p.bot || !!(presence[p.id] && presence[p.id].on);
@@ -1000,7 +1003,7 @@ function lobbyNet(el) {
     return `<li style="--c:${p.color}"><img alt="" src="${petImg(p.pet)}"><b>${esc(p.name)}</b>${p.id === S.hostId ? '<em class="host">HOST</em>' : ''}${p.bot ? '<em class="bot">BOT</em>' : isMe(p.id) ? '<em>bạn</em>' : ''}${readyBadge}<i class="dot${on ? ' on' : ''}" title="${p.bot ? 'Bot tự động' : on ? 'Đang online' : 'Mất kết nối'}"></i>${remove}</li>`;
   }).join('');
   if (!mine) {
-    const pet = (S.players.length < CFG.MAX_PLAYERS) && (lobbyNet.pick && !taken.has(lobbyNet.pick) ? lobbyNet.pick : (G.PETS.find((x) => !taken.has(x.id)) || {}).id);
+    const pet = (S.players.length < CFG.MAX_PLAYERS) && (lobbyNet.pick && pets.some((x) => x.id === lobbyNet.pick) && !taken.has(lobbyNet.pick) ? lobbyNet.pick : (pets.find((x) => !taken.has(x.id)) || {}).id);
     lobbyNet.pick = pet;
     el.innerHTML = sheet('#2c8ff0', 'Thái Thịnh Monopoly', 'Phòng chờ', S.players.length >= CFG.MAX_PLAYERS ? `<p class="center">Phòng đã đủ ${CFG.MAX_PLAYERS} người.</p><ul class="who">${list}</ul>` :
       `<label class="fld">Tên của bạn<input id="lname" maxlength="16" autocomplete="nickname" value="${esc(lobbyDraftName || '')}" placeholder="Ví dụ: Bố"></label>
@@ -1044,13 +1047,14 @@ function lobbyClaim(el) {
 }
 // chơi chung một máy: tự thêm 2–4 người
 function lobbyLocal(el) {
-  if (!localDraft) localDraft = (S.players.length ? S.players.map((p) => ({ name: p.name, pet: p.pet })) : [{ name: '', pet: G.PETS[0].id }, { name: '', pet: G.PETS[1].id }]);
+  const pets = currentPets();
+  if (!localDraft) localDraft = (S.players.length ? S.players.map((p) => ({ name: p.name, pet: p.pet })) : [{ name: '', pet: pets[0].id }, { name: '', pet: pets[1].id }]);
   lobbyLocal.time = lobbyLocal.time || S.settings.timeLimitMin || 60;
   lobbyLocal.turn = lobbyLocal.turn || S.settings.turnSec || CFG.TURN_SEC;
   const rows = localDraft.map((d, k) => {
     const taken = new Set(localDraft.filter((_, j) => j !== k).map((x) => x.pet));
     return `<div class="lrow"><input data-n="${k}" maxlength="16" placeholder="Người chơi ${k + 1}" value="${esc(d.name)}">
-      <div class="mini">${G.PETS.map((x) => `<button type="button" class="${x.id === d.pet ? 'on' : ''}" data-k="${k}" data-p="${x.id}" ${taken.has(x.id) ? 'disabled' : ''} title="${x.n}" style="--c:${x.c}"><img alt="${x.n}" src="${petImg(x.id)}"></button>`).join('')}</div>
+      <div class="mini">${pets.map((x) => `<button type="button" class="${x.id === d.pet ? 'on' : ''}" data-k="${k}" data-p="${x.id}" ${taken.has(x.id) ? 'disabled' : ''} title="${x.n}" style="--c:${x.c}"><img alt="${x.n}" src="${petImg(x.id)}"></button>`).join('')}</div>
       ${localDraft.length > 2 ? `<button type="button" class="rm" data-rm="${k}" aria-label="Bỏ người chơi">×</button>` : ''}</div>`;
   }).join('');
   el.innerHTML = sheet('#2c8ff0', 'Thái Thịnh Monopoly', 'Chơi chung một máy', `${rows}
@@ -1063,7 +1067,7 @@ function lobbyLocal(el) {
   el.querySelectorAll('[data-rm]').forEach((b) => { b.onclick = () => { keep(); localDraft.splice(Number(b.dataset.rm), 1); renderLobby(); }; });
   el.querySelectorAll('[data-t]').forEach((b) => { b.onclick = () => { keep(); lobbyLocal.time = Number(b.dataset.t); renderLobby(); }; });
   el.querySelectorAll('[data-ts]').forEach((b) => { b.onclick = () => { keep(); lobbyLocal.turn = Number(b.dataset.ts); renderLobby(); }; });
-  if ($('#ladd')) $('#ladd').onclick = () => { keep(); const used = new Set(localDraft.map((x) => x.pet)); localDraft.push({ name: '', pet: G.PETS.find((x) => !used.has(x.id)).id }); renderLobby(); };
+  if ($('#ladd')) $('#ladd').onclick = () => { keep(); const used = new Set(localDraft.map((x) => x.pet)); localDraft.push({ name: '', pet: pets.find((x) => !used.has(x.id)).id }); renderLobby(); };
   if ($('#lcancel')) $('#lcancel').onclick = () => { lobbyOpen = false; localDraft = null; renderLobby(); renderHub(); };
   $('#lstart').onclick = () => {
     keep();

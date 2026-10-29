@@ -6,6 +6,11 @@
   const R = typeof module !== 'undefined' && module.exports ? require('./rules.js') : root.RULES;
   const { CONFIG: CFG, GROUPS, TILES, CARDS, PETS, MAPS, LEVEL_NAMES, STATES } = R;
   const COLORS = PETS.map((x) => ({ c: x.c, n: x.n }));
+  function petsForMap(mapId) {
+    const map = MAPS.find((x) => x.id === mapId);
+    return map && Array.isArray(map.pets) && map.pets.length ? map.pets : PETS;
+  }
+  const petsForState = (s) => petsForMap(s && s.settings ? s.settings.mapId : MAPS[0].id);
 
   const isBuyable = (t) => t.type === 'city' || t.type === 'resort';
   const RESORTS = TILES.filter((t) => t.type === 'resort').map((t) => t.i);
@@ -109,7 +114,8 @@
   const alive = (s) => s.players.filter((p) => !p.bankrupt);
   function ensureHost(s) {
     // Đồng bộ màu theo nhân vật để các room/file lưu từ phiên bản cũ cũng nhận bảng màu mới.
-    s.players.forEach((p) => { const pet = PETS.find((x) => x.id === p.pet); if (pet) p.color = pet.c; if (typeof p.ready !== 'boolean') p.ready = !!p.bot; });
+    const pets = petsForState(s);
+    s.players.forEach((p) => { const pet = pets.find((x) => x.id === p.pet); if (pet) p.color = pet.c; if (typeof p.ready !== 'boolean') p.ready = !!p.bot; });
     const host = s.hostId && byId(s, s.hostId);
     if (!host || host.bot) s.hostId = (s.players.find((p) => !p.bot) || {}).id || null;
     return s.hostId;
@@ -133,9 +139,10 @@
     return s.players.find((p) => p.name.toLowerCase() === name.toLowerCase()) || null;
   }
   function freePet(s, want) {
+    const pets = petsForState(s);
     const used = new Set(s.players.map((p) => p.pet));
-    if (want && PETS.some((x) => x.id === want) && !used.has(want)) return want;
-    const f = PETS.find((x) => !used.has(x.id)); return f && f.id;
+    if (want && pets.some((x) => x.id === want) && !used.has(want)) return want;
+    const f = pets.find((x) => !used.has(x.id)); return f && f.id;
   }
   function addPlayer(s, { id, token, name, pet, bot = false }) {
     if (s.phase !== 'lobby') fail('Ván đang diễn ra, không thể vào thêm');
@@ -144,7 +151,7 @@
     if (s.players.some((p) => p.name.toLowerCase() === name.toLowerCase())) fail('Tên này đã có người dùng');
     if (pet && s.players.some((p) => p.pet === pet)) fail('Nhân vật này đã có người chọn');
     pet = freePet(s, pet);
-    const p = { id, token: bot ? null : token, name, pet, color: PETS.find((x) => x.id === pet).c, bot: !!bot, ready: !!bot };
+    const p = { id, token: bot ? null : token, name, pet, color: petsForState(s).find((x) => x.id === pet).c, bot: !!bot, ready: !!bot };
     resetPlayer(p);
     s.players.push(p);
     ensureHost(s);
@@ -173,7 +180,7 @@
   }
   function setPet(s, id, pet) {
     if (s.phase !== 'lobby') fail('Chỉ đổi nhân vật khi chưa bắt đầu');
-    const x = PETS.find((q) => q.id === pet); if (!x) fail('Nhân vật không hợp lệ');
+    const x = petsForState(s).find((q) => q.id === pet); if (!x) fail('Nhân vật không hợp lệ');
     if (s.players.some((p) => p.id !== id && p.pet === pet)) fail('Nhân vật này đã có người chọn');
     Object.assign(byId(s, id), { pet, color: x.c, ready: false });
   }
@@ -778,7 +785,7 @@
 
   const api = {
     RULES: R, STATES, stepLeft, checkTurn,
-    GROUPS, TILES, CFG, COLORS, PETS, MAPS, CARDS, LEVEL_NAMES, RESORTS, SIDES, GameError,
+    GROUPS, TILES, CFG, COLORS, PETS, MAPS, CARDS, LEVEL_NAMES, RESORTS, SIDES, GameError, petsForMap,
     setRng, createState, publicView, ensureHost, isHost, byName, addPlayer, addBot, removePlayer, removeBot, setPet, setReady, renamePlayer, setSettings, startGame, resetGame, checkWin,
     act, autoAction, botAction, checkTime, cur, byId, value, invested, toll, upgradeCost, rentOf, rentMultiplier, takeoverPrice, canTakeover, sellValue, ownedBy, networth,
     ownsGroup, canUpgrade, nextLevel, isBuyable, maxBuild, villaLocked, taxBase, outaged, festMult, tourTargets, festivalTargets, cardTargets,

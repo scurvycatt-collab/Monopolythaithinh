@@ -30,6 +30,32 @@ for (const [i, entry] of (Array.isArray(MAPS) ? MAPS : []).entries()) {
   if (entry.default === true) defaults++;
   if (typeof entry.name !== 'string' || !entry.name.trim()) fail(id, 'thiếu `name`.');
 
+  if (entry.pets !== undefined) {
+    if (!Array.isArray(entry.pets) || entry.pets.length !== 4) fail(id, '`pets` riêng phải có đúng 4 nhân vật.');
+    else {
+      const petIds = new Set(), petColors = new Set();
+      for (const pet of entry.pets) {
+        if (!pet || typeof pet.id !== 'string' || !/^[a-z0-9-]+$/.test(pet.id)) fail(id, 'nhân vật có id không hợp lệ.');
+        if (!pet || typeof pet.n !== 'string' || !pet.n.trim()) fail(id, 'nhân vật thiếu tên.');
+        if (!pet || typeof pet.c !== 'string' || !/^#[0-9a-f]{6}$/i.test(pet.c)) fail(id, `nhân vật "${pet && pet.id}" có màu không hợp lệ.`);
+        if (petIds.has(pet.id)) fail(id, `id nhân vật bị trùng: ${pet.id}.`);
+        if (petColors.has(pet.c.toLowerCase())) fail(id, `màu nhân vật bị trùng: ${pet.c}.`);
+        petIds.add(pet.id); petColors.add(pet.c.toLowerCase());
+        const imagePath = typeof pet.img === 'string' ? path.join(PUBLIC, pet.img) : '';
+        if (!imagePath || !isFile(imagePath)) { fail(id, `thumbnail nhân vật không tồn tại: ${pet.img || '(trống)'}.`); continue; }
+        const png = readFileSync(imagePath);
+        if (png.length > 512 * 1024) fail(id, `thumbnail ${pet.img} vượt 512 KB.`);
+        if (png.toString('ascii', 1, 4) !== 'PNG') { fail(id, `thumbnail ${pet.img} không phải PNG.`); continue; }
+        const width = png.readUInt32BE(16), height = png.readUInt32BE(20), colorType = png[25];
+        if (width !== 512 || height !== 512) fail(id, `thumbnail ${pet.img} phải đúng 512×512, hiện ${width}×${height}.`);
+        const hasAlpha = [4, 6].includes(colorType) || (colorType === 3 && png.indexOf(Buffer.from('tRNS')) >= 0);
+        if (!hasAlpha) fail(id, `thumbnail ${pet.img} phải có kênh alpha trong suốt (RGBA hoặc indexed PNG + tRNS).`);
+      }
+      const total = entry.pets.reduce((sum, pet) => { const p = pet && pet.img ? path.join(PUBLIC, pet.img) : ''; return sum + (p && isFile(p) ? statSync(p).size : 0); }, 0);
+      if (total > 1.5 * 1024 * 1024) fail(id, `tổng thumbnail nhân vật ${(total / 1024 / 1024).toFixed(2)} MB vượt 1,5 MB.`);
+    }
+  }
+
   if (typeof entry.preview !== 'string' || !entry.preview) fail(id, 'thiếu `preview`.');
   else if (!isFile(path.join(PUBLIC, entry.preview))) fail(id, `file preview không tồn tại: public/${entry.preview}`);
 
@@ -53,6 +79,11 @@ for (const [i, entry] of (Array.isArray(MAPS) ? MAPS : []).entries()) {
             const winter = (skin.zones || []).find((zone) => zone.id === 'winter');
             if (!winter || winter.labelText !== '#17212b') fail(id, 'cạnh Mùa Đông phải dùng chữ đen để đủ tương phản trên nền tuyết.');
             if (skin.cityLabelBand !== 0.18) fail(id, 'dải màu Monopoly phải phủ nền tên địa danh với tỷ lệ 0.18 chiều sâu ô.');
+          }
+          if (entry.id === 'ben-10') {
+            if ((skin.zones || []).length !== 4) fail(id, 'phải có đủ bốn vùng Bellwood, Pyronite, Petropia và Null Void.');
+            if (skin.cityLabelBand !== 0.18) fail(id, 'dải màu Monopoly phải phủ nền tên địa danh với tỷ lệ 0.18 chiều sâu ô.');
+            if ((skin.packs || []).length) fail(id, 'map Ben 10 phải giữ thiết kế Pen nhẹ, không tải asset pack ngoài.');
           }
           for (const p of Object.values(skin.sprites || {})) if (!isFile(path.join(PUBLIC, path.dirname(rendererRel), p))) fail(id, `sprite riêng không tồn tại: ${p}`);
           for (const pack of skin.packs) if (!existsSync(path.join(PUBLIC, 'assets/shared', pack, 'LICENSE.txt'))) fail(id, `pack dùng chung "${pack}" thiếu public/assets/shared/${pack}/LICENSE.txt.`);

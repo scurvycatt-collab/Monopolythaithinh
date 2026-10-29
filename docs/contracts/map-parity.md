@@ -28,6 +28,9 @@ có thay đổi bản đồ.
 ## 3. Nhân vật
 
 - Mọi mẫu nhân vật được chuẩn hoá cùng chiều cao hiển thị `1.08` đơn vị bản đồ.
+- Map có bộ nhân vật riêng phải khai báo đủ 4 entry trong `MAPS[].pets`; mỗi entry dùng PNG tĩnh
+  512×512 có alpha và đường dẫn `img`. Lobby, thẻ người chơi, chat và renderer đều phải đọc
+  cùng danh sách qua `Game.petsForMap(mapId)`, không trộn nhân vật từ map khác.
 - Mũi tên theo màu người chơi; quân của người đang điều khiển có viền sáng.
 - Nhiều quân trên cùng ô phải được tách vị trí, không che hoàn toàn nhau.
 
@@ -55,6 +58,8 @@ có thay đổi bản đồ.
 3. Kiểm tra ô trống, ô có chủ, mất điện, xây nhà, bán nhà và nhiều quân cùng ô.
 4. Kiểm tra Chance di chuyển (đặc biệt tới Championships/World Tour) và thông báo thẻ sử dụng.
 5. Kiểm tra `low`, `medium`, `high`, tab ẩn/hiện lại và rời phòng vào lại.
+6. Nếu map có bộ nhân vật riêng: chọn đủ từng nhân vật, kiểm tra thumbnail không trễ/không cắt,
+   màu tên–thẻ–mũi tên đồng nhất và server từ chối nhân vật thuộc map khác.
 
 Không được bỏ qua checklist bằng ngoại lệ riêng cho một skin. Nếu thay đổi luật dùng chung,
 cập nhật `public/rules.js`, test và tài liệu luật trước khi sửa renderer.

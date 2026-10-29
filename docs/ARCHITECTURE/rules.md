@@ -9,9 +9,9 @@ Code chính: `public/rules.js`, `public/game.js`
 - `act()` từ chối hành động không có trong `STATES[step].actions`.
 - `docs/RULES.md` sinh từ rules.js (`npm run rules:doc`). Mọi thay đổi phải qua `npm run verify` (hook pre-commit, CI GitHub, build:exe).
 - `RULEBOOK` trong rules.js là luật tiếng Việt hiện ở nút **Luật chơi** (bảng Cài đặt). Giao diện và engine cùng đọc một nguồn.
-- Danh sách map nằm trong `MAPS` (rules.js). Mỗi entry có `preview` trỏ ảnh SVG trong `public/maps/`, hiện ở màn tạo phòng và danh sách map trong lobby.
+- Danh sách map nằm trong `MAPS` (rules.js). Mỗi entry có `preview` trỏ ảnh SVG trong `public/maps/`, hiện ở màn tạo phòng. Map có bộ nhân vật riêng khai báo `pets`; engine và client lấy qua `Game.petsForMap(mapId)`.
 - Room lưu lựa chọn ở `settings.mapId`; `map-1` là map hiện tại và mặc định.
-- Thêm map: bổ sung asset/renderer, ảnh preview, entry `MAPS`, kiểm thử và tài liệu cùng lúc.
+- Thêm map: bổ sung asset/renderer, ảnh preview, entry `MAPS`, kiểm thử và tài liệu cùng lúc. Thumbnail nhân vật riêng phải là PNG tĩnh 512×512 có alpha, không sinh khi người chơi vào game.
 
 ## Luồng lượt
 - Thiếu tiền: khoản phải trả **treo** ở `S.pending = { from, to, amount, why }`, chưa ai mất/nhận tiền.

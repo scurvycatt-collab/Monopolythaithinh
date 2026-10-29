@@ -274,8 +274,8 @@ export class GameRoom extends DurableObject {
         }
         const wasEmpty = s.players.length === 0;
         const id = 'p' + hex(4), token = hex(18);
-        G.addPlayer(s, { id, token, name: body.name, pet: body.pet });
         if (wasEmpty && body.mapId) G.setSettings(s, { mapId: body.mapId });
+        G.addPlayer(s, { id, token, name: body.name, pet: body.pet });
         this.offlineSince.set(id, Date.now());
         this.emptySince = Date.now();
         await this.ctx.storage.put('emptySince', this.emptySince);
