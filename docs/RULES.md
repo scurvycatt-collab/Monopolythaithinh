@@ -116,7 +116,7 @@ stateDiagram-v2
 |---|---|---|
 | `roll` | Chờ đổ xúc xắc | **roll**: Đổ 2 xúc xắc, đi tổng số ô → giải quyết ô dừng. Đổ đôi: được đổ thêm sau khi xong ô (đôi lần 3 → Lost Island). |
 | `island` | Đang kẹt ở Lost Island | **roll**: Ra đôi → thoát và đi luôn; không ra đôi → mất 1 lượt (hết 3 lượt thì tự rời đảo và đi).<br>**payIsland**: Trả phí rời đảo → về bước roll.<br>**useCard**: Dùng thẻ Thoát đảo → về bước roll. |
-| `tour` | Lượt sau khi dừng ở World Tour | **tour**: Trả vé, bay tới thành phố chưa có chủ; nếu không còn thành phố trống thì bay tới ô của mình.<br>**skip**: Không bay → về bước roll. |
+| `tour` | Lượt sau khi dừng ở World Tour | **tour**: Trả vé, bay tới thành phố chưa có chủ hoặc thành phố của mình.<br>**skip**: Không bay → về bước roll. |
 | `flight` | Vừa rút thẻ Vé máy bay | **flight**: Bấm OK trên thẻ → đi tới World Tour → giải quyết ô dừng. |
 | `hostFestival` | Vừa rút thẻ Tổ chức lễ hội | **hostFestival**: Bấm OK trên thẻ → đi tới Championships → giải quyết ô dừng. |
 | `buy` | Dừng ở ô chưa có chủ, đủ tiền mua đất | **buy**: Mua đất + xây tới cấp chọn (≤ giới hạn vòng) → kiểm tra thắng → kết thúc ô.<br>**skip**: Không mua → kết thúc ô. |

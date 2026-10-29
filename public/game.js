@@ -66,8 +66,9 @@
     return Object.keys(s.props).map(Number).filter((i) => s.props[i].owner === pid).sort((a, b) => a - b);
   }
   function tourTargets(s, p) {
-    const freeCities = TILES.filter((t) => t.type === 'city' && !s.props[t.i]).map((t) => t.i);
-    return freeCities.length ? freeCities : ownedBy(s, p.id);
+    return TILES
+      .filter((t) => t.type === 'city' && (!s.props[t.i] || s.props[t.i].owner === p.id))
+      .map((t) => t.i);
   }
   function festivalTargets(s, p) {
     const targets = ownedBy(s, p.id);
@@ -633,7 +634,7 @@
       case 'tour': {
         need('tour');
         const i = tileArg();
-        if (!tourTargets(s, p).includes(i)) fail('Chỉ được bay tới thành phố trống; nếu không còn thành phố trống thì chọn ô của bạn');
+        if (!tourTargets(s, p).includes(i)) fail('Chỉ được bay tới thành phố chưa có chủ hoặc thành phố của bạn');
         if (p.money < CFG.TOUR_FEE) fail('Không đủ tiền mua vé');
         p.tourPending = false;
         transfer(p, null, CFG.TOUR_FEE);

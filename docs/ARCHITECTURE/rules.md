@@ -28,7 +28,7 @@ Code chính: `public/rules.js`, `public/game.js`
 - Ba ô lễ hội đầu ván nhân đôi tiền thuê.
 - Hệ số tổng cộng dồn theo monopoly / lễ hội / Championships, chặn ở ×10.
 - Chuyển Championships sang ô của mình tốn 50K (tăng tại ô hiện tại không mất phí).
-- World Tour chỉ tới thành phố trống; hết thành phố trống mới tới ô của mình.
+- World Tour cho phép tới thành phố chưa có chủ hoặc thành phố của chính người chơi; không được tới thành phố của người khác hay bãi biển.
 - Thuế là 10% tổng tài sản, không còn mức sàn tự đặt.
 - Luật công khai chỉ xác nhận đi qua hoặc dừng ở Start nhận 300K. Chưa có nguồn đủ tin cậy cho "nâng miễn phí 1 nhà hoặc roll thêm" khi dừng chính xác, nên engine chưa thêm cơ chế này.
 

@@ -155,9 +155,16 @@ function build(setup) {
 
 {
   const s = build({ step: 'tour' }), p = G.byId(s, 'me');
-  assert.ok(G.tourTargets(s, p).every((i) => R.TILES[i].type === 'city' && !s.props[i]), 'World Tour phải ưu tiên thành phố trống');
+  s.props[3] = { owner: 'me', level: 1 };
+  assert.ok(G.tourTargets(s, p).includes(3), 'World Tour phải cho bay tới thành phố của mình dù vẫn còn thành phố trống');
+  assert.ok(G.tourTargets(s, p).every((i) => R.TILES[i].type === 'city' && (!s.props[i] || s.props[i].owner === p.id)), 'World Tour chỉ nhận thành phố trống hoặc thành phố của mình');
+  const before = p.money;
+  G.act(s, p.id, 'tour', { tile: 3 });
+  assert.equal(p.pos, 3, 'World Tour phải thực sự di chuyển vào thành phố của mình');
+  assert.equal(p.money, before - R.CONFIG.TOUR_FEE, 'bay về thành phố của mình vẫn phải trả vé World Tour');
+  assert.equal(s.step.kind, 'upgrade', 'bay về thành phố của mình phải giải quyết ô và cho nâng cấp như khi dừng bình thường');
   for (const tile of R.TILES.filter((t) => t.type === 'city')) s.props[tile.i] = { owner: tile.i === 3 ? 'me' : 'op', level: 0 };
-  assert.deepEqual(G.tourTargets(s, p), [3], 'hết thành phố trống, World Tour chỉ được tới ô của mình');
+  assert.deepEqual(G.tourTargets(s, p), [3], 'World Tour không được bay tới thành phố của người khác');
 }
 
 function check(row) {

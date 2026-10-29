@@ -46,7 +46,7 @@
      Chuỗi trong TILE_INFO dùng placeholder {name}; app.js chỉ thay dữ liệu động,
      không tự giữ thêm một bản mô tả luật riêng. */
   const RULE_TEXT = {
-    TOUR_DESTINATION: 'một thành phố chưa có chủ; nếu không còn thành phố trống thì được chọn một ô của mình',
+    TOUR_DESTINATION: 'một thành phố chưa có chủ hoặc thành phố của mình',
   };
 
   const TILE_INFO = {
@@ -165,7 +165,7 @@
   const STATES = {
     roll: { desc: 'Chờ đổ xúc xắc', actions: { roll: 'Đổ 2 xúc xắc, đi tổng số ô → giải quyết ô dừng. Đổ đôi: được đổ thêm sau khi xong ô (đôi lần 3 → Lost Island).' } },
     island: { desc: 'Đang kẹt ở Lost Island', actions: { roll: 'Ra đôi → thoát và đi luôn; không ra đôi → mất 1 lượt (hết 3 lượt thì tự rời đảo và đi).', payIsland: 'Trả phí rời đảo → về bước roll.', useCard: 'Dùng thẻ Thoát đảo → về bước roll.' } },
-    tour: { desc: 'Lượt sau khi dừng ở World Tour', actions: { tour: 'Trả vé, bay tới thành phố chưa có chủ; nếu không còn thành phố trống thì bay tới ô của mình.', skip: 'Không bay → về bước roll.' } },
+    tour: { desc: 'Lượt sau khi dừng ở World Tour', actions: { tour: 'Trả vé, bay tới thành phố chưa có chủ hoặc thành phố của mình.', skip: 'Không bay → về bước roll.' } },
     flight: { desc: 'Vừa rút thẻ Vé máy bay', actions: { flight: 'Bấm OK trên thẻ → đi tới World Tour → giải quyết ô dừng.' } },
     hostFestival: { desc: 'Vừa rút thẻ Tổ chức lễ hội', actions: { hostFestival: 'Bấm OK trên thẻ → đi tới Championships → giải quyết ô dừng.' } },
     buy: { desc: 'Dừng ở ô chưa có chủ, đủ tiền mua đất', actions: { buy: 'Mua đất + xây tới cấp chọn (≤ giới hạn vòng) → kiểm tra thắng → kết thúc ô.', skip: 'Không mua → kết thúc ô.' } },

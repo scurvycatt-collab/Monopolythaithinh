@@ -421,9 +421,9 @@ function renderHub() {
   hub.querySelectorAll('[data-a]').forEach((b) => { b.onclick = () => act(b.dataset.a, null, b); });
   if (st.kind === 'tour') {
     const ok = p.money >= CFG.TOUR_FEE;
-    const targets = G.tourTargets(S, p), hasFreeCity = TILES.some((t) => t.type === 'city' && !S.props[t.i]);
+    const targets = G.tourTargets(S, p);
     setPick('tour', new Set(ok ? targets : []), (i) => { clearPick(); act('tour', { tile: i }); },
-      ok ? `${esc(p.name)}: ${hasFreeCity ? 'chọn thành phố chưa có chủ' : 'đã hết thành phố trống, chọn ô của bạn'} (vé ${shortK(CFG.TOUR_FEE)})` : `${esc(p.name)} không đủ ${shortK(CFG.TOUR_FEE)} mua vé`, 'Không bay');
+      ok ? `${esc(p.name)}: chọn thành phố chưa có chủ hoặc thành phố của bạn (vé ${shortK(CFG.TOUR_FEE)})` : `${esc(p.name)} không đủ ${shortK(CFG.TOUR_FEE)} mua vé`, 'Không bay');
   }
   if (st.kind === 'festival') {
     const next = CFG.FEST_MULT[Math.min(CFG.FEST_MULT.length - 1, (S.festLevel || 0) + 1)];
