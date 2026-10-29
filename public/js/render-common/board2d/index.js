@@ -3,7 +3,7 @@
    Lớp vẽ: (1) cảnh tĩnh nướng vào một canvas cỡ màn hình — đế, mặt giữa bàn, 32 ô, mọi sprite (nhà, góc, hội chợ…),
    chỉ dựng lại khi đổi khung nhìn hoặc trạng thái; (2) mỗi khung: chép cảnh tĩnh, ambient (trừ low), quân, xúc xắc,
    hoạt ảnh xây nhà, pháo giấy, làm tối khi chọn ô. Bàn trống ở low = một lần drawImage + quân. */
-import { Pen, P, CX, CY, swapPen, bake, canvas, fitText, shade, mix, light, rng, hash, wp, FONT } from './pen.js';
+import { Pen, P, CX, CY, swapPen, bake, canvas, fitText, shade, mix, light, rgb, rng, hash, wp, FONT } from './pen.js';
 import { loadAssets, composeKit } from './assets.js';
 
 // kích thước bàn (đơn vị thế giới): mặt ô ở y = 0, đế bên dưới. Ô Start là góc gần màn hình, đi về −x.
@@ -114,6 +114,7 @@ export async function createBoard2D(ctx, skin) {
   const outRounds = (i) => (S ? Math.max(0, Number((S.outage && S.outage[i]) || 0) - Number(S.round || 0)) : 0);
   const ownerOf = (i) => { const pr = S && S.props && S.props[i]; return pr ? (S.players.find((p) => p.id === pr.owner) || null) : null; };
   const colorOf = (p) => { if (!p) return '#9aa4b1'; const def = PETS.find((x) => x.id === p.pet); return def ? def.c : p.color || '#9aa4b1'; };
+  const contrastOn = (hex) => { const [r, g, b] = rgb(hex); return (r * 0.299 + g * 0.587 + b * 0.114) / 255 > 0.62 ? '#17212b' : '#ffffff'; };
   function tileTex(i) {
     const t = TILES[i], f = frame(i), own = ownerOf(i), out = own && G.outaged(S, i), slot = SL[slotOf(t)] || {};
     if (f.corner) {
@@ -125,10 +126,14 @@ export async function createBoard2D(ctx, skin) {
     const c = cOf(i), tex = canvas(TW * PX, TD * PX), c2 = tex.getContext('2d'), cw = tex.width, ch = tex.height, gH = Math.round(ch * GR), sH = ch - gH, pal = c.palette;
     if (slot.paint) slot.paint(c2, { ...c, cw, ch: gH, px: PX }); else grass(c2, 0, 0, cw, gH, c.seed, c.zone);
     c2.fillStyle = own ? (out ? shade(colorOf(own), 0.55) : colorOf(own)) : pal.priceStrip || '#c6cdd6'; c2.fillRect(0, gH, cw, sH);
-    const band = t.group ? pal.groups[t.group] : t.type === 'resort' ? pal.resortBand || '#7fd3dd' : null; if (band) { c2.fillStyle = band; c2.fillRect(0, gH - 4, cw, 8); }
+    const band = t.group ? pal.groups[t.group] : t.type === 'resort' ? pal.resortBand || '#7fd3dd' : null;
+    const cityBandH = t.group && skin.cityLabelBand ? Math.round(ch * skin.cityLabelBand) : 0;
+    if (band) { c2.fillStyle = band; c2.fillRect(0, cityBandH ? gH - cityBandH : gH - 4, cw, cityBandH || 8); }
     const sy = gH + sH / 2 + 3, ink = pal.priceText || '#5b6676', inkSh = 'rgba(255,255,255,.6)';
     if (t.price) {
-      fitText(c2, t.name.toUpperCase(), cw / 2, gH - 26, 34, cw - 12, 0, pal.labelText || '#fff', pal.labelShadow);
+      const nameInk = cityBandH ? contrastOn(band) : pal.labelText || '#fff';
+      const nameShadow = cityBandH ? (nameInk === '#ffffff' ? 'rgba(0,0,0,.38)' : 'rgba(255,255,255,.48)') : pal.labelShadow;
+      fitText(c2, t.name.toUpperCase(), cw / 2, gH - 26, 34, cw - 12, 0, nameInk, nameShadow);
       if (out) fitText(c2, `${outRounds(i)} ⚡`, cw / 2, sy, 60, cw - 16, 0, '#ffd23a', 'rgba(0,0,0,.45)');
       else if (own) fitText(c2, shortK(G.rentOf(S, i)), cw / 2, sy, 58, cw - 16, 0, '#ffffff', 'rgba(0,0,0,.35)');
     } else fitText(c2, LB[t.type] || t.type.toUpperCase(), cw / 2, sy, 40, cw - 16, 0, ink, inkSh);

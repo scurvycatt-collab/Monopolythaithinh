@@ -364,6 +364,7 @@ function fountainFx(p, t) {
 export default defineSkin({
   id: 'four-seasons',
   packs: ['kenney-iso-buildings', 'kenney-nature'],
+  cityLabelBand: 0.18,
   palette: {
     groups: { A: '#f27aa6', B: '#8fcf4f', C: '#ffbf1f', D: '#1fb5d6', E: '#f07a2a', F: '#c43a3a', G: '#7b86e0', H: '#3fb0e8' },
     ground: '#bde69c', priceStrip: '#c6cdd6', priceText: '#5b6676', labelText: '#ffffff',

@@ -189,6 +189,8 @@ assert.match(specials, /const th = ch \* 0\.78, tw = th \* 0\.94, tx = \(cw - tw
 assert.match(specials, /new THREE\.MeshBasicMaterial\(\{ map: tex \}\)/, 'Championships marker must remain bright under every camera-side light');
 assert.match(app, /pendingRoomMap = create \? mapId : ''/, 'only room creation may send the selected map');
 assert.match(app, /function renderGateMapPreview\(\)/, 'map preview must update with the selected map');
+assert.match(app, /--gate-map-bg/, 'selected map preview must also become the lightweight gate background');
+assert.match(css, /#gate::before\{[^}]*var\(--gate-map-bg,none\)[^}]*background-size:cover/, 'gate background must cover the viewport using the selected preview');
 assert.match(app, /const preview = `\$\{map\.preview\}/, 'map cards must use their registered preview image with an explicit cache version');
 assert.match(app, /#gwatch'\)\.onclick = \(\) => enterRoom\(false, true\)/, 'watch button must enter spectator mode');
 assert.match(app, /fetch\(roomEndpoint\(location\.href, 'api\/watch', room\)/, 'join and spectator modes must read room metadata before loading a board');

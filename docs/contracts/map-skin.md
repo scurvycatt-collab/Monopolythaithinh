@@ -33,6 +33,7 @@ export default defineSkin({
   packs: ['kenney-iso-buildings', 'kenney-nature'],   // asset dùng chung cần tải
   sprites: { lantern: 'assets/lantern.png' },        // asset riêng, gọi bằng tên trong draw
   palette: { … },        // §3
+  cityLabelBand: 0.18,   // tuỳ chọn: dải màu nhóm làm nền tên thành phố
   zones: [ … ] | null,   // §4
   slots: { … },          // §5
   ambient: { … },        // §6, tuỳ chọn
@@ -41,6 +42,8 @@ export default defineSkin({
 ```
 
 `defineSkin` kiểm tra skin lúc tải: thiếu slot bắt buộc, sai kiểu, sprite không tồn tại → lỗi tiếng Việt nêu rõ trường.
+
+`cityLabelBand` là tỷ lệ chiều sâu ô (0–0,3). Khi có, dải màu nhóm đất được kéo cao làm nền cho tên thành phố; khung xương tự chọn chữ đen/trắng theo độ sáng màu nhóm.
 
 ## 3. palette
 

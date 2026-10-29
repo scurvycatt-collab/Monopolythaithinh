@@ -29,6 +29,7 @@ export function defineSkin(skin) {
   GROUP_KEYS.forEach((g) => { if (!HEX.test(pal.groups[g] || '')) err(`palette.groups.${g}`, 'phải là màu "#rrggbb".'); });
   Object.keys(pal.groups).forEach((g) => { if (!GROUP_KEYS.includes(g)) err('palette.groups', `có khoá lạ "${g}" (chỉ A…H như rules.GROUPS).`); });
   for (const [k, v] of Object.entries(pal)) if (k !== 'groups' && !HEX.test(v)) err(`palette.${k}`, 'phải là màu "#rrggbb".');
+  if (skin.cityLabelBand !== undefined && (!Number.isFinite(skin.cityLabelBand) || skin.cityLabelBand <= 0 || skin.cityLabelBand > 0.3)) err('cityLabelBand', 'phải là tỷ lệ > 0 và ≤ 0.3 chiều sâu ô.');
 
   if (skin.zones !== null && skin.zones !== undefined) {
     if (!Array.isArray(skin.zones) || skin.zones.length !== 4) err('zones', 'phải là mảng đúng 4 phần tử (cạnh 0…3) hoặc null.');

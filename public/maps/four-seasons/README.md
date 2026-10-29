@@ -25,6 +25,7 @@ Giữa bàn là hội chợ bốn mùa (chợ hoa Tết, bãi thả diều, ph�
 
 - Tuân thủ `docs/contracts/map-parity.md`: ô trống không hiện giá mua, quân cao chuẩn 1.08,
   popup dùng thumbnail tĩnh và Chance phát thẻ theo `seq` trước chuyển động do thẻ tạo ra.
+- Dải màu Monopoly cao 18% chiều sâu ô và làm nền trực tiếp cho tên địa danh; chữ tự đổi đen/trắng theo độ tương phản.
 - Cảnh tĩnh/sprite được cache; lúc rảnh giảm nhịp đánh thức, tab ẩn dừng render; mức `low`
   bỏ ambient. Chạy `npm run verify` trước commit/deploy.
 

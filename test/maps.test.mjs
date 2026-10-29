@@ -52,6 +52,7 @@ for (const [i, entry] of (Array.isArray(MAPS) ? MAPS : []).entries()) {
           if (entry.id === 'four-seasons') {
             const winter = (skin.zones || []).find((zone) => zone.id === 'winter');
             if (!winter || winter.labelText !== '#17212b') fail(id, 'cạnh Mùa Đông phải dùng chữ đen để đủ tương phản trên nền tuyết.');
+            if (skin.cityLabelBand !== 0.18) fail(id, 'dải màu Monopoly phải phủ nền tên địa danh với tỷ lệ 0.18 chiều sâu ô.');
           }
           for (const p of Object.values(skin.sprites || {})) if (!isFile(path.join(PUBLIC, path.dirname(rendererRel), p))) fail(id, `sprite riêng không tồn tại: ${p}`);
           for (const pack of skin.packs) if (!existsSync(path.join(PUBLIC, 'assets/shared', pack, 'LICENSE.txt'))) fail(id, `pack dùng chung "${pack}" thiếu public/assets/shared/${pack}/LICENSE.txt.`);

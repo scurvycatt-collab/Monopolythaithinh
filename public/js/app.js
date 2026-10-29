@@ -974,6 +974,7 @@ const turnRow = (cur, attr) => `<div class="times">${CFG.TURN_OPTIONS.map((v) =>
 function renderGateMapPreview() {
   const map = MAPS.find((item) => item.id === $('#gmap').value) || MAPS[0];
   const preview = `${map.preview}${map.preview.includes('?') ? '&' : '?'}v=2`;
+  $('#gate').style.setProperty('--gate-map-bg', `url(${JSON.stringify(new URL(preview, document.baseURI).href)})`);
   $('#gmap-preview').innerHTML = `<img src="${esc(preview)}" alt="Ảnh xem trước ${esc(map.name)}"><span><b>${esc(map.name)}${map.default ? ' (Mặc định)' : ''}</b><small>${esc(map.description)}</small></span>`;
 }
 function lobbyNet(el) {
