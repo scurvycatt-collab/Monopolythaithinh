@@ -220,8 +220,16 @@ assert.match(worker, /case 'ready': G\.setReady\(s, p\.id, d\.ready\)/, 'Cloudfl
 assert.match(worker, /mapId: _fixedAtCreation/, 'Cloudflare must keep the creation-time map immutable in the lobby');
 assert.doesNotMatch(worker, /this\.isOnline\(d\.id\).*Người này đang online/, 'Cloudflare host kick must also work for online players');
 assert.match(server, /const EMPTY_ROOM_TTL_MS = 2 \* 60 \* 1000/);
-assert.match(server, /if \(!hasOnlinePlayers\(\)\) emptyTimer = setTimeout\(deleteEmptyRoom, EMPTY_ROOM_TTL_MS\)/);
+assert.match(server, /const MAX_ROOM_AGE_MS = 12 \* 60 \* 60 \* 1000/);
+assert.match(server, /lastPlayerSeenAt \+ EMPTY_ROOM_TTL_MS/, 'Node room expiry must use the same renewable player lease');
+assert.match(server, /url\.pathname === '\/api\/presence'/, 'Node hosting must accept player presence heartbeats');
 assert.match(worker, /const EMPTY_ROOM_TTL_MS = 2 \* 60 \* 1000/);
+assert.match(worker, /const MAX_ROOM_AGE_MS = 12 \* 60 \* 60 \* 1000/);
+assert.match(worker, /lastPlayerSeenAt \+ EMPTY_ROOM_TTL_MS/, 'Cloudflare room expiry must use a renewable player lease');
+assert.match(worker, /createdAt \+ MAX_ROOM_AGE_MS/, 'Cloudflare rooms must have a hard 12-hour lifetime');
+assert.match(worker, /await this\.expireInactiveRoom\(\)/, 'Cloudflare must lazily expire a stale room before handling a reconnect');
+assert.match(worker, /url\.pathname === '\/api\/presence'/, 'Cloudflare must accept player presence heartbeats');
+assert.match(app, /presenceTimer = setInterval\(beat, 30000\)/, 'network players must renew the room lease while connected');
 assert.match(worker, /await this\.ctx\.storage\.deleteAll\(\)/, 'empty Cloudflare rooms must delete persisted state');
 assert.match(worker, /await this\.ctx\.storage\.deleteAlarm\(\)/, 'deleted rooms must not leave a scheduled alarm behind');
 assert.match(worker, /if \(!this\.state\.players\.length\) return json\(404, \{ error: 'Phòng không tồn tại hoặc đã bị xoá' \}\)/, 'Cloudflare must reject spectators for a deleted room');

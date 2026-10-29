@@ -792,13 +792,25 @@ const NAME_KEY = 'tt-monopoly-name';
 const meKey = () => `${ME_KEY}:${ROOM || 'main'}`;
 function loadMe() { try { return JSON.parse(localStorage.getItem(meKey()) || 'null'); } catch (e) { return null; } }
 function setMe(m, reconnect = true) { me = m; try { m ? localStorage.setItem(meKey(), JSON.stringify(m)) : localStorage.removeItem(meKey()); } catch (e) { /* bỏ qua */ } if (reconnect) connect(); }
-let es = null, connectionEpoch = 0;
+let es = null, connectionEpoch = 0, presenceTimer = 0;
+function stopPresenceHeartbeat() { clearInterval(presenceTimer); presenceTimer = 0; }
+function startPresenceHeartbeat(epoch) {
+  stopPresenceHeartbeat();
+  if (MODE !== 'net' || !me || !ROOM) return;
+  const beat = () => {
+    if (epoch !== connectionEpoch || !me || !ROOM) return stopPresenceHeartbeat();
+    api('api/presence', { token: me.token }).catch(() => {});
+  };
+  beat();
+  presenceTimer = setInterval(beat, 30000);
+}
 function connect() {
   const epoch = ++connectionEpoch;
+  stopPresenceHeartbeat();
   if (es) es.close();
   const source = new EventSource(roomEndpoint(location.href, 'events', ROOM, me ? { token: me.token } : (WATCH_MODE ? { viewer: lobbyDraftName } : {})));
   es = source;
-  source.onopen = () => { if (epoch === connectionEpoch) $('#conn').classList.remove('show'); };
+  source.onopen = () => { if (epoch === connectionEpoch) { $('#conn').classList.remove('show'); startPresenceHeartbeat(epoch); } };
   source.onerror = () => { if (epoch === connectionEpoch) $('#conn').classList.add('show'); };
   source.onmessage = (e) => {
     if (epoch !== connectionEpoch) return;
@@ -1081,6 +1093,7 @@ function showRoomGate() {
   if (!ROOM_GATE) return;
   if (board) board.stop();
   connectionEpoch++;
+  stopPresenceHeartbeat();
   if (es) es.close();
   es = null;
   queue.length = 0;

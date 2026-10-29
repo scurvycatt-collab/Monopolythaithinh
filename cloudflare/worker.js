@@ -10,6 +10,7 @@ import { resolveAppPath, validRoomKey } from './pathing.mjs';
 const G = Game;
 const C = G.RULES.CONFIG;
 const EMPTY_ROOM_TTL_MS = 2 * 60 * 1000;
+const MAX_ROOM_AGE_MS = 12 * 60 * 60 * 1000;
 const enc = new TextEncoder();
 const json = (code, obj) => new Response(JSON.stringify(obj), { status: code, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' } });
 const hex = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, '0')).join('');
@@ -51,8 +52,12 @@ export class GameRoom extends DurableObject {
     this.interaction = null;
     this.interactionAt = new Map();
     this.emptySince = null;
+    this.lastPlayerSeenAt = null;
+    this.createdAt = null;
     ctx.blockConcurrencyWhile(async () => {
-      const [saved, emptySince, chat] = await Promise.all([ctx.storage.get('state'), ctx.storage.get('emptySince'), ctx.storage.get('chat')]);
+      const [saved, emptySince, lastPlayerSeenAt, createdAt, chat] = await Promise.all([
+        ctx.storage.get('state'), ctx.storage.get('emptySince'), ctx.storage.get('lastPlayerSeenAt'), ctx.storage.get('createdAt'), ctx.storage.get('chat'),
+      ]);
       const base = G.createState();
       this.state = saved ? Object.assign(base, saved, { settings: Object.assign(base.settings, saved.settings || {}) }) : base;
       G.ensureHost(this.state); // nâng cấp room cũ chưa có hostId
@@ -61,7 +66,12 @@ export class GameRoom extends DurableObject {
       this.state.players.forEach((p) => this.offlineSince.set(p.id, now));
       if (this.state.players.length) {
         this.emptySince = Number(emptySince) || now;
+        // Room cũ chưa có lease dùng emptySince để không được sống lại sau khi đã quá hạn.
+        this.lastPlayerSeenAt = Number(lastPlayerSeenAt) || Number(emptySince) || now;
+        this.createdAt = Number(createdAt) || now;
         if (!emptySince) await ctx.storage.put('emptySince', this.emptySince);
+        if (!lastPlayerSeenAt) await ctx.storage.put('lastPlayerSeenAt', this.lastPlayerSeenAt);
+        if (!createdAt) await ctx.storage.put('createdAt', this.createdAt);
         await this.schedule();
       }
     });
@@ -97,20 +107,47 @@ export class GameRoom extends DurableObject {
     this.emptySince = null;
     await this.ctx.storage.delete('emptySince');
   }
+  async touchPlayer() {
+    if (!this.state.players.length) return;
+    if (this.createdAt === null) {
+      this.createdAt = Date.now();
+      await this.ctx.storage.put('createdAt', this.createdAt);
+    }
+    this.lastPlayerSeenAt = Date.now();
+    await this.ctx.storage.put('lastPlayerSeenAt', this.lastPlayerSeenAt);
+    await this.schedule();
+  }
+  async expireInactiveRoom() {
+    if (!this.state.players.length) return false;
+    const now = Date.now();
+    const inactive = this.lastPlayerSeenAt !== null && now >= this.lastPlayerSeenAt + EMPTY_ROOM_TTL_MS;
+    const tooOld = this.createdAt !== null && now >= this.createdAt + MAX_ROOM_AGE_MS;
+    if (!inactive && !tooOld) return false;
+    await this.deleteRoom();
+    return true;
+  }
   async deleteRoom() {
+    const closing = [...this.clients];
     this.state = G.createState();
-    this.conns.clear(); this.offlineSince.clear(); this.emptySince = null;
+    this.conns.clear(); this.offlineSince.clear(); this.emptySince = null; this.lastPlayerSeenAt = null; this.createdAt = null;
     await this.ctx.storage.deleteAll();
     await this.ctx.storage.deleteAlarm();
-    this.broadcast();
+    const msg = this.payload();
+    this.clients.clear();
+    for (const c of closing) {
+      try { await c.writer.write(enc.encode(msg)); } catch (e) { /* stream đã đóng */ }
+      try { await c.writer.close(); } catch (e) { /* stream đã đóng */ }
+    }
   }
   // đồng hồ của phòng: chỉ hẹn giờ đúng lúc có việc (hết ván, hết giờ bước, người mất kết nối tới hạn đi hộ,
   // hoặc ping 14 giây giữ kết nối) để tiết kiệm lượt gọi trên gói miễn phí của Cloudflare
   nextDeadline() {
     const s = this.state, now = Date.now(), t = [];
     if (this.clients.size) t.push((this.lastPing || now) + 14000);
+    // Lease do trình duyệt gia hạn: không phụ thuộc việc stream SSE có báo đóng chính xác hay không.
+    if (s.players.length && this.lastPlayerSeenAt !== null) t.push(this.lastPlayerSeenAt + EMPTY_ROOM_TTL_MS);
+    if (s.players.length && this.createdAt !== null) t.push(this.createdAt + MAX_ROOM_AGE_MS);
     if (s.players.length && !this.hasOnlinePlayers()) {
-      if (this.emptySince !== null) t.push(this.emptySince + EMPTY_ROOM_TTL_MS);
       return t.length ? Math.max(now + 250, Math.min(...t)) : null;
     }
     if (s.phase === 'play') {
@@ -131,7 +168,9 @@ export class GameRoom extends DurableObject {
   }
   async alarm() {
     const s = this.state;
-    if (s.players.length && !this.hasOnlinePlayers() && this.emptySince !== null && Date.now() >= this.emptySince + EMPTY_ROOM_TTL_MS) {
+    const now = Date.now();
+    if (s.players.length && ((this.lastPlayerSeenAt !== null && now >= this.lastPlayerSeenAt + EMPTY_ROOM_TTL_MS)
+      || (this.createdAt !== null && now >= this.createdAt + MAX_ROOM_AGE_MS))) {
       await this.deleteRoom(); return;
     }
     if (s.phase === 'play' && this.hasOnlinePlayers()) try {
@@ -164,6 +203,8 @@ export class GameRoom extends DurableObject {
   async fetch(req) {
     const url = new URL(req.url);
     if (url.pathname === '/health') return json(200, { app: 'thai-thinh-monopoly', phase: this.state.phase, version: this.state.version, host: 'cloudflare' });
+    // Alarm có thể chạy trễ; request mới vẫn phải xoá room quá hạn trước khi được phép hồi sinh nó.
+    await this.expireInactiveRoom();
     if (url.pathname === '/api/info' && req.method === 'GET') {
       const basePath = req.headers.get('X-Thai-Thinh-Base-Path') || '';
       const invite = new URL(`${url.origin}${basePath}/`);
@@ -181,14 +222,16 @@ export class GameRoom extends DurableObject {
   }
 
   async events(url) {
-    const p = this.byToken(url.searchParams.get('token'));
+    const token = url.searchParams.get('token');
+    const p = this.byToken(token);
+    if (token && !p) return json(401, { error: 'Phiên phòng đã hết hạn' });
     const viewer = p ? '' : String(url.searchParams.get('viewer') || '').replace(/\s+/g, ' ').trim().slice(0, 16);
     if (viewer && !this.state.players.length) return json(404, { error: 'Phòng không tồn tại hoặc đã bị xoá' });
     const { readable, writable } = new TransformStream();
     const c = { writer: writable.getWriter(), pid: p ? p.id : null, viewer };
     c.writer.closed.catch(() => this.drop(c)); // trình duyệt đóng kết nối → mất kết nối ngay
     this.clients.add(c);
-    if (p) { this.conns.set(p.id, (this.conns.get(p.id) || 0) + 1); await this.markOccupied(); }
+    if (p) { this.conns.set(p.id, (this.conns.get(p.id) || 0) + 1); await this.markOccupied(); await this.touchPlayer(); }
     this.send(c, 'retry: 1500\n\n');
     this.broadcast();
     this.schedule();
@@ -213,6 +256,12 @@ export class GameRoom extends DurableObject {
     try { const text = await req.text(); if (text.length > 20000) throw new Error('Quá lớn'); body = text ? JSON.parse(text) : {}; } catch (e) { return json(400, { error: e.message === 'Quá lớn' ? e.message : 'JSON lỗi' }); }
     const s = this.state;
     try {
+      if (url.pathname === '/api/presence') {
+        const p = this.byToken(body.token);
+        if (!p) return json(401, { error: 'Phiên phòng đã hết hạn' });
+        await this.touchPlayer();
+        return json(200, { ok: true });
+      }
       if (url.pathname === '/api/join') {
         const existing = G.byName(s, body.name);
         if (existing) {
@@ -220,6 +269,7 @@ export class GameRoom extends DurableObject {
           if (this.isOnline(existing.id)) return json(409, { error: `${existing.name} đang online trên một thiết bị khác` });
           this.offlineSince.set(existing.id, Date.now());
           await this.startEmptyGrace();
+          await this.touchPlayer();
           return json(200, { id: existing.id, token: existing.token, rejoined: true });
         }
         const wasEmpty = s.players.length === 0;
@@ -230,6 +280,7 @@ export class GameRoom extends DurableObject {
         this.emptySince = Date.now();
         await this.ctx.storage.put('emptySince', this.emptySince);
         await this.commit();
+        await this.touchPlayer();
         return json(200, { id, token });
       }
       if (url.pathname === '/api/claim') { // nhận lại ghế từ thiết bị khác khi ghế đó đang mất kết nối
@@ -237,6 +288,7 @@ export class GameRoom extends DurableObject {
         if (!p) return json(404, { error: 'Không tìm thấy người chơi' });
         if (this.isOnline(p.id)) return json(409, { error: `${p.name} đang online trên một thiết bị khác` });
         await this.startEmptyGrace();
+        await this.touchPlayer();
         return json(200, { id: p.id, token: p.token });
       }
       if (url.pathname === '/api/chat') {
@@ -244,6 +296,7 @@ export class GameRoom extends DurableObject {
         const viewer = String(body.viewer || '').replace(/\s+/g, ' ').trim().slice(0, 16);
         const activeViewer = !p && viewer && this.viewers().some((name) => name.toLowerCase() === viewer.toLowerCase());
         if (!p && !activeViewer) return json(401, { error: 'Bạn cần vào phòng hoặc vào xem trước khi chat' });
+        if (p) await this.touchPlayer();
         const text = String(body.text || '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 240);
         if (!text) return json(400, { error: 'Tin nhắn đang trống' });
         this.chat.push({ id: hex(8), pid: p ? p.id : '', name: p ? p.name : viewer, viewer: !p, text, at: Date.now() });
@@ -255,6 +308,7 @@ export class GameRoom extends DurableObject {
       if (url.pathname === '/api/interact') {
         const p = this.byToken(body.token), target = G.byId(s, body.target), kind = String(body.kind || '');
         if (!p) return json(401, { error: 'Chỉ người chơi trong phòng mới dùng được tương tác' });
+        await this.touchPlayer();
         if (!target || target.bot || target.id === p.id) return json(400, { error: 'Không thể tương tác với người chơi này' });
         if (!INTERACTIONS.has(kind)) return json(400, { error: 'Tương tác không hợp lệ' });
         if (Date.now() - (this.interactionAt.get(p.id) || 0) < 1800) return json(429, { error: 'Chờ một chút trước khi gửi tiếp' });
@@ -266,6 +320,7 @@ export class GameRoom extends DurableObject {
       if (url.pathname === '/api/act') {
         const p = this.byToken(body.token);
         if (!p) return json(401, { error: 'Bạn chưa vào phòng (hoặc phiên đã hết hạn)' });
+        await this.touchPlayer();
         if (['start', 'reset', 'kick', 'settings', 'addBot', 'removeBot'].includes(body.type) && !G.isHost(s, p.id)) {
           return json(403, { error: 'Chỉ host mới được thay đổi cấu hình phòng' });
         }

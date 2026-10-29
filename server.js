@@ -27,6 +27,7 @@ const SAVE = path.join(DATA_DIR, 'game.json');
 const CHAT_SAVE = path.join(DATA_DIR, 'chat.json');
 const MANUAL_PROXY_SEC = G.RULES.CONFIG.PROXY_SEC; // người chơi mất kết nối bao lâu thì người khác được bấm "Đi hộ" (bộ luật)
 const EMPTY_ROOM_TTL_MS = 2 * 60 * 1000;
+const MAX_ROOM_AGE_MS = 12 * 60 * 60 * 1000;
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
 
@@ -79,14 +80,29 @@ const interactionAt = new Map();
 const payload = () => `data: ${JSON.stringify({ state: G.publicView(state), presence: presence(), viewers: viewers(), chat, interaction, now: Date.now(), proxySec: MANUAL_PROXY_SEC })}\n\n`;
 function broadcast() { const msg = payload(); for (const c of clients) c.res.write(msg); }
 let emptyTimer = null;
+let lastPlayerSeenAt = state.players.length ? Date.now() : null;
+let roomCreatedAt = Number(state.roomCreatedAt) || (state.players.length ? Date.now() : null);
 function deleteEmptyRoom() {
-  if (hasOnlinePlayers()) return;
+  const now = Date.now();
+  const inactive = lastPlayerSeenAt !== null && now >= lastPlayerSeenAt + EMPTY_ROOM_TTL_MS;
+  const tooOld = roomCreatedAt !== null && now >= roomCreatedAt + MAX_ROOM_AGE_MS;
+  if (!inactive && !tooOld) return scheduleEmptyCleanup();
   state = G.createState(); chat = []; offlineSince.clear(); conns.clear(); save(); saveChat(); broadcast();
+  lastPlayerSeenAt = null; roomCreatedAt = null;
 }
 function scheduleEmptyCleanup() {
   clearTimeout(emptyTimer); emptyTimer = null;
   if (!state.players.length) return;
-  if (!hasOnlinePlayers()) emptyTimer = setTimeout(deleteEmptyRoom, EMPTY_ROOM_TTL_MS);
+  const inactiveAt = (lastPlayerSeenAt || Date.now()) + EMPTY_ROOM_TTL_MS;
+  const hardExpiryAt = (roomCreatedAt || Date.now()) + MAX_ROOM_AGE_MS;
+  const delay = Math.max(0, Math.min(inactiveAt, hardExpiryAt) - Date.now());
+  emptyTimer = setTimeout(deleteEmptyRoom, delay);
+}
+function touchPlayer() {
+  const now = Date.now();
+  if (roomCreatedAt === null) { roomCreatedAt = now; state.roomCreatedAt = now; save(); }
+  lastPlayerSeenAt = now;
+  scheduleEmptyCleanup();
 }
 function commit() { state.version++; save(); broadcast(); scheduleEmptyCleanup(); scheduleBot(); }
 scheduleEmptyCleanup();
@@ -166,7 +182,7 @@ function handleEvents(req, res, url) {
   req.socket.setKeepAlive(true, 10000); req.socket.setNoDelay(true);
   const c = { res, pid: p ? p.id : null, viewer };
   clients.add(c);
-  if (p) { conns.set(p.id, (conns.get(p.id) || 0) + 1); clearTimeout(emptyTimer); emptyTimer = null; scheduleBot(); }
+  if (p) { conns.set(p.id, (conns.get(p.id) || 0) + 1); touchPlayer(); scheduleBot(); }
   broadcast();
   req.on('close', () => {
     clients.delete(c);
@@ -183,13 +199,19 @@ async function handleApi(req, res, url) {
   let body;
   try { body = await readBody(req); } catch (e) { return sendJSON(res, 400, { error: e.message }); }
   try {
+    if (url.pathname === '/api/presence') {
+      const p = byToken(body.token);
+      if (!p) return sendJSON(res, 401, { error: 'Phiên phòng đã hết hạn' });
+      touchPlayer();
+      return sendJSON(res, 200, { ok: true });
+    }
     if (url.pathname === '/api/join') {
       const existing = G.byName(state, body.name);
       if (existing) {
         if (existing.bot) return sendJSON(res, 409, { error: 'Tên này đang được bot sử dụng' });
         if (isOnline(existing.id)) return sendJSON(res, 409, { error: `${existing.name} đang online trên một thiết bị khác` });
         offlineSince.set(existing.id, Date.now());
-        scheduleEmptyCleanup();
+        touchPlayer();
         return sendJSON(res, 200, { id: existing.id, token: existing.token, rejoined: true });
       }
       const wasEmpty = state.players.length === 0;
@@ -198,6 +220,7 @@ async function handleApi(req, res, url) {
       G.addPlayer(state, { id, token, name: body.name, pet: body.pet });
       if (wasEmpty && body.mapId) G.setSettings(state, { mapId: body.mapId });
       offlineSince.set(id, Date.now());
+      touchPlayer();
       commit();
       return sendJSON(res, 200, { id, token });
     }
@@ -205,7 +228,7 @@ async function handleApi(req, res, url) {
       const p = G.byId(state, body.id);
       if (!p) return sendJSON(res, 404, { error: 'Không tìm thấy người chơi' });
       if (isOnline(p.id)) return sendJSON(res, 409, { error: `${p.name} đang online trên một thiết bị khác` });
-      scheduleEmptyCleanup();
+      touchPlayer();
       return sendJSON(res, 200, { id: p.id, token: p.token });
     }
     if (url.pathname === '/api/chat') {
@@ -213,6 +236,7 @@ async function handleApi(req, res, url) {
       const viewer = String(body.viewer || '').replace(/\s+/g, ' ').trim().slice(0, 16);
       const activeViewer = !p && viewer && viewers().some((name) => name.toLowerCase() === viewer.toLowerCase());
       if (!p && !activeViewer) return sendJSON(res, 401, { error: 'Bạn cần vào phòng hoặc vào xem trước khi chat' });
+      if (p) touchPlayer();
       const text = String(body.text || '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 240);
       if (!text) return sendJSON(res, 400, { error: 'Tin nhắn đang trống' });
       chat.push({ id: crypto.randomBytes(8).toString('hex'), pid: p ? p.id : '', name: p ? p.name : viewer, viewer: !p, text, at: Date.now() });
@@ -222,6 +246,7 @@ async function handleApi(req, res, url) {
     if (url.pathname === '/api/interact') {
       const p = byToken(body.token), target = G.byId(state, body.target), kind = String(body.kind || '');
       if (!p) return sendJSON(res, 401, { error: 'Chỉ người chơi trong phòng mới dùng được tương tác' });
+      touchPlayer();
       if (!target || target.bot || target.id === p.id) return sendJSON(res, 400, { error: 'Không thể tương tác với người chơi này' });
       if (!INTERACTIONS.has(kind)) return sendJSON(res, 400, { error: 'Tương tác không hợp lệ' });
       if (Date.now() - (interactionAt.get(p.id) || 0) < 1800) return sendJSON(res, 429, { error: 'Chờ một chút trước khi gửi tiếp' });
@@ -233,6 +258,7 @@ async function handleApi(req, res, url) {
     if (url.pathname === '/api/act') {
       const p = byToken(body.token);
       if (!p) return sendJSON(res, 401, { error: 'Bạn chưa vào phòng (hoặc phiên đã hết hạn)' });
+      touchPlayer();
       if (['start', 'reset', 'kick', 'settings', 'addBot', 'removeBot'].includes(body.type) && !G.isHost(state, p.id)) {
         return sendJSON(res, 403, { error: 'Chỉ host mới được thay đổi cấu hình phòng' });
       }

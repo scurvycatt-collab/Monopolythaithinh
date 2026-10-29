@@ -28,8 +28,9 @@ Code chính: `server.js`, `cloudflare/worker.js`, `cloudflare/` (Worker, `wrangl
 - Màn tạo phòng gửi `mapId` trong `/api/join`. Node server và Durable Object chỉ nhận nếu room chưa có người (`wasEmpty`), nên vào phòng hoặc rejoin không thể ghi đè map của host. (`MAPS`: xem `rules.md`.)
 
 ## TTL phòng trống
-- Khi toàn bộ người chơi mất kết nối, Node server và Durable Object bắt đầu đệm `EMPTY_ROOM_TTL_MS = 2 phút`, tạm dừng tự đi/hết bước và xoá toàn bộ state phòng khi hết hạn.
-- Một SSE người chơi kết nối lại sẽ huỷ xoá; khán giả không giữ phòng sống.
+- Trình duyệt của người chơi gia hạn lease mỗi 30 giây. Nếu không còn lease nào được gia hạn, Node server và Durable Object xoá toàn bộ state phòng sau `EMPTY_ROOM_TTL_MS = 2 phút`; không phụ thuộc hoàn toàn vào việc proxy/SSE có báo đóng stream đúng lúc hay không.
+- Mỗi phòng chỉ tồn tại tối đa `MAX_ROOM_AGE_MS = 12 giờ` kể từ lúc tạo. Đây là hạn cứng, heartbeat và reconnect không gia hạn được.
+- Alarm thực hiện xoá chủ động; mọi request mới cũng kiểm tra hạn trước để room quá hạn không thể sống lại nếu alarm chạy trễ. Khán giả không gia hạn lease và không giữ phòng sống.
 
 ## Bot
 - Host có nút **🤖 + Thêm bot** trong phòng chờ khi còn ghế trống, và xoá từng bot trước khi bắt đầu.
