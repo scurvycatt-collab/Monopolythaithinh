@@ -22,6 +22,8 @@ assert.match(html, /class="gate-card"/);
 assert.match(html, /id="gmap"/, 'room creation screen must include map selection');
 assert.match(html, /id="gmap-preview"/, 'map selector must include an image preview area');
 assert.match(html, /id="roomchat"/, 'game must expose a left-side room chat window');
+assert.match(css, /#roomchat\{[^}]*left:calc\(12px[^}]*top:calc\(132px/, 'desktop chat must be pinned below the top-left player card');
+assert.match(css, /@media \(max-width:760px\)[\s\S]*#roomchat\{[^}]*top:calc\(90px/, 'mobile chat must follow the smaller top-left player card');
 assert.match(html, /id="interaction-menu"/, 'game must expose the player interaction picker');
 assert.match(html, /id="gwatch"/, 'home screen must offer spectator mode');
 assert.match(html, /id="soundbtn"/);
