@@ -57,12 +57,14 @@ function flameVent(p, x, z, s = 1) {
   p.cone(x, 0.04, z, 0.13 * s, 0.38 * s, '#ff6a24'); p.cone(x, 0.05, z, 0.07 * s, 0.28 * s, '#ffd642');
 }
 
+function decorImageName(c) {
+  const group = String(c.group || 'A').toUpperCase();
+  return `m3Decor${/^[A-H]$/.test(group) ? group : 'A'}`;
+}
+
 function deco(p, c) {
-  const z = zoneId(c), x = c.seed % 2 ? -0.5 : 0.48, zz = c.gz - 0.45;
-  if (z === 'bellwood') { alienTree(p, x, zz, 0.75); p.ball(-x * 0.6, 0.08, zz + 0.35, 0.07, '#b9ff59'); }
-  if (z === 'pyronite') { crystal(p, x, zz, 0.42, '#ff7c2d'); p.flatEllipse(-x * 0.4, 0.01, zz + 0.36, 0.18, 0.1, '#ffb329'); }
-  if (z === 'petropia') { crystal(p, x, zz, 0.52, '#55e5ff'); crystal(p, -x * 0.55, zz + 0.32, 0.28, '#a4f6ff'); }
-  if (z === 'null-void') { p.cyl(x, 0, zz, 0.08, 0.36, '#6f4a91'); p.ball(x, 0.46, zz, 0.15, '#de72ff'); p.line3([[x, 0.32, zz], [-x * 0.45, 0.18, zz + 0.32]], '#bc5ce7', 0.025); }
+  const x = c.seed % 2 ? -0.32 : 0.32;
+  p.img(decorImageName(c), x, c.gz - 0.32, 1.4);
 }
 
 function windowBand(p, x, y, z, w, color) {
@@ -123,12 +125,20 @@ function maxBuilding(p, c) {
   if (lv === 4) { p.box(-0.45, h + 0.58, z - 0.04, 0.9, 0.2, 0.08, col, { edge: null }); p.textZ('PLUMBER', 0, h + 0.68, z + 0.045, 0.1, '#ffffff'); p.flagC(-0.56, z - 0.18, 1.18, col); p.flagC(0.56, z - 0.18, 1.18, col); }
 }
 
+function buildingImageName(c) {
+  const owner = { 'ben10-ben': 'Ben', 'ben10-gwen': 'Gwen', 'ben10-kevin': 'Kevin', 'ben10-max': 'Max' }[c.pet];
+  return owner ? `m3Building${owner}${c.level}` : '';
+}
 function techHouse(p, c) {
+  const sprite = buildingImageName(c); if (sprite) return p.img(sprite, 0, c.gz, 1.6);
   if (c.pet === 'ben10-gwen') return gwenBuilding(p, c);
   if (c.pet === 'ben10-kevin') return kevinBuilding(p, c);
   if (c.pet === 'ben10-max') return maxBuilding(p, c);
   return benBuilding(p, c);
 }
+
+function resortImageName(c) { return `m3Resort${Math.max(0, Math.min(4, Number(c.level) || 0))}`; }
+function resortImage(p, c) { p.img(resortImageName(c), 0, c.gz, 1.6); }
 
 function portalPad(p, c) {
   const z = c.gz; energyRing(p, 0, 0.01, z, 0.42, c.color || '#9aed32', 10);
@@ -175,6 +185,18 @@ function plumberTax(p, c) {
   p.box(-0.3, 0.34, z + 0.255, 0.6, 0.16, 0.025, '#1b2925', { edge: null }); p.textZ('PLUMBER TAX', 0, 0.42, z + 0.282, 0.1, '#aaff32'); p.box(-0.08, 0, z + 0.26, 0.16, 0.3, 0.025, '#263b40', { edge: null });
 }
 
+const cornerImage = (name, scale) => (p) => p.img(name, 0, 0, scale);
+function chanceImage(p, c) {
+  const name = c.tile === 20 ? 'm3Chance2' : c.tile === 28 ? 'm3Chance3' : 'm3Chance1';
+  p.img(name, 0, c.gz, name === 'm3Chance1' ? 1.45 : name === 'm3Chance2' ? 1.55 : 1.5);
+}
+function taxImage(p, c) { p.img('m3Tax', 0, c.gz, 1.55); }
+function festivalImage(p, c) {
+  p.img('m3Festival', 0, c.gz, 1.7);
+  p.textZ(`×${c.level || 2}`, 0, 0.72, c.gz + 0.04, 0.18, '#ffffff', 'rgba(0,0,0,.45)');
+}
+function outageImage(p, c) { p.img('m3Outage', 0, c.gz, 1.45); }
+
 function centerGround(g, c) {
   const W = (x, z) => c.T(x, z); g.save(); g.fillStyle = '#132c24'; g.fillRect(0, 0, g.canvas.width, g.canvas.height); g.globalAlpha = 0.52; g.strokeStyle = '#78d934'; g.lineWidth = 5;
   for (let r = 1; r <= 5; r++) { const [x, y] = W(0, 0); g.beginPath(); g.arc(x, y, r * 58, 0, Math.PI * 2); g.stroke(); }
@@ -184,31 +206,31 @@ function centerGround(g, c) {
 }
 
 function biome(pen, c) {
-  const add = (u, v, fn, d = 0) => { const [x, z] = c.toWorld(u, v); c.add(x, z, (p) => fn(p, x, z), d); };
+  const add = (x, z, fn, d = 0) => c.add(x, z, (p) => fn(p, x, z), d);
   const landmark = (name, h) => (p, x, z) => p.img(name, x, z, h);
   if (c.zone.id === 'bellwood') {
-    add(-1.55, 3.72, landmark('bellwood', 3.65), .2);
-    add(1.55, 4.75, (p, x, z) => alienTree(p, x, z, 1.15), .05);
+    add(3.7, 2.45, landmark('bellwood', 3.65), .2);
+    add(4.75, 1.15, (p, x, z) => alienTree(p, x, z, 1.15), .05);
   }
   if (c.zone.id === 'pyronite') {
-    add(-1.55, 3.72, landmark('pyron', 3.65), .2);
-    add(1.55, 4.75, (p, x, z) => flameVent(p, x, z, 1.15), .05);
+    add(-2.75, -2.75, landmark('pyron', 3.65), .2);
+    add(-4.15, -1.85, (p, x, z) => flameVent(p, x, z, 1.15), .05);
   }
   if (c.zone.id === 'petropia') {
-    add(-1.55, 3.72, landmark('petropia', 3.65), .2);
-    add(1.55, 4.75, (p, x, z) => crystal(p, x, z, .85, '#8df4ff'), .05);
+    add(-1.1, 4.1, landmark('petropia', 3.65), .2);
+    add(0.6, 4.8, (p, x, z) => crystal(p, x, z, .85, '#8df4ff'), .05);
   }
   if (c.zone.id === 'null-void') {
-    add(-1.55, 3.72, landmark('nullvoid', 3.7), .2);
-    add(1.55, 4.75, (p, x, z) => { energyRing(p, x, .03, z, .42, '#c765ff', 10); p.ball(x, .62, z, .13, '#f0b5ff'); }, .05);
+    add(-4.15, 0.35, landmark('nullvoid', 3.7), .2);
+    add(-4.85, 1.7, (p, x, z) => { energyRing(p, x, .03, z, .42, '#c765ff', 10); p.ball(x, .62, z, .13, '#f0b5ff'); }, .05);
   }
 }
 
 function omnitrixCore(p) {
-  p.ellipseShadow(0, 0, 1.18, 0.16); p.cyl(0, 0, 0, 1.05, 0.14, '#17221e'); energyRing(p, 0, 0.15, 0, 0.92, '#9aed32', 12);
-  p.cyl(0, 0.18, 0, 0.34, 0.5, '#34453f'); p.flatEllipse(0, 0.7, 0, 0.52, 0.52, '#aaff32'); p.flatEllipse(0, 0.72, 0, 0.34, 0.34, '#101914');
-  p.poly([[-0.28, 0.74, -0.18], [0, 0.74, 0], [-0.28, 0.74, 0.18]], '#aaff32'); p.poly([[0.28, 0.74, -0.18], [0, 0.74, 0], [0.28, 0.74, 0.18]], '#aaff32');
-  for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + Math.PI / 4; p.line3([[Math.cos(a) * 0.45, 0.18, Math.sin(a) * 0.45], [Math.cos(a) * 1.45, 0.04, Math.sin(a) * 1.45]], '#7edb36', 0.06); }
+  // Hai ảnh ngang neo tại mép trước của mặt đất, không dùng neo đáy ảnh mặc định.
+  p.img('m3AlienRing', 0, 0, 5.6, 0.8);
+  p.img('m3CenterOmnitrix', 1.34, 1.34, 4.8, 0.015);
+  p.img('m3DicePad', 3.25, 3.25, 3.35, 0.02);
 }
 
 function energyFx(p, t) {
@@ -219,9 +241,91 @@ export default defineSkin({
   id: 'ben-10',
   packs: [],
   sprites: {
-    bellwood: 'assets/landmarks/bellwood.png', pyron: 'assets/landmarks/pyron.png',
-    petropia: 'assets/landmarks/petropia.png', nullvoid: 'assets/landmarks/nullvoid.png',
+    bellwood: 'assets/v2/zones/m3-zone-bellwood.webp', pyron: 'assets/v2/zones/m3-zone-pyron.webp',
+    petropia: 'assets/v2/zones/m3-zone-petropia.webp', nullvoid: 'assets/v2/zones/m3-zone-nullvoid.webp',
+    m3BoardBase: 'assets/v2/board/m3-board-base.webp',
+    m3CenterOmnitrix: 'assets/v2/board/m3-center-omnitrix.webp',
+    m3DicePad: 'assets/v2/board/m3-dice-pad.webp',
+    m3AlienRing: 'assets/v2/zones/m3-center-prop-aliens.webp',
+    m3EdgeLights: 'assets/v2/zones/m3-board-edge-lights.webp',
+    m3Start: 'assets/v2/special/m3-special-start.webp',
+    m3NullVoid: 'assets/v2/special/m3-special-null-void.webp',
+    m3Championship: 'assets/v2/special/m3-special-championship.webp',
+    m3Tour: 'assets/v2/special/m3-special-tour.webp',
+    m3Chance1: 'assets/v2/special/m3-special-chance-1.webp',
+    m3Chance2: 'assets/v2/special/m3-special-chance-2.webp',
+    m3Chance3: 'assets/v2/special/m3-special-chance-3.webp',
+    m3Tax: 'assets/v2/special/m3-special-tax.webp',
+    m3Festival: 'assets/v2/special/m3-special-festival.webp',
+    m3Outage: 'assets/v2/special/m3-special-outage.webp',
+    m3BuildingBen0: 'assets/v2/buildings/m3-building-ben-0.webp',
+    m3BuildingBen1: 'assets/v2/buildings/m3-building-ben-1.webp',
+    m3BuildingBen2: 'assets/v2/buildings/m3-building-ben-2.webp',
+    m3BuildingBen3: 'assets/v2/buildings/m3-building-ben-3.webp',
+    m3BuildingBen4: 'assets/v2/buildings/m3-building-ben-4.webp',
+    m3BuildingGwen0: 'assets/v2/buildings/m3-building-gwen-0.webp',
+    m3BuildingGwen1: 'assets/v2/buildings/m3-building-gwen-1.webp',
+    m3BuildingGwen2: 'assets/v2/buildings/m3-building-gwen-2.webp',
+    m3BuildingGwen3: 'assets/v2/buildings/m3-building-gwen-3.webp',
+    m3BuildingGwen4: 'assets/v2/buildings/m3-building-gwen-4.webp',
+    m3BuildingKevin0: 'assets/v2/buildings/m3-building-kevin-0.webp',
+    m3BuildingKevin1: 'assets/v2/buildings/m3-building-kevin-1.webp',
+    m3BuildingKevin2: 'assets/v2/buildings/m3-building-kevin-2.webp',
+    m3BuildingKevin3: 'assets/v2/buildings/m3-building-kevin-3.webp',
+    m3BuildingKevin4: 'assets/v2/buildings/m3-building-kevin-4.webp',
+    m3BuildingMax0: 'assets/v2/buildings/m3-building-max-0.webp',
+    m3BuildingMax1: 'assets/v2/buildings/m3-building-max-1.webp',
+    m3BuildingMax2: 'assets/v2/buildings/m3-building-max-2.webp',
+    m3BuildingMax3: 'assets/v2/buildings/m3-building-max-3.webp',
+    m3BuildingMax4: 'assets/v2/buildings/m3-building-max-4.webp',
+    m3Resort0: 'assets/v2/resorts/m3-resort-0.webp',
+    m3Resort1: 'assets/v2/resorts/m3-resort-1.webp',
+    m3Resort2: 'assets/v2/resorts/m3-resort-2.webp',
+    m3Resort3: 'assets/v2/resorts/m3-resort-3.webp',
+    m3Resort4: 'assets/v2/resorts/m3-resort-4.webp',
+    m3DecorA: 'assets/v2/decor/m3-decor-a.webp',
+    m3DecorB: 'assets/v2/decor/m3-decor-b.webp',
+    m3DecorC: 'assets/v2/decor/m3-decor-c.webp',
+    m3DecorD: 'assets/v2/decor/m3-decor-d.webp',
+    m3DecorE: 'assets/v2/decor/m3-decor-e.webp',
+    m3DecorF: 'assets/v2/decor/m3-decor-f.webp',
+    m3DecorG: 'assets/v2/decor/m3-decor-g.webp',
+    m3DecorH: 'assets/v2/decor/m3-decor-h.webp',
   },
+  spriteMeta: {
+    bellwood: { anchor: [0.5, 0.9296875] }, pyron: { anchor: [0.5, 0.9296875] },
+    petropia: { anchor: [0.5, 0.9296875] }, nullvoid: { anchor: [0.5, 0.9296875] },
+    m3BoardBase: { anchor: [0.5, 0.94140625] },
+    m3CenterOmnitrix: { anchor: [0.5, 0.92578125] },
+    m3DicePad: { anchor: [0.5, 0.916015625] },
+    m3AlienRing: { anchor: [0.5, 0.5] },
+    m3EdgeLights: { anchor: [0.5, 0.921875] },
+    m3Start: { anchor: [0.5, 0.9375] }, m3NullVoid: { anchor: [0.5, 0.9375] },
+    m3Championship: { anchor: [0.5, 0.9375] }, m3Tour: { anchor: [0.5, 0.9375] },
+    m3Chance1: { anchor: [0.5, 0.9375] }, m3Chance2: { anchor: [0.5, 0.9375] },
+    m3Chance3: { anchor: [0.5, 0.9375] }, m3Tax: { anchor: [0.5, 0.9375] },
+    m3Festival: { anchor: [0.5, 0.9375], lazy: true }, m3Outage: { anchor: [0.5, 0.9375], lazy: true },
+    m3BuildingBen0: { anchor: [0.5, 0.9375], lazy: true }, m3BuildingBen1: { anchor: [0.5, 0.9375], lazy: true },
+    m3BuildingBen2: { anchor: [0.5, 0.9375], lazy: true }, m3BuildingBen3: { anchor: [0.5, 0.9375], lazy: true },
+    m3BuildingBen4: { anchor: [0.5, 0.9375], lazy: true },
+    m3BuildingGwen0: { anchor: [0.5, 0.9375], lazy: true }, m3BuildingGwen1: { anchor: [0.5, 0.9375], lazy: true },
+    m3BuildingGwen2: { anchor: [0.5, 0.9375], lazy: true }, m3BuildingGwen3: { anchor: [0.5, 0.9375], lazy: true },
+    m3BuildingGwen4: { anchor: [0.5, 0.9375], lazy: true },
+    m3BuildingKevin0: { anchor: [0.5, 0.9375], lazy: true }, m3BuildingKevin1: { anchor: [0.5, 0.9375], lazy: true },
+    m3BuildingKevin2: { anchor: [0.5, 0.9375], lazy: true }, m3BuildingKevin3: { anchor: [0.5, 0.9375], lazy: true },
+    m3BuildingKevin4: { anchor: [0.5, 0.9375], lazy: true },
+    m3BuildingMax0: { anchor: [0.5, 0.9375], lazy: true }, m3BuildingMax1: { anchor: [0.5, 0.9375], lazy: true },
+    m3BuildingMax2: { anchor: [0.5, 0.9375], lazy: true }, m3BuildingMax3: { anchor: [0.5, 0.9375], lazy: true },
+    m3BuildingMax4: { anchor: [0.5, 0.9375], lazy: true },
+    m3Resort0: { anchor: [0.5, 0.9375] },
+    m3Resort1: { anchor: [0.5, 0.9375], lazy: true }, m3Resort2: { anchor: [0.5, 0.9375], lazy: true },
+    m3Resort3: { anchor: [0.5, 0.9375], lazy: true }, m3Resort4: { anchor: [0.5, 0.9375], lazy: true },
+    m3DecorA: { anchor: [0.5, 0.9375] }, m3DecorB: { anchor: [0.5, 0.9375] },
+    m3DecorC: { anchor: [0.5, 0.9375] }, m3DecorD: { anchor: [0.5, 0.9375] },
+    m3DecorE: { anchor: [0.5, 0.9375] }, m3DecorF: { anchor: [0.5, 0.9375] },
+    m3DecorG: { anchor: [0.5, 0.9375] }, m3DecorH: { anchor: [0.5, 0.9375] },
+  },
+  diceAt: [[2.65, 1.82], [1.82, 2.65]],
   cityLabelBand: 0.18,
   palette: {
     groups: { A: '#a8ef45', B: '#4dd47a', C: '#32c6b7', D: '#45a8df', E: '#6775e8', F: '#a55cdf', G: '#e65d9c', H: '#ff8b38' },
@@ -231,19 +335,21 @@ export default defineSkin({
   zones: ZONES,
   slots: {
     tile: { paint: circuitPaint },
-    deco: { draw: deco },
-    house: { draw: techHouse },
-    resort: { paint: circuitPaint, draw: portalPad },
-    resortHouse: { draw: outpost },
-    start: { paint: circuitPaint, label: [0.62, 0.65, 58, 0.82], draw: omnitrixArch },
-    island: { paint: flat('#4b3372'), side: ['#4c356e', '#34244d'], label: [0.7, 0.8, 31, 0.56], draw: nullVoid },
-    festival: { paint: circuitPaint, draw: arena },
-    tour: { paint: circuitPaint, draw: plumberShip },
-    chance: { paint: circuitPaint, draw: chancePod },
-    tax: { paint: circuitPaint, draw: plumberTax },
-    base: { draw: (p, c) => { const a = c.half + c.margin - 0.08, y = c.y + 0.002; p.line3([[-a, y, a], [a, y, a], [a, y, -a], [-a, y, -a], [-a, y, a]], '#9aed32', 0.055); } },
+    deco: { draw: deco, assets: (c) => [decorImageName(c)] },
+    house: { draw: techHouse, assets: (c) => { const name = buildingImageName(c); return name ? [name] : []; } },
+    resort: { paint: circuitPaint, draw: resortImage, assets: () => ['m3Resort0'] },
+    resortHouse: { draw: resortImage, assets: (c) => [resortImageName(c)] },
+    start: { paint: circuitPaint, label: [0.62, 0.65, 58, 0.82], draw: cornerImage('m3Start', 2.75) },
+    island: { paint: flat('#4b3372'), side: ['#4c356e', '#34244d'], label: [0.7, 0.8, 31, 0.56], draw: cornerImage('m3NullVoid', 2.85) },
+    festival: { paint: circuitPaint, draw: cornerImage('m3Championship', 2.95) },
+    tour: { paint: circuitPaint, draw: cornerImage('m3Tour', 2.9) },
+    chance: { paint: circuitPaint, draw: chanceImage },
+    tax: { paint: circuitPaint, draw: taxImage },
+    bonus: { draw: festivalImage, assets: () => ['m3Festival'] },
+    outage: { draw: outageImage, assets: () => ['m3Outage'] },
+    base: { draw: (p, c) => { const a = c.half + c.margin - 0.08; p.img('m3BoardBase', a, a, 19.45, c.y - 0.42); p.img('m3EdgeLights', a, a, 19.45, c.y - 0.38); } },
     center: { paint: centerGround, draw: biome, core: omnitrixCore },
   },
   ambient: { animate: { energy: energyFx } },
-  labels: { start: 'HERO START', island: 'NULL VOID', festival: 'GALACTIC CUP', tour: 'PLUMBER TOUR', resortLevels: ['Cổng dịch chuyển', 'Tiền đồn', 'Căn cứ', 'Trạm Omnitrix'] },
+  labels: { start: 'HERO START', island: 'NULL VOID', festival: 'GALACTIC CUP', tour: 'PLUMBER TOUR', resortLevels: ['Cổng dịch chuyển', 'Trạm vệ tinh', 'Trạm trung chuyển quỹ đạo', 'Pháo đài Plumber'] },
 });

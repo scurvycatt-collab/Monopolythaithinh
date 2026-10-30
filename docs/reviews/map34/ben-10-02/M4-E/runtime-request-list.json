@@ -1,0 +1,246 @@
+{
+  "generatedAt": "2026-10-30T12:17:59.414Z",
+  "coldBudgetBytes": 2621440,
+  "coldBytes": 2383540,
+  "coldAssets": [
+    {
+      "path": "board/m4-alien-ring.webp",
+      "bytes": 112090
+    },
+    {
+      "path": "board/m4-blue-domes.webp",
+      "bytes": 77916
+    },
+    {
+      "path": "board/m4-board-base.webp",
+      "bytes": 33642
+    },
+    {
+      "path": "board/m4-card-pad-charge.webp",
+      "bytes": 38980
+    },
+    {
+      "path": "board/m4-card-pad-plumber.webp",
+      "bytes": 41530
+    },
+    {
+      "path": "board/m4-center-omnitrix.webp",
+      "bytes": 60776
+    },
+    {
+      "path": "board/m4-center-props.webp",
+      "bytes": 95826
+    },
+    {
+      "path": "board/m4-crystal-citadel.webp",
+      "bytes": 91242
+    },
+    {
+      "path": "board/m4-desert-fortress.webp",
+      "bytes": 68750
+    },
+    {
+      "path": "board/m4-dice-pad.webp",
+      "bytes": 49428
+    },
+    {
+      "path": "board/m4-jungle-domain.webp",
+      "bytes": 88508
+    },
+    {
+      "path": "board/m4-mount-rushmore.webp",
+      "bytes": 57134
+    },
+    {
+      "path": "board/m4-neon-city.webp",
+      "bytes": 82652
+    },
+    {
+      "path": "board/m4-purple-castle.webp",
+      "bytes": 79206
+    },
+    {
+      "path": "board/m4-pyron-volcano.webp",
+      "bytes": 63504
+    },
+    {
+      "path": "board/m4-tech-metropolis.webp",
+      "bytes": 74734
+    },
+    {
+      "path": "special/m4-special-championship.webp",
+      "bytes": 115986
+    },
+    {
+      "path": "special/m4-special-chance-1.webp",
+      "bytes": 84952
+    },
+    {
+      "path": "special/m4-special-chance-2.webp",
+      "bytes": 91586
+    },
+    {
+      "path": "special/m4-special-chance-3.webp",
+      "bytes": 92282
+    },
+    {
+      "path": "special/m4-special-null-void.webp",
+      "bytes": 88898
+    },
+    {
+      "path": "special/m4-special-start.webp",
+      "bytes": 97896
+    },
+    {
+      "path": "special/m4-special-tax.webp",
+      "bytes": 65728
+    },
+    {
+      "path": "special/m4-special-tour.webp",
+      "bytes": 96472
+    },
+    {
+      "path": "decor/m4-decor-a.webp",
+      "bytes": 63982
+    },
+    {
+      "path": "decor/m4-decor-b.webp",
+      "bytes": 53926
+    },
+    {
+      "path": "decor/m4-decor-c.webp",
+      "bytes": 75274
+    },
+    {
+      "path": "decor/m4-decor-d.webp",
+      "bytes": 49750
+    },
+    {
+      "path": "decor/m4-decor-e.webp",
+      "bytes": 58600
+    },
+    {
+      "path": "decor/m4-decor-f.webp",
+      "bytes": 54704
+    },
+    {
+      "path": "decor/m4-decor-g.webp",
+      "bytes": 84478
+    },
+    {
+      "path": "decor/m4-decor-h.webp",
+      "bytes": 55018
+    },
+    {
+      "path": "resorts/m4-resort-0.webp",
+      "bytes": 38090
+    }
+  ],
+  "lazyAssets": [
+    {
+      "path": "buildings/m4-building-ben-0.webp",
+      "bytes": 44960
+    },
+    {
+      "path": "buildings/m4-building-ben-1.webp",
+      "bytes": 59158
+    },
+    {
+      "path": "buildings/m4-building-ben-2.webp",
+      "bytes": 97384
+    },
+    {
+      "path": "buildings/m4-building-ben-3.webp",
+      "bytes": 123480
+    },
+    {
+      "path": "buildings/m4-building-ben-4.webp",
+      "bytes": 182038
+    },
+    {
+      "path": "buildings/m4-building-gwen-0.webp",
+      "bytes": 47076
+    },
+    {
+      "path": "buildings/m4-building-gwen-1.webp",
+      "bytes": 72184
+    },
+    {
+      "path": "buildings/m4-building-gwen-2.webp",
+      "bytes": 88438
+    },
+    {
+      "path": "buildings/m4-building-gwen-3.webp",
+      "bytes": 119844
+    },
+    {
+      "path": "buildings/m4-building-gwen-4.webp",
+      "bytes": 150322
+    },
+    {
+      "path": "buildings/m4-building-kevin-0.webp",
+      "bytes": 45512
+    },
+    {
+      "path": "buildings/m4-building-kevin-1.webp",
+      "bytes": 56032
+    },
+    {
+      "path": "buildings/m4-building-kevin-2.webp",
+      "bytes": 114320
+    },
+    {
+      "path": "buildings/m4-building-kevin-3.webp",
+      "bytes": 161962
+    },
+    {
+      "path": "buildings/m4-building-kevin-4.webp",
+      "bytes": 184052
+    },
+    {
+      "path": "buildings/m4-building-rook-0.webp",
+      "bytes": 47486
+    },
+    {
+      "path": "buildings/m4-building-rook-1.webp",
+      "bytes": 60412
+    },
+    {
+      "path": "buildings/m4-building-rook-2.webp",
+      "bytes": 71666
+    },
+    {
+      "path": "buildings/m4-building-rook-3.webp",
+      "bytes": 97466
+    },
+    {
+      "path": "buildings/m4-building-rook-4.webp",
+      "bytes": 139162
+    },
+    {
+      "path": "resorts/m4-resort-1.webp",
+      "bytes": 63702
+    },
+    {
+      "path": "resorts/m4-resort-2.webp",
+      "bytes": 77336
+    },
+    {
+      "path": "resorts/m4-resort-3.webp",
+      "bytes": 83414
+    },
+    {
+      "path": "resorts/m4-resort-4.webp",
+      "bytes": 102554
+    },
+    {
+      "path": "special/m4-special-festival.webp",
+      "bytes": 112336
+    },
+    {
+      "path": "special/m4-special-outage.webp",
+      "bytes": 123756
+    }
+  ],
+  "sourceMastersExcludedFromDeploy": "public/.assetsignore: maps/*/assets/v2/source/**"
+}

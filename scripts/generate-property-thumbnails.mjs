@@ -204,7 +204,7 @@ async function generate() {
   const server = await startServer();
   const address = server.address();
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'ttm-thumbnails-'));
-  const chrome = spawn(chromePath(), ['--headless=new', '--no-first-run', '--no-default-browser-check', '--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--remote-debugging-port=0', `--user-data-dir=${temp}`, `http://127.0.0.1:${address.port}/__thumbgen`], { stdio: 'ignore', windowsHide: true });
+  const chrome = spawn(chromePath(), ['--headless=new', '--no-sandbox', '--disable-dev-shm-usage', '--no-first-run', '--no-default-browser-check', '--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--remote-debugging-port=0', `--user-data-dir=${temp}`, `http://127.0.0.1:${address.port}/__thumbgen`], { stdio: 'ignore', windowsHide: true });
   let socket;
   try {
     const activePort = path.join(temp, 'DevToolsActivePort');

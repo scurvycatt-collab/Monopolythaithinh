@@ -1,0 +1,258 @@
+[
+  {
+    "id": "m4-alien-ring",
+    "path": "board/m4-alien-ring.webp",
+    "canvas": [
+      1024,
+      1024
+    ],
+    "contentBounds": [
+      102,
+      327,
+      820,
+      633
+    ],
+    "bytes": 153660,
+    "sha256": "C84A653AD637D2256F492828DB14CFD68FA2F708515D258E606186E3222F1888"
+  },
+  {
+    "id": "m4-blue-domes",
+    "path": "board/m4-blue-domes.webp",
+    "canvas": [
+      1024,
+      1024
+    ],
+    "contentBounds": [
+      132,
+      386,
+      760,
+      574
+    ],
+    "bytes": 114502,
+    "sha256": "469F12791346C182929D7F886381CB38A7D19AD547744564D6358EFD195951C9"
+  },
+  {
+    "id": "m4-board-base",
+    "path": "board/m4-board-base.webp",
+    "canvas": [
+      1024,
+      1024
+    ],
+    "contentBounds": [
+      52,
+      441,
+      920,
+      519
+    ],
+    "bytes": 50612,
+    "sha256": "E6643A08C3887B7292B915BB9017156A1352CA50767B27E78CC3F109F928CA6C"
+  },
+  {
+    "id": "m4-card-pad-charge",
+    "path": "board/m4-card-pad-charge.webp",
+    "canvas": [
+      1024,
+      1024
+    ],
+    "contentBounds": [
+      132,
+      449,
+      760,
+      511
+    ],
+    "bytes": 55314,
+    "sha256": "FD3576E6546DECA55B381F0C86C1B01DE32B60E1C11064E60D19140D241B7B57"
+  },
+  {
+    "id": "m4-card-pad-plumber",
+    "path": "board/m4-card-pad-plumber.webp",
+    "canvas": [
+      1024,
+      1024
+    ],
+    "contentBounds": [
+      132,
+      382,
+      760,
+      578
+    ],
+    "bytes": 62112,
+    "sha256": "2BC7FE13B9B543F1F49057CC7560A2DA4B91B0A60FC3C5BC634259BF7CE3C7A1"
+  },
+  {
+    "id": "m4-center-omnitrix",
+    "path": "board/m4-center-omnitrix.webp",
+    "canvas": [
+      1024,
+      1024
+    ],
+    "contentBounds": [
+      132,
+      466,
+      760,
+      494
+    ],
+    "bytes": 89210,
+    "sha256": "BAFBD0F36AEADD2FB5AB78A4A36A62BA57A241A03D8CBDBAB4A4C0D0DE9BCAFD"
+  },
+  {
+    "id": "m4-center-props",
+    "path": "board/m4-center-props.webp",
+    "canvas": [
+      1024,
+      1024
+    ],
+    "contentBounds": [
+      102,
+      485,
+      820,
+      475
+    ],
+    "bytes": 126542,
+    "sha256": "E32F80BD25F5A820908FC34F208FF072435E824D7F8F0E80663B52A2144BF319"
+  },
+  {
+    "id": "m4-crystal-citadel",
+    "path": "board/m4-crystal-citadel.webp",
+    "canvas": [
+      1024,
+      1024
+    ],
+    "contentBounds": [
+      132,
+      402,
+      760,
+      558
+    ],
+    "bytes": 135904,
+    "sha256": "B0760F74B3F3C65F63CB62BDB6833278A81EC58B3EEF1231AD3E40ED95FB22D7"
+  },
+  {
+    "id": "m4-desert-fortress",
+    "path": "board/m4-desert-fortress.webp",
+    "canvas": [
+      1024,
+      1024
+    ],
+    "contentBounds": [
+      102,
+      444,
+      820,
+      516
+    ],
+    "bytes": 103196,
+    "sha256": "5E4E064BFEEE4EB64E0FAA7AFAA1352D6BB3B7AF4B9A6A37A59838839667ECD8"
+  },
+  {
+    "id": "m4-dice-pad",
+    "path": "board/m4-dice-pad.webp",
+    "canvas": [
+      1024,
+      1024
+    ],
+    "contentBounds": [
+      132,
+      421,
+      760,
+      539
+    ],
+    "bytes": 72206,
+    "sha256": "D0D2EBEB99B1334323EFDE802CE1085E6C074CFC59BCAE1448EDEC029F7C5718"
+  },
+  {
+    "id": "m4-jungle-domain",
+    "path": "board/m4-jungle-domain.webp",
+    "canvas": [
+      1024,
+      1024
+    ],
+    "contentBounds": [
+      132,
+      375,
+      760,
+      585
+    ],
+    "bytes": 144564,
+    "sha256": "879A9B1F9ED84728EE7CAC1841AD4DCA21D07F3F2E5B6C1FA8DCBEAE824B51FE"
+  },
+  {
+    "id": "m4-mount-rushmore",
+    "path": "board/m4-mount-rushmore.webp",
+    "canvas": [
+      1024,
+      1024
+    ],
+    "contentBounds": [
+      102,
+      506,
+      820,
+      454
+    ],
+    "bytes": 86142,
+    "sha256": "F68D718418A7513CA95628209ED9769EF25647041B3E75A63963E55E478AB53B"
+  },
+  {
+    "id": "m4-neon-city",
+    "path": "board/m4-neon-city.webp",
+    "canvas": [
+      1024,
+      1024
+    ],
+    "contentBounds": [
+      132,
+      407,
+      760,
+      553
+    ],
+    "bytes": 132086,
+    "sha256": "29A6C7315EA852FCC5EDBB340B0601E1472EFE587DDD8DD66EABACEE5A11C107"
+  },
+  {
+    "id": "m4-purple-castle",
+    "path": "board/m4-purple-castle.webp",
+    "canvas": [
+      1024,
+      1024
+    ],
+    "contentBounds": [
+      132,
+      374,
+      760,
+      586
+    ],
+    "bytes": 112346,
+    "sha256": "67C817525E7165B084EDE679A7A711830972FA36E93D70EE4853734A42FFD154"
+  },
+  {
+    "id": "m4-pyron-volcano",
+    "path": "board/m4-pyron-volcano.webp",
+    "canvas": [
+      1024,
+      1024
+    ],
+    "contentBounds": [
+      132,
+      378,
+      760,
+      582
+    ],
+    "bytes": 96210,
+    "sha256": "23DAD86B326772FE0ED3797A38D636DF0C52893E183618B2FC52BF3200A718F6"
+  },
+  {
+    "id": "m4-tech-metropolis",
+    "path": "board/m4-tech-metropolis.webp",
+    "canvas": [
+      1024,
+      1024
+    ],
+    "contentBounds": [
+      133,
+      408,
+      759,
+      552
+    ],
+    "bytes": 108910,
+    "sha256": "CC86C55E6FC74360093BCFFF2D2632E75E221273AF9AD34A59B77DBAE6035782"
+  }
+]

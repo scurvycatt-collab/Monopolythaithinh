@@ -2,7 +2,7 @@
    Không dùng DOM: test/maps.test.mjs import file này trong Node. Lỗi nêu rõ trường, tiếng Việt. */
 import { KINDS, PIECES, PACKS, PARTICLES } from './packs.js';
 
-export const SLOTS = ['tile', 'house', 'deco', 'resort', 'resortHouse', 'start', 'island', 'festival', 'tour', 'chance', 'tax', 'base', 'center'];
+export const SLOTS = ['tile', 'house', 'deco', 'resort', 'resortHouse', 'start', 'island', 'festival', 'tour', 'chance', 'tax', 'bonus', 'outage', 'base', 'center'];
 export const REQUIRED = ['tile', 'house', 'resort', 'resortHouse', 'start', 'island', 'festival', 'tour', 'chance', 'tax'];
 const GROUP_KEYS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 const HEX = /^#[0-9a-f]{6}$/i;
@@ -22,6 +22,15 @@ export function defineSkin(skin) {
     if (!isObj(skin.sprites)) err('sprites', 'phải là object { tên: đường dẫn }.');
     for (const [n, p] of Object.entries(skin.sprites)) if (typeof p !== 'string' || !/\.(png|webp|svg)$/i.test(p) || /^(\/|[a-z]+:)/i.test(p)) err(`sprites.${n}`, 'phải là đường dẫn tương đối tới ảnh .png/.webp/.svg trong thư mục map.');
   }
+  if (skin.spriteMeta !== undefined) {
+    if (!isObj(skin.spriteMeta)) err('spriteMeta', 'phải là object { tên: { anchor: [x,y] } }.');
+    for (const [n, meta] of Object.entries(skin.spriteMeta)) {
+      if (!skin.sprites || !skin.sprites[n]) err(`spriteMeta.${n}`, 'phải trỏ tới một sprite đã khai báo.');
+      if (!isObj(meta) || !Array.isArray(meta.anchor) || meta.anchor.length !== 2 || meta.anchor.some((v) => !Number.isFinite(v) || v < 0 || v > 1)) err(`spriteMeta.${n}.anchor`, 'phải là [x,y], mỗi giá trị trong khoảng 0…1.');
+      if (meta.lazy !== undefined && typeof meta.lazy !== 'boolean') err(`spriteMeta.${n}.lazy`, 'phải là boolean.');
+    }
+  }
+  if (skin.diceAt !== undefined && (!Array.isArray(skin.diceAt) || skin.diceAt.length !== 2 || skin.diceAt.some((p) => !Array.isArray(p) || p.length !== 2 || p.some((v) => !Number.isFinite(v))))) err('diceAt', 'phải gồm đúng hai tọa độ [[x,z],[x,z]].');
 
   const pal = skin.palette;
   if (!isObj(pal)) err('palette', 'bắt buộc.');
@@ -56,6 +65,7 @@ export function defineSkin(skin) {
       if (!fns.some((f) => typeof v[f] === 'function')) err(`slots.${s}`, `cần ít nhất một hàm ${fns.join(' / ')} hoặc một kind.`);
     }
     for (const f of ['paint', 'draw', 'core', 'under', 'over']) if (v[f] !== undefined && typeof v[f] !== 'function') err(`slots.${s}.${f}`, 'phải là hàm.');
+    if (v.assets !== undefined && typeof v.assets !== 'function') err(`slots.${s}.assets`, 'phải là hàm trả về danh sách sprite cần theo state.');
     if (v.label !== undefined && v.label !== false && !(Array.isArray(v.label) && v.label.length === 4 && v.label.every(Number.isFinite))) err(`slots.${s}.label`, 'phải là [x, y, cỡ, rộng] (tỉ lệ ô) hoặc false.');
   }
 
@@ -66,7 +76,7 @@ export function defineSkin(skin) {
     if (amb.particles !== undefined && !isObj(amb.particles)) err('ambient.particles', 'phải là object.');
   }
   if (skin.labels !== undefined) { if (!isObj(skin.labels)) err('labels', 'phải là object.'); for (const [k, v] of Object.entries(skin.labels)) { if (k === 'resortLevels') { if (!Array.isArray(v) || v.length !== 4 || v.some((x) => typeof x !== 'string')) err('labels.resortLevels', 'phải là mảng 4 tên cấp nhà resort.'); } else if (typeof v !== 'string') err(`labels.${k}`, 'phải là chuỗi.'); } }
-  return Object.freeze({ zones: null, sprites: {}, ambient: {}, labels: {}, ...skin, packs });
+  return Object.freeze({ zones: null, sprites: {}, spriteMeta: {}, ambient: {}, labels: {}, ...skin, packs });
 }
 
 function checkKit(v, s, err, packs) {

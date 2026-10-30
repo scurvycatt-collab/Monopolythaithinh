@@ -116,6 +116,7 @@ assert.match(specials, /generatedTexture\('chance-card'\)/, 'Chance card texture
 assert.match(specials, /generatedTexture\(`festival-banner-\$\{mult\}`\)/, 'festival banner texture must be generated before gameplay');
 assert.match(app, /PROPERTY_THUMBNAIL_VERSION/, 'property thumbnails must use a generated cache version');
 assert.match(app, /const propertyThumbnail = \(kind, level, color, pet = '', mapId =/, 'property dialogs must use prebuilt static thumbnails, including map-specific character sets');
+assert.match(app, /map\.background \|\| map\.preview/, 'home background may use a dedicated high-resolution map asset instead of stretching the small preview');
 assert.match(app, /async function preloadMapPropertyThumbnails\(mapId\)/, 'selected map thumbnails must be preloaded after entering a room');
 assert.match(app, /const thumbnails = preloadMapPropertyThumbnails\(entry\.id\);[\s\S]*await createBoard\(entry\);[\s\S]*await thumbnails;/, 'board and selected-map thumbnails must load together');
 assert.match(app, /maps\/\$\{mapId\}\/assets\/buildings\/\$\{pet\}-\$\{level\}\.png/, 'Ben 10 dialogs must route to prebuilt map-specific thumbnails');

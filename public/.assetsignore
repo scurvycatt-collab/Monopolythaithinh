@@ -1,0 +1,2 @@
+# Production only needs optimized runtime assets. Source masters stay in Git for regeneration/QA.
+maps/*/assets/v2/source/**

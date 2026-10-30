@@ -4,7 +4,7 @@
    chỉ dựng lại khi đổi khung nhìn hoặc trạng thái; (2) mỗi khung: chép cảnh tĩnh, ambient (trừ low), quân, xúc xắc,
    hoạt ảnh xây nhà, pháo giấy, làm tối khi chọn ô. Bàn trống ở low = một lần drawImage + quân. */
 import { Pen, P, CX, CY, swapPen, bake, canvas, fitText, shade, mix, light, rgb, rng, hash, wp, FONT } from './pen.js';
-import { loadAssets, composeKit } from './assets.js';
+import { loadAssets, ensureAssets, composeKit } from './assets.js';
 import { diceRollDuration, diceRollFrame } from '../dice-roll.js';
 import { TOKEN_HEIGHT, PROPERTY_LEVEL_SCALE, PROPERTY_TILE_RATIO } from '../visual-scale.js';
 
@@ -105,6 +105,7 @@ export async function createBoard2D(ctx, skin) {
   });
   // băng rôn lễ hội ×2 (view.bonus) và bảng Championships (view.festival)
   const bonusSprite = (i) => cached(`bonus|${i}`, () => bakeTile(i, (p) => {
+    if (SL.bonus) return drawKind(SL.bonus, p, cOf(i, { slot: 'bonus', level: CFG.BONUS_MULT }));
     for (const x of [-0.62, 0.62]) p.box(x - 0.02, 0, -1.36, 0.04, 0.95, 0.04, '#8a6040', { edge: null });
     p.bunting([-0.62, 0.92, -1.34], [0.62, 0.92, -1.34], ['#e2342a', '#ffd23a', '#1fb5d6', '#ffffff'], 0.05, 8);
     p.box(-0.5, 0.5, -1.36, 1.0, 0.3, 0.03, '#e2342a', { left: '#e2342a', right: '#b52a22', edge: null }); p.textZ(`LỄ HỘI ×${CFG.BONUS_MULT}`, 0, 0.65, -1.329, 0.15, '#ffffff');
@@ -158,6 +159,32 @@ export async function createBoard2D(ctx, skin) {
     const t = TILES[i], pr = S.props[i], own = ownerOf(i);
     return t.type === 'resort' ? spriteFor('resortHouse', i, resortLevel(own.id), colorOf(own), own.pet) : spriteFor('house', i, pr.level, colorOf(own), own.pet);
   }
+  const stateAssets = (v) => {
+    if (!v) return [];
+    const names = [];
+    for (let i = 0; i < 32; i++) {
+      const pr = v.props && v.props[i]; if (!pr) continue;
+      const own = v.players && v.players.find((p) => p.id === pr.owner); if (!own) continue;
+      const t = TILES[i], slotName = t.type === 'resort' ? 'resortHouse' : 'house', slot = SL[slotName];
+      if (!slot || !slot.assets) continue;
+      const level = t.type === 'resort' ? Math.min(4, G.ownedBy(v, own.id).filter((j) => TILES[j].type === 'resort').length) : pr.level;
+      const result = slot.assets(cOf(i, { slot: slotName, level, color: colorOf(own), pet: own.pet }));
+      if (Array.isArray(result)) names.push(...result);
+    }
+    if (SL.bonus && SL.bonus.assets) {
+      for (const i of (v.bonus || [])) {
+        const result = SL.bonus.assets(cOf(i, { slot: 'bonus', level: CFG.BONUS_MULT }));
+        if (Array.isArray(result)) names.push(...result);
+      }
+    }
+    if (SL.outage && SL.outage.assets) {
+      for (let i = 0; i < 32; i++) if (Math.max(0, Number((v.outage && v.outage[i]) || 0) - Number(v.round || 0)) > 0) {
+        const result = SL.outage.assets(cOf(i, { slot: 'outage', level: Math.max(0, Number(v.outage[i]) - Number(v.round || 0)) }));
+        if (Array.isArray(result)) names.push(...result);
+      }
+    }
+    return names;
+  };
   let CENTER = null, ORDER = [];
   function centerSprite() {
     const slot = SL.center; if (!slot || (!slot.draw && !slot.core)) return null;
@@ -183,6 +210,7 @@ export async function createBoard2D(ctx, skin) {
         at(buildingSprite(i), GZ, PROPERTY_LEVEL_SCALE[level] || 1);
       }
       if (S && (S.bonus || []).includes(i)) at(bonusSprite(i), -1.3);
+      if (outRounds(i) > 0 && SL.outage) at(spriteFor('outage', i, outRounds(i)), 0.95);
       if (S && S.festival === i && S.props[i]) at(festSprite(i, G.festMult(S)), 0.8);
     }
     ORDER = list.sort((a, b) => a.x + a.z + a.d - (b.x + b.z + b.d)); perf.sprites = ORDER.length;
@@ -258,7 +286,7 @@ export async function createBoard2D(ctx, skin) {
       const o = tok[p.id] || (tok[p.id] = { x: 0, z: 0, y: 0, tile: p.pos, moving: false });
       if (o.moving) continue; o.tile = p.pos; const [x, z] = spot(p.id, p.pos, posOf); if (snap || !o.init) Object.assign(o, { x, z, y: 0, init: true }); else Object.assign(o, { tx: x, tz: z });
       const pet = p.pet || (PETS[seats().indexOf(p) % PETS.length] || {}).id;
-      if (pet && !petImg[pet]) { const def = PETS.find((x) => x.id === pet), im = new Image(); petImg[pet] = im; im.onload = () => (dirty = true); im.src = new URL(def && def.img ? def.img : `thumbnails/static/pet-${pet}.png`, document.baseURI).href; }
+      if (pet && !petImg[pet]) { const def = PETS.find((x) => x.id === pet), im = new Image(); petImg[pet] = im; im.onload = () => (dirty = true); im.src = new URL(def && (def.tokenImg || def.img) ? (def.tokenImg || def.img) : `thumbnails/static/pet-${pet}.png`, document.baseURI).href; }
       o.pet = pet; o.color = colorOf(p); o.hidden = !!p.bankrupt;
     }
     for (const id of Object.keys(tok)) if (!seats().some((p) => p.id === id)) delete tok[id];
@@ -299,7 +327,7 @@ export async function createBoard2D(ctx, skin) {
     PIP[side[0]].forEach(([a, b]) => p.quadX(0.351, b * sp - e, b * sp + e, 0.35 + a * sp - e, 0.35 + a * sp + e, side[0] === 1 ? '#e2557f' : '#26364a'));
     PIP[side[1]].forEach(([a, b]) => p.quadZ(0.351, a * sp - e, a * sp + e, 0.35 + b * sp - e, 0.35 + b * sp + e, side[1] === 1 ? '#e2557f' : '#26364a'));
   }, { L: -0.8, R: 0.8, B: -0.6, T: 1.1 }, 120));
-  const DICE_AT = [[1.75, 0.55], [0.55, 1.75]];
+  const DICE_AT = skin.diceAt || [[1.75, 0.55], [0.55, 1.75]];
   function drawDice(now) {
     [dice.a, dice.b].forEach((n, k) => {
       const [x, z] = DICE_AT[k], frame = diceRollFrame(now, dice.t0, dice.dur, k, n);
@@ -434,8 +462,11 @@ export async function createBoard2D(ctx, skin) {
   return {
     // PR #5: app đọc thời lượng xây nhà và tên cấp nhà resort thay vì hằng của map-1
     meta: { buildMs: BUILD_MS, resortLevels: LB.resortLevels || null },
-    reset(v) { S = v; anims.length = 0; confetti.length = 0; for (const k in built) delete built[k]; for (const k in tok) delete tok[k]; syncObjects(true); placeTokens(true); highlight = null; if (running) wake(); },
-    async sync(v) { S = v; const wait = syncObjects(false); placeTokens(false); wake(); return wait; },
+    reset(v) {
+      S = v; anims.length = 0; confetti.length = 0; for (const k in built) delete built[k]; for (const k in tok) delete tok[k]; placeTokens(true); highlight = null;
+      ensureAssets(stateAssets(v)).then(() => { if (S !== v) return; syncObjects(true); if (running) wake(); }).catch(console.error);
+    },
+    async sync(v) { await ensureAssets(stateAssets(v)); S = v; const wait = syncObjects(false); placeTokens(false); wake(); return wait; },
     async moveToken(pid, path, opts = {}) {
       if (opts.view) S = opts.view;
       if (!tok[pid]) placeTokens(true);

@@ -155,16 +155,16 @@
 
   // Bộ nhân vật riêng của Map Ben 10. `img` là thumbnail đã dựng sẵn để không phát sinh Canvas/WebGL lúc vào phòng.
   const BEN10_PETS = [
-    { id: 'ben10-ben', n: 'Ben', c: '#70c83d', img: 'maps/ben-10/assets/characters/ben.png' },
-    { id: 'ben10-gwen', n: 'Gwen', c: '#4c8ee8', img: 'maps/ben-10/assets/characters/gwen.png' },
-    { id: 'ben10-kevin', n: 'Kevin', c: '#6f668c', img: 'maps/ben-10/assets/characters/kevin.png' },
-    { id: 'ben10-max', n: 'Ông Max', c: '#df5a3f', img: 'maps/ben-10/assets/characters/max.png' },
+    { id: 'ben10-ben', n: 'Ben', c: '#70c83d', img: 'maps/ben-10/assets/characters/ben.png', tokenImg: 'maps/ben-10/assets/v2/characters/m3-token-ben.webp' },
+    { id: 'ben10-gwen', n: 'Gwen', c: '#e653a2', img: 'maps/ben-10/assets/characters/gwen.png', tokenImg: 'maps/ben-10/assets/v2/characters/m3-token-gwen.webp' },
+    { id: 'ben10-kevin', n: 'Kevin', c: '#f27a24', img: 'maps/ben-10/assets/characters/kevin.png', tokenImg: 'maps/ben-10/assets/v2/characters/m3-token-kevin.webp' },
+    { id: 'ben10-max', n: 'Ông Max', c: '#27c8e8', img: 'maps/ben-10/assets/characters/max.png', tokenImg: 'maps/ben-10/assets/v2/characters/m3-token-max.webp' },
   ];
   const BEN10_SPACE_PETS = [
-    { id: 'ben10-02-ben', n: 'Ben', c: '#62e642', img: 'maps/ben-10-02/assets/characters/ben.png' },
-    { id: 'ben10-02-gwen', n: 'Gwen', c: '#42b8ef', img: 'maps/ben-10-02/assets/characters/gwen.png' },
-    { id: 'ben10-02-kevin', n: 'Kevin', c: '#8b64d8', img: 'maps/ben-10-02/assets/characters/kevin.png' },
-    { id: 'ben10-02-rook', n: 'Rook', c: '#38d79b', img: 'maps/ben-10-02/assets/characters/rook.png' },
+    { id: 'ben10-02-ben', n: 'Ben', c: '#62e642', img: 'maps/ben-10-02/assets/characters/ben.png', tokenImg: 'maps/ben-10-02/assets/v2/characters/m4-token-ben.webp' },
+    { id: 'ben10-02-gwen', n: 'Gwen', c: '#42b8ef', img: 'maps/ben-10-02/assets/characters/gwen.png', tokenImg: 'maps/ben-10-02/assets/v2/characters/m4-token-gwen.webp' },
+    { id: 'ben10-02-kevin', n: 'Kevin', c: '#8b64d8', img: 'maps/ben-10-02/assets/characters/kevin.png', tokenImg: 'maps/ben-10-02/assets/v2/characters/m4-token-kevin.webp' },
+    { id: 'ben10-02-rook', n: 'Rook', c: '#38d79b', img: 'maps/ben-10-02/assets/characters/rook.png', tokenImg: 'maps/ben-10-02/assets/v2/characters/m4-token-rook.webp' },
   ];
 
   // Tên là lớp trình bày theo map, được ánh xạ bằng index. Giá, tiền thuê,
@@ -193,8 +193,8 @@
   const MAPS = [
     { id: 'map-1', name: 'Map 1', description: 'Bản đồ Thái Thịnh mặc định', preview: 'maps/map-1/preview.svg', renderer: 'maps/map-1/renderer.js', default: true },
     { id: 'four-seasons', name: 'Bốn Mùa Hà Nội', description: 'Hà Nội qua bốn mùa: Xuân, Hạ, Thu, Đông. Hội chợ bốn mùa và đài phun nước giữa bàn. Bàn 2D nhẹ, hợp máy yếu.', preview: 'maps/four-seasons/preview.svg', renderer: 'maps/four-seasons/renderer.js', tileNames: HANOI_TILE_NAMES },
-    { id: 'ben-10', name: 'Map 3: Ben10', description: 'Căn cứ Plumber thống nhất, trung tâm Omnitrix và bốn bộ công trình riêng cho Ben, Gwen, Kevin, Ông Max.', preview: 'maps/ben-10/preview.webp', renderer: 'maps/ben-10/renderer.js', pets: BEN10_PETS, tileNames: BEN10_TILE_NAMES },
-    { id: 'ben-10-02', name: 'Map 4: Ben10-02', description: 'Phiên bản không gian: Omnitrix phát sáng giữa bốn khu hành tinh, bộ riêng Ben, Gwen, Kevin và Rook.', preview: 'maps/ben-10-02/preview.webp', renderer: 'maps/ben-10-02/renderer.js', pets: BEN10_SPACE_PETS, tileNames: BEN10_SPACE_TILE_NAMES },
+    { id: 'ben-10', name: 'Map 3: Ben10', description: 'Căn cứ Plumber thống nhất, trung tâm Omnitrix và bốn bộ công trình riêng cho Ben, Gwen, Kevin, Ông Max.', preview: 'maps/ben-10/assets/v2/ui/m3-map-preview.webp', background: 'maps/ben-10/assets/v2/ui/m3-home-background.webp', renderer: 'maps/ben-10/renderer.js', pets: BEN10_PETS, tileNames: BEN10_TILE_NAMES },
+    { id: 'ben-10-02', name: 'Map 4: Ben10-02', description: 'Phiên bản không gian: Omnitrix phát sáng giữa tám khu hành tinh, bộ riêng Ben, Gwen, Kevin và Rook.', preview: 'maps/ben-10-02/assets/v2/ui/m4-map-preview.webp', background: 'maps/ben-10-02/assets/v2/ui/m4-home-background.webp', renderer: 'maps/ben-10-02/renderer.js', pets: BEN10_SPACE_PETS, tileNames: BEN10_SPACE_TILE_NAMES },
   ];
 
   /* ===================== LỚP 2 — SƠ ĐỒ TRẠNG THÁI ===================== */

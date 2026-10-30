@@ -1,0 +1,2462 @@
+{
+  "version": 2,
+  "mapId": "ben-10-02",
+  "reference": {
+    "path": "docs/references/map-4-ben10-02-approved.png",
+    "sha256": "AF267711178BED274C8E86CDB5AC71446429AACA7916DCCC4240123D65252488"
+  },
+  "generator": "OpenAI built-in ImageGen plus approved existing Map 4 source masters",
+  "camera": "isometric 3/4 fixed to approved Map 4 reference",
+  "assets": [
+    {
+      "id": "m4-board-base",
+      "mapId": "ben-10-02",
+      "batch": "M4-A",
+      "path": "board/m4-board-base.webp",
+      "sourceRef": "source/m4-board-base.png",
+      "prompt": "Isolated dark space-board base with beveled metallic diamond slab and restrained Omnitrix-green edge glow; transparent; no track, props, characters, dice or text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        52,
+        441,
+        920,
+        519
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 19.45,
+      "depthOffset": -0.42,
+      "tileIndexes": [],
+      "useCases": [
+        "board-base"
+      ],
+      "sha256": "9C6E818500A27D0FA3E8DC01A44229D08FA421F9DC7D740A3F75C7562EFD8CC5",
+      "bytes": 33642,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-A/qa.md"
+    },
+    {
+      "id": "m4-center-omnitrix",
+      "mapId": "ben-10-02",
+      "batch": "M4-A",
+      "path": "board/m4-center-omnitrix.webp",
+      "sourceRef": "source/m4-center-omnitrix.png",
+      "prompt": "Multi-tier metallic Omnitrix center platform with bright green hourglass core and radial technology panels; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        132,
+        466,
+        760,
+        494
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 3.7,
+      "depthOffset": 0.16,
+      "tileIndexes": [],
+      "useCases": [
+        "center-landmark"
+      ],
+      "sha256": "BCFEACF2794D32C50479767CCB7EDBA864C21B4C7176EC028BD45FC9A79C5DA7",
+      "bytes": 60776,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-A/qa.md"
+    },
+    {
+      "id": "m4-alien-ring",
+      "mapId": "ben-10-02",
+      "batch": "M4-A",
+      "path": "board/m4-alien-ring.webp",
+      "sourceRef": "source/m4-alien-ring.png",
+      "prompt": "Ring of distinct neon-green alien hologram symbols and low emitters with a completely open center; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        102,
+        327,
+        820,
+        633
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 4.35,
+      "depthOffset": 0.11,
+      "tileIndexes": [],
+      "useCases": [
+        "center-alien-ring"
+      ],
+      "sha256": "07E9F86A85BEDBFBC62E4D1D37A874B1E9E8C0B4C400C8C28B17290DAEE0423E",
+      "bytes": 112090,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-A/qa.md"
+    },
+    {
+      "id": "m4-mount-rushmore",
+      "mapId": "ben-10-02",
+      "batch": "M4-A",
+      "path": "board/m4-mount-rushmore.webp",
+      "sourceRef": "source/m4-mount-rushmore.png",
+      "prompt": "Compact sci-fi Mount Rushmore monument with carved stone faces, dark rock base and subtle green Plumber beacons; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        102,
+        506,
+        820,
+        454
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 2.8,
+      "depthOffset": 0.08,
+      "tileIndexes": [],
+      "useCases": [
+        "upper-center-landmark"
+      ],
+      "sha256": "E4BD3B4433980CF5C86285924E1267E0579CF19D7CDEACD22D129423873CFBAA",
+      "bytes": 57134,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-A/qa.md"
+    },
+    {
+      "id": "m4-pyron-volcano",
+      "mapId": "ben-10-02",
+      "batch": "M4-A",
+      "path": "board/m4-pyron-volcano.webp",
+      "sourceRef": "source/m4-pyron-volcano.png",
+      "prompt": "Pyron volcanic biome master with lava crater, basalt paths and glowing fire structures; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        132,
+        378,
+        760,
+        582
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 3.35,
+      "depthOffset": 0.2,
+      "tileIndexes": [
+        9,
+        10,
+        11
+      ],
+      "useCases": [
+        "visible-biome-C"
+      ],
+      "sha256": "DA5FE43D7220DD50ACA8BDAC6CD5C37622A72AAE4D41A5ABF3D2BA63DF567D76",
+      "bytes": 63504,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-A/qa.md"
+    },
+    {
+      "id": "m4-neon-city",
+      "mapId": "ben-10-02",
+      "batch": "M4-A",
+      "path": "board/m4-neon-city.webp",
+      "sourceRef": "source/m4-neon-city.png",
+      "prompt": "Cyan-magenta neon alien city with looping architecture and luminous towers; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        132,
+        407,
+        760,
+        553
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 2.65,
+      "depthOffset": 0.2,
+      "tileIndexes": [
+        13,
+        15
+      ],
+      "useCases": [
+        "visible-biome-D"
+      ],
+      "sha256": "8AC47DF72264D7DECB31B7D4558852EADDBDA70CFE052BCC07FC0514EB5DC908",
+      "bytes": 82652,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-A/qa.md"
+    },
+    {
+      "id": "m4-crystal-citadel",
+      "mapId": "ben-10-02",
+      "batch": "M4-A",
+      "path": "board/m4-crystal-citadel.webp",
+      "sourceRef": "source/m4-crystal-citadel.png",
+      "prompt": "Cyan crystal citadel with ice-like shards, luminous bridges and compact silver structures; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        132,
+        402,
+        760,
+        558
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 3.35,
+      "depthOffset": 0.2,
+      "tileIndexes": [
+        5,
+        6,
+        7
+      ],
+      "useCases": [
+        "visible-biome-B"
+      ],
+      "sha256": "C205FF03323CE18FBD01BADE1353A8D66EE2357D6980E969C785E2F717663BCD",
+      "bytes": 91242,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-A/qa.md"
+    },
+    {
+      "id": "m4-tech-metropolis",
+      "mapId": "ben-10-02",
+      "batch": "M4-A",
+      "path": "board/m4-tech-metropolis.webp",
+      "sourceRef": "source/m4-tech-metropolis.png",
+      "prompt": "Dense silver-gray technology metropolis with teal windows and layered futuristic towers; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        133,
+        408,
+        759,
+        552
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 2.65,
+      "depthOffset": 0.2,
+      "tileIndexes": [
+        17,
+        19
+      ],
+      "useCases": [
+        "visible-biome-E"
+      ],
+      "sha256": "543F6B32576D1426EDE09BD4A2564545627604BE0AE3A2088C85C8428A94A3FB",
+      "bytes": 74734,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-A/qa.md"
+    },
+    {
+      "id": "m4-desert-fortress",
+      "mapId": "ben-10-02",
+      "batch": "M4-A",
+      "path": "board/m4-desert-fortress.webp",
+      "sourceRef": "source/m4-desert-fortress.png",
+      "prompt": "Red alien desert fortress with ochre mesas, defensive walls, compact towers and sci-fi relay details; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        102,
+        444,
+        820,
+        516
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 2.65,
+      "depthOffset": 0.2,
+      "tileIndexes": [
+        21,
+        22,
+        23
+      ],
+      "useCases": [
+        "visible-biome-F"
+      ],
+      "sha256": "576AAD39C7FE592D8A5E50752421D204A643AC99A5CDA64D7FF182F4814CE360",
+      "bytes": 68750,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-A/qa.md"
+    },
+    {
+      "id": "m4-blue-domes",
+      "mapId": "ben-10-02",
+      "batch": "M4-A",
+      "path": "board/m4-blue-domes.webp",
+      "sourceRef": "source/m4-blue-domes.png",
+      "prompt": "Bright blue planetary dome settlement with cyan platforms and green-lit technology crates; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        132,
+        386,
+        760,
+        574
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 2.65,
+      "depthOffset": 0.2,
+      "tileIndexes": [
+        29,
+        31
+      ],
+      "useCases": [
+        "visible-biome-H"
+      ],
+      "sha256": "9AD4518DAB666C3C00AC6B5339FC6DFB8D3FA4B4FE73B9D4211E46E59FF479F1",
+      "bytes": 77916,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-A/qa.md"
+    },
+    {
+      "id": "m4-purple-castle",
+      "mapId": "ben-10-02",
+      "batch": "M4-A",
+      "path": "board/m4-purple-castle.webp",
+      "sourceRef": "source/m4-purple-castle.png",
+      "prompt": "Purple Null Void castle with sharp towers, dark rock base and violet energy accents; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        132,
+        374,
+        760,
+        586
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 3.35,
+      "depthOffset": 0.2,
+      "tileIndexes": [
+        26,
+        27
+      ],
+      "useCases": [
+        "visible-biome-G"
+      ],
+      "sha256": "EF8AB2148C8251197CEA9DF8AC3CF64AE30A12AF6BEBD4E52EDC9C0AFE3D7FBB",
+      "bytes": 79206,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-A/qa.md"
+    },
+    {
+      "id": "m4-jungle-domain",
+      "mapId": "ben-10-02",
+      "batch": "M4-A",
+      "path": "board/m4-jungle-domain.webp",
+      "sourceRef": "source/m4-jungle-domain.png",
+      "prompt": "Dense alien jungle domain with bioluminescent plants, vine structures and green Plumber technology; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        132,
+        375,
+        760,
+        585
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 3.35,
+      "depthOffset": 0.2,
+      "tileIndexes": [
+        1,
+        2,
+        3
+      ],
+      "useCases": [
+        "visible-biome-A"
+      ],
+      "sha256": "5D82648E056A616B02A26B8A90976B8EAF01448C6A7A1E053BE4A0F447F16381",
+      "bytes": 88508,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-A/qa.md"
+    },
+    {
+      "id": "m4-card-pad-charge",
+      "mapId": "ben-10-02",
+      "batch": "M4-A",
+      "path": "board/m4-card-pad-charge.webp",
+      "sourceRef": "source/m4-card-pad-charge.png",
+      "prompt": "Low Omnitrix Charge card pedestal with green hourglass emblem and empty card face; transparent; no words or text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        132,
+        449,
+        760,
+        511
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.55,
+      "depthOffset": 0.12,
+      "tileIndexes": [],
+      "useCases": [
+        "center-card-pad-left"
+      ],
+      "sha256": "8C950BF43D0D9B3844E9891CB061DE58DE6D8EF91DAD4500901BAA7A7FFCB053",
+      "bytes": 38980,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-A/qa.md"
+    },
+    {
+      "id": "m4-card-pad-plumber",
+      "mapId": "ben-10-02",
+      "batch": "M4-A",
+      "path": "board/m4-card-pad-plumber.webp",
+      "sourceRef": "source/m4-card-pad-plumber.png",
+      "prompt": "Low Plumber Level card pedestal with green Plumber emblem and empty card face; transparent; no words or text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        132,
+        382,
+        760,
+        578
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.55,
+      "depthOffset": 0.12,
+      "tileIndexes": [],
+      "useCases": [
+        "center-card-pad-right"
+      ],
+      "sha256": "1449F2A1383E7BCE777D6E2F5BB47E58C084A0E8A0F4F772DBE2EE4BC0126895",
+      "bytes": 41530,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-A/qa.md"
+    },
+    {
+      "id": "m4-dice-pad",
+      "mapId": "ben-10-02",
+      "batch": "M4-A",
+      "path": "board/m4-dice-pad.webp",
+      "sourceRef": "source/m4-dice-pad.png",
+      "prompt": "Low neon-green Plumber dice pad with one black and one white die, matching the approved reference; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        132,
+        421,
+        760,
+        539
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.8,
+      "depthOffset": 0.14,
+      "tileIndexes": [],
+      "useCases": [
+        "dice-pad"
+      ],
+      "sha256": "F813DDD5D68D87453D7A286EFFB1A4CEBDC6FED4AD97FC024E34858B8EDC490A",
+      "bytes": 49428,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-A/qa.md"
+    },
+    {
+      "id": "m4-center-props",
+      "mapId": "ben-10-02",
+      "batch": "M4-A",
+      "path": "board/m4-center-props.webp",
+      "sourceRef": "source/m4-center-props.png",
+      "prompt": "Sparse small alien and vehicle props arranged along radial center paths, leaving the middle open; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        102,
+        485,
+        820,
+        475
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 2.25,
+      "depthOffset": 0.1,
+      "tileIndexes": [],
+      "useCases": [
+        "center-decor"
+      ],
+      "sha256": "F8A3F4D3494EF948ED35352ACBDF87621FDFC0E351B7A785704D6916A7982AEF",
+      "bytes": 95826,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-A/qa.md"
+    },
+    {
+      "id": "m4-special-start",
+      "mapId": "ben-10-02",
+      "batch": "M4-B",
+      "path": "special/m4-special-start.webp",
+      "sourceRef": "source/m4-special-start.png",
+      "prompt": "Omnitrix Start gate and launch platform with forward arrow; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        105,
+        160,
+        814,
+        800
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 2.75,
+      "depthOffset": 0,
+      "tileIndexes": [
+        0
+      ],
+      "useCases": [
+        "start-corner"
+      ],
+      "sha256": "F4323B5BB5BE4E157857DC6D8D739E3E5D2F50C9EAC0DE9CA8636CDB6103221A",
+      "bytes": 97896,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-B/qa.md"
+    },
+    {
+      "id": "m4-special-null-void",
+      "mapId": "ben-10-02",
+      "batch": "M4-B",
+      "path": "special/m4-special-null-void.webp",
+      "sourceRef": "source/m4-special-null-void.png",
+      "prompt": "Null Void prison platform with purple vortex, four jagged containment spires and green restraints; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        109,
+        160,
+        806,
+        800
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 2.85,
+      "depthOffset": 0,
+      "tileIndexes": [
+        8
+      ],
+      "useCases": [
+        "island-corner"
+      ],
+      "sha256": "3E6815C93CC76D70115792240AAA6BD3CFA050748F60DFCA51A101536478A022",
+      "bytes": 88898,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-B/qa.md"
+    },
+    {
+      "id": "m4-special-championship",
+      "mapId": "ben-10-02",
+      "batch": "M4-B",
+      "path": "special/m4-special-championship.webp",
+      "sourceRef": "source/m4-special-championship.png",
+      "prompt": "Galactic Championship arena with Omnitrix dais, tiered stands and cyan trophy crystals; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        116,
+        160,
+        793,
+        800
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 2.95,
+      "depthOffset": 0,
+      "tileIndexes": [
+        16
+      ],
+      "useCases": [
+        "championship-corner"
+      ],
+      "sha256": "E6BF496AFEE6EEB3AEBF19E3E0AD528CB8958A5D6ED321D4437F0BE3BD2034CA",
+      "bytes": 115986,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-B/qa.md"
+    },
+    {
+      "id": "m4-special-tour",
+      "mapId": "ben-10-02",
+      "batch": "M4-B",
+      "path": "special/m4-special-tour.webp",
+      "sourceRef": "source/m4-special-tour.png",
+      "prompt": "White-charcoal Plumber Tour cruiser hovering over cyan-green teleport ring; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        102,
+        255,
+        820,
+        705
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 2.9,
+      "depthOffset": 0,
+      "tileIndexes": [
+        24
+      ],
+      "useCases": [
+        "world-tour-corner"
+      ],
+      "sha256": "B89E21ABF623F347DBD9DBF622BD81AF92E362AE37C6D5D61D56BA7336520D4A",
+      "bytes": 96472,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-B/qa.md"
+    },
+    {
+      "id": "m4-special-chance-1",
+      "mapId": "ben-10-02",
+      "batch": "M4-B",
+      "path": "special/m4-special-chance-1.webp",
+      "sourceRef": "source/m4-special-chance-1.png",
+      "prompt": "Omnitrix Chance scanner with holographic question orb and antenna fins; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        164,
+        160,
+        697,
+        800
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.4,
+      "depthOffset": 0,
+      "tileIndexes": [
+        12
+      ],
+      "useCases": [
+        "chance-variant-1"
+      ],
+      "sha256": "212DD17B8F22F1F7D19C56EE571DFA1361098975F028BCB4308623B55B9C6A8C",
+      "bytes": 84952,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-B/qa.md"
+    },
+    {
+      "id": "m4-special-chance-2",
+      "mapId": "ben-10-02",
+      "batch": "M4-B",
+      "path": "special/m4-special-chance-2.webp",
+      "sourceRef": "source/m4-special-chance-2.png",
+      "prompt": "Omnitrix Chance DNA roulette with eight alien glyph lights and levitating green crystal; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        102,
+        255,
+        820,
+        705
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.5,
+      "depthOffset": 0,
+      "tileIndexes": [
+        20
+      ],
+      "useCases": [
+        "chance-variant-2"
+      ],
+      "sha256": "C355B0EBE37CB821A03D71FD9A6BD685326D38DFCCC03FA2B557A96CB24F010C",
+      "bytes": 91586,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-B/qa.md"
+    },
+    {
+      "id": "m4-special-chance-3",
+      "mapId": "ben-10-02",
+      "batch": "M4-B",
+      "path": "special/m4-special-chance-3.webp",
+      "sourceRef": "source/m4-special-chance-3.png",
+      "prompt": "Omnitrix Chance unstable transformation capsule in three mechanical clamps with amber beacons; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        180,
+        160,
+        664,
+        800
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.42,
+      "depthOffset": 0,
+      "tileIndexes": [
+        28
+      ],
+      "useCases": [
+        "chance-variant-3"
+      ],
+      "sha256": "E03FF08A204DB703B2647CAEB230DDB4EA084DA2A9A1810813035163688D9253",
+      "bytes": 92282,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-B/qa.md"
+    },
+    {
+      "id": "m4-special-tax",
+      "mapId": "ben-10-02",
+      "batch": "M4-B",
+      "path": "special/m4-special-tax.webp",
+      "sourceRef": "source/m4-special-tax.png",
+      "prompt": "Plumber Tax customs terminal with cyan scanner, credit-chip hologram and receipt slot; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        103,
+        309,
+        819,
+        651
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.55,
+      "depthOffset": 0,
+      "tileIndexes": [
+        30
+      ],
+      "useCases": [
+        "tax-tile"
+      ],
+      "sha256": "DBDF720445062FF5EBF69ECAF06DF577F1A9670B1DDB0ABB5869281BDB7ACB7B",
+      "bytes": 65728,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-B/qa.md"
+    },
+    {
+      "id": "m4-special-festival",
+      "mapId": "ben-10-02",
+      "batch": "M4-B",
+      "path": "special/m4-special-festival.webp",
+      "sourceRef": "source/m4-special-festival.png",
+      "prompt": "Festival hologram with exactly two poles and one broad blank lime-cyan ribbon; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        102,
+        169,
+        820,
+        791
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.7,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "festival-bonus-overlay"
+      ],
+      "sha256": "DC13E3A1203086BDE800D53A81FEF6D3356014289984C5AC58A31F03A88BB50A",
+      "bytes": 112336,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-B/qa.md"
+    },
+    {
+      "id": "m4-special-outage",
+      "mapId": "ben-10-02",
+      "batch": "M4-B",
+      "path": "special/m4-special-outage.webp",
+      "sourceRef": "source/m4-special-outage.png",
+      "prompt": "Broken Plumber relay with blue sparks, blank counter plate before amber lightning badge; transparent; no text or number.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        126,
+        160,
+        772,
+        800
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.45,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "power-outage-overlay"
+      ],
+      "sha256": "91863672593AD30103450C6BEEB266E991F1CCAA300B89DB957E3AD8A95E98B4",
+      "bytes": 123756,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-B/qa.md"
+    },
+    {
+      "id": "m4-building-ben-0",
+      "mapId": "ben-10-02",
+      "batch": "M4-C-Ben",
+      "path": "buildings/m4-building-ben-0.webp",
+      "sourceRef": "source/m4-building-ben-0.png",
+      "prompt": "Ben owner marker: compact Omnitrix claim beacon on a dark sci-fi foundation, green luminous accents; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        252,
+        597,
+        520,
+        363
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.6,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "property-level-0",
+        "owner-ben"
+      ],
+      "sha256": "CC18584EC5504C66159DD8A7B3004407E6B73B2738ABE8C2B9BA9A72960FEF98",
+      "bytes": 44960,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-C/ben-qa.md"
+    },
+    {
+      "id": "m4-building-ben-1",
+      "mapId": "ben-10-02",
+      "batch": "M4-C-Ben",
+      "path": "buildings/m4-building-ben-1.webp",
+      "sourceRef": "source/m4-building-ben-1.png",
+      "prompt": "Ben property level 1: small Omnitrix field station, one readable green energy tier; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        247,
+        440,
+        530,
+        520
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.6,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "property-level-1",
+        "owner-ben"
+      ],
+      "sha256": "4E9610936FFDE5CAD70DB4A0662454543897C385399C1D40EDFED611687B93F6",
+      "bytes": 59158,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-C/ben-qa.md"
+    },
+    {
+      "id": "m4-building-ben-2",
+      "mapId": "ben-10-02",
+      "batch": "M4-C-Ben",
+      "path": "buildings/m4-building-ben-2.webp",
+      "sourceRef": "source/m4-building-ben-2.png",
+      "prompt": "Ben property level 2: larger twin-wing Omnitrix station with two green energy modules; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        192,
+        360,
+        640,
+        600
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.6,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "property-level-2",
+        "owner-ben"
+      ],
+      "sha256": "97D25D65A7D2BD54847B86FFEBCA9ADD472F9B789C2B35CA3673AADC6D1B744B",
+      "bytes": 97384,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-C/ben-qa.md"
+    },
+    {
+      "id": "m4-building-ben-3",
+      "mapId": "ben-10-02",
+      "batch": "M4-C-Ben",
+      "path": "buildings/m4-building-ben-3.webp",
+      "sourceRef": "source/m4-building-ben-3.png",
+      "prompt": "Ben property level 3: tall Omnitrix transformation tower with three distinct tiers and antenna core; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        152,
+        367,
+        720,
+        593
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.6,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "property-level-3",
+        "owner-ben"
+      ],
+      "sha256": "00182125178844361AF004425BF1635E519BD3CA4364DFBE67D0C719939D6479",
+      "bytes": 123480,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-C/ben-qa.md"
+    },
+    {
+      "id": "m4-building-ben-4",
+      "mapId": "ben-10-02",
+      "batch": "M4-C-Ben",
+      "path": "buildings/m4-building-ben-4.webp",
+      "sourceRef": "source/m4-building-ben-4.png",
+      "prompt": "Ben property hotel level: monumental Omnitrix command citadel with orbital green energy ring and unmistakable highest-tier silhouette; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        123,
+        180,
+        779,
+        780
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.6,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "property-level-4",
+        "owner-ben"
+      ],
+      "sha256": "0A9A6036CD166C947F96544C2A36D0A011956AAD9E439AE3C5851CE67ED4CB89",
+      "bytes": 182038,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-C/ben-qa.md"
+    },
+    {
+      "id": "m4-building-gwen-0",
+      "mapId": "ben-10-02",
+      "batch": "M4-C-Gwen",
+      "path": "buildings/m4-building-gwen-0.webp",
+      "sourceRef": "source/m4-building-gwen-0.png",
+      "prompt": "Gwen owner marker: low-profile Anodite mana platform with one tiny magenta crystal and four cyan emitters; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        252,
+        651,
+        520,
+        309
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.6,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "property-level-0",
+        "owner-gwen"
+      ],
+      "sha256": "35EEF9DACC75285B67DBD33BF2C49DDCAD91ACDF74FA2B0161C57E1C4CA557B2",
+      "bytes": 47076,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-C/gwen-qa.md"
+    },
+    {
+      "id": "m4-building-gwen-1",
+      "mapId": "ben-10-02",
+      "batch": "M4-C-Gwen",
+      "path": "buildings/m4-building-gwen-1.webp",
+      "sourceRef": "source/m4-building-gwen-1.png",
+      "prompt": "Gwen property level 1: compact single-room Anodite energy lab with cyan core and two rune pylons; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        247,
+        529,
+        530,
+        431
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.6,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "property-level-1",
+        "owner-gwen"
+      ],
+      "sha256": "904DEBAACC395D9CDFE67F6D03A2D9FC660EFA7E2338FFA5DFF5D31F2368A07E",
+      "bytes": 72184,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-C/gwen-qa.md"
+    },
+    {
+      "id": "m4-building-gwen-2",
+      "mapId": "ben-10-02",
+      "batch": "M4-C-Gwen",
+      "path": "buildings/m4-building-gwen-2.webp",
+      "sourceRef": "source/m4-building-gwen-2.png",
+      "prompt": "Gwen property level 2: medium Anodite energy tower with twin laboratory wings and rune pylons; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        192,
+        414,
+        640,
+        546
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.6,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "property-level-2",
+        "owner-gwen"
+      ],
+      "sha256": "AB0A31B8C65D553648BC6A43BBBBA8FE23DE9456935913EBAA060DE42C96E121",
+      "bytes": 88438,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-C/gwen-qa.md"
+    },
+    {
+      "id": "m4-building-gwen-3",
+      "mapId": "ben-10-02",
+      "batch": "M4-C-Gwen",
+      "path": "buildings/m4-building-gwen-3.webp",
+      "sourceRef": "source/m4-building-gwen-3.png",
+      "prompt": "Gwen property level 3: tall Anodite transformation tower with three crystalline tiers and levitating rune ring; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        179,
+        240,
+        666,
+        720
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.6,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "property-level-3",
+        "owner-gwen"
+      ],
+      "sha256": "444175B4B10CCF85C74D5CFF19B6CD510EEBDBD9595A0806DE4AA88773EA1516",
+      "bytes": 119844,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-C/gwen-qa.md"
+    },
+    {
+      "id": "m4-building-gwen-4",
+      "mapId": "ben-10-02",
+      "batch": "M4-C-Gwen",
+      "path": "buildings/m4-building-gwen-4.webp",
+      "sourceRef": "source/m4-building-gwen-4.png",
+      "prompt": "Gwen property hotel level: broad ultimate Anodite palace with central spire, twin towers, sanctums and crown halo; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        102,
+        213,
+        820,
+        747
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.6,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "property-level-4",
+        "owner-gwen"
+      ],
+      "sha256": "EBDA0541A43D98F074468676BA83B0B06E23738C91435751C54D3B7DF1AF2559",
+      "bytes": 150322,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-C/gwen-qa.md"
+    },
+    {
+      "id": "m4-building-kevin-0",
+      "mapId": "ben-10-02",
+      "batch": "M4-C-Kevin",
+      "path": "buildings/m4-building-kevin-0.webp",
+      "sourceRef": "source/m4-building-kevin-0.png",
+      "prompt": "Kevin owner marker: low charcoal salvage pad with orange plasma clamp, scrap cube and cyan diagnostics; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        252,
+        605,
+        520,
+        355
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.6,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "property-level-0",
+        "owner-kevin"
+      ],
+      "sha256": "60D5EC2150D65C988BF0C794993F28DF1FFDBA3AA8CC3DC3420B679C6F0421CB",
+      "bytes": 45512,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-C/kevin-qa.md"
+    },
+    {
+      "id": "m4-building-kevin-1",
+      "mapId": "ben-10-02",
+      "batch": "M4-C-Kevin",
+      "path": "buildings/m4-building-kevin-1.webp",
+      "sourceRef": "source/m4-building-kevin-1.png",
+      "prompt": "Kevin property level 1: compact single-bay salvage garage with lift, bins and orange service light; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        247,
+        576,
+        530,
+        384
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.6,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "property-level-1",
+        "owner-kevin"
+      ],
+      "sha256": "AA2938AE20288AC6E80B0EAE5E45991DDF581534182D6356E03C33CA90B5F09D",
+      "bytes": 56032,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-C/kevin-qa.md"
+    },
+    {
+      "id": "m4-building-kevin-2",
+      "mapId": "ben-10-02",
+      "batch": "M4-C-Kevin",
+      "path": "buildings/m4-building-kevin-2.webp",
+      "sourceRef": "source/m4-building-kevin-2.png",
+      "prompt": "Kevin property level 2: medium space foundry with central smelter, twin fabrication wings and robotic arms; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        192,
+        442,
+        640,
+        518
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.6,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "property-level-2",
+        "owner-kevin"
+      ],
+      "sha256": "A19830C183B373D58605CE82289243C865DE9C80E8A93D2F565C489BFA4B44DF",
+      "bytes": 114320,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-C/kevin-qa.md"
+    },
+    {
+      "id": "m4-building-kevin-3",
+      "mapId": "ben-10-02",
+      "batch": "M4-C-Kevin",
+      "path": "buildings/m4-building-kevin-3.webp",
+      "sourceRef": "source/m4-building-kevin-3.png",
+      "prompt": "Kevin property level 3: tall interstellar Tech Forge with stacked reactor tiers, crane towers and fabrication wings; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        152,
+        282,
+        720,
+        678
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.6,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "property-level-3",
+        "owner-kevin"
+      ],
+      "sha256": "A6D4CC98C36F71F6506B15E02F652C370789D2FE06CF6AF9C2E1D4657DB905F0",
+      "bytes": 161962,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-C/kevin-qa.md"
+    },
+    {
+      "id": "m4-building-kevin-4",
+      "mapId": "ben-10-02",
+      "batch": "M4-C-Kevin",
+      "path": "buildings/m4-building-kevin-4.webp",
+      "sourceRef": "source/m4-building-kevin-4.png",
+      "prompt": "Kevin property hotel level: ultimate orbital Tech Megaforge with plasma citadel, four fabrication wings and assembly ring; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        102,
+        221,
+        820,
+        739
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.6,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "property-level-4",
+        "owner-kevin"
+      ],
+      "sha256": "AD1EFD66C496D75947957A16B44CB7C15FB896645DA50B35D7938A4BF48E6890",
+      "bytes": 184052,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-C/kevin-qa.md"
+    },
+    {
+      "id": "m4-building-rook-0",
+      "mapId": "ben-10-02",
+      "batch": "M4-C-Rook",
+      "path": "buildings/m4-building-rook-0.webp",
+      "sourceRef": "source/m4-building-rook-0.png",
+      "prompt": "Rook owner marker: low blue-gray Proto-tool pad with folded device, cyan nodes and white Plumber ring; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        252,
+        609,
+        520,
+        351
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.6,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "property-level-0",
+        "owner-rook"
+      ],
+      "sha256": "F32B61136FD8A0AC9EF33FF8D20C32D26BFD3238EA03A762290731BA5EA778BA",
+      "bytes": 47486,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-C/rook-qa.md"
+    },
+    {
+      "id": "m4-building-rook-1",
+      "mapId": "ben-10-02",
+      "batch": "M4-C-Rook",
+      "path": "buildings/m4-building-rook-1.webp",
+      "sourceRef": "source/m4-building-rook-1.png",
+      "prompt": "Rook property level 1: compact Revonnah outpost with cyan portal, comm mast and Proto-tool docks; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        247,
+        481,
+        530,
+        479
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.6,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "property-level-1",
+        "owner-rook"
+      ],
+      "sha256": "7E3F5D1A3A1F00AAF1527047A8EE3E7552138620288395510DF5B459262701D8",
+      "bytes": 60412,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-C/rook-qa.md"
+    },
+    {
+      "id": "m4-building-rook-2",
+      "mapId": "ben-10-02",
+      "batch": "M4-C-Rook",
+      "path": "buildings/m4-building-rook-2.webp",
+      "sourceRef": "source/m4-building-rook-2.png",
+      "prompt": "Rook property level 2: medium Plumber station with command tower, operations wings and Proto-tool pylons; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        192,
+        498,
+        640,
+        462
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.6,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "property-level-2",
+        "owner-rook"
+      ],
+      "sha256": "FAB0DFEF5316CC1B4A814941A423CFCE3E4B3C43A91ED03793B87F29B148C997",
+      "bytes": 71666,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-C/rook-qa.md"
+    },
+    {
+      "id": "m4-building-rook-3",
+      "mapId": "ben-10-02",
+      "batch": "M4-C-Rook",
+      "path": "buildings/m4-building-rook-3.webp",
+      "sourceRef": "source/m4-building-rook-3.png",
+      "prompt": "Rook property level 3: tall Galactic Plumber fortress with bastions, cyan defense ring and teleport portal; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        152,
+        407,
+        720,
+        553
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.6,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "property-level-3",
+        "owner-rook"
+      ],
+      "sha256": "85720FAA582D8B3E90F7A9707F1F563D7AB436F8D741686138064FE96D67A09A",
+      "bytes": 97466,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-C/rook-qa.md"
+    },
+    {
+      "id": "m4-building-rook-4",
+      "mapId": "ben-10-02",
+      "batch": "M4-C-Rook",
+      "path": "buildings/m4-building-rook-4.webp",
+      "sourceRef": "source/m4-building-rook-4.png",
+      "prompt": "Rook property hotel level: ultimate Galactic Plumber citadel with four bastions, orbital ring and monumental gate; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        102,
+        338,
+        820,
+        622
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.6,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "property-level-4",
+        "owner-rook"
+      ],
+      "sha256": "4690F77C065D9C109FB109552C4DA3191F56C7C329375BFD4698250490F1EDC5",
+      "bytes": 139162,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-C/rook-qa.md"
+    },
+    {
+      "id": "m4-resort-0",
+      "mapId": "ben-10-02",
+      "batch": "M4-D-Resort",
+      "path": "resorts/m4-resort-0.webp",
+      "sourceRef": "source/m4-resort-0.png",
+      "prompt": "Unowned compact interplanetary teleport landing pad with green Omnitrix energy ring.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        232,
+        563,
+        560,
+        397
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.6,
+      "depthOffset": 0,
+      "tileIndexes": [
+        4,
+        14,
+        18,
+        25
+      ],
+      "useCases": [
+        "resort-unowned"
+      ],
+      "sha256": "70F3B887589B6F9B624FDEF40DF82390D43F43A6A431D944E83CBAC098F65D51",
+      "bytes": 38090,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-D/resort-qa.md"
+    },
+    {
+      "id": "m4-resort-1",
+      "mapId": "ben-10-02",
+      "batch": "M4-D-Resort",
+      "path": "resorts/m4-resort-1.webp",
+      "sourceRef": "source/m4-resort-1.png",
+      "prompt": "Resort level 1 compact active teleport gateway with curved pylons.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        222,
+        528,
+        580,
+        432
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.6,
+      "depthOffset": 0,
+      "tileIndexes": [
+        4,
+        14,
+        18,
+        25
+      ],
+      "useCases": [
+        "resort-level-1"
+      ],
+      "sha256": "B65A70B60F5B460C826CF1E662AB7190A9199B40D1475EB8BF2B49183C8E358B",
+      "bytes": 63702,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-D/resort-qa.md"
+    },
+    {
+      "id": "m4-resort-2",
+      "mapId": "ben-10-02",
+      "batch": "M4-D-Resort",
+      "path": "resorts/m4-resort-2.webp",
+      "sourceRef": "source/m4-resort-2.png",
+      "prompt": "Resort level 2 satellite relay, control cabin and teleport pad.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        192,
+        364,
+        640,
+        596
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.6,
+      "depthOffset": 0,
+      "tileIndexes": [
+        4,
+        14,
+        18,
+        25
+      ],
+      "useCases": [
+        "resort-level-2"
+      ],
+      "sha256": "DAB8D767B56E884C1C72A42A037B2A993F49E4314DF5D8F9A423A407887B9571",
+      "bytes": 77336,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-D/resort-qa.md"
+    },
+    {
+      "id": "m4-resort-3",
+      "mapId": "ben-10-02",
+      "batch": "M4-D-Resort",
+      "path": "resorts/m4-resort-3.webp",
+      "sourceRef": "source/m4-resort-3.png",
+      "prompt": "Resort level 3 orbital transfer station with docking arms and control tower.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        152,
+        487,
+        720,
+        473
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.6,
+      "depthOffset": 0,
+      "tileIndexes": [
+        4,
+        14,
+        18,
+        25
+      ],
+      "useCases": [
+        "resort-level-3"
+      ],
+      "sha256": "4C2A813671F4A4BBBEEBE02E6E3290E74543EE1CBD4C1D5019557EC6353CE4EF",
+      "bytes": 83414,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-D/resort-qa.md"
+    },
+    {
+      "id": "m4-resort-4",
+      "mapId": "ben-10-02",
+      "batch": "M4-D-Resort",
+      "path": "resorts/m4-resort-4.webp",
+      "sourceRef": "source/m4-resort-4.png",
+      "prompt": "Resort level 4 grand interstellar Plumber fortress around a portal core.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        122,
+        393,
+        780,
+        567
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.6,
+      "depthOffset": 0,
+      "tileIndexes": [
+        4,
+        14,
+        18,
+        25
+      ],
+      "useCases": [
+        "resort-level-4"
+      ],
+      "sha256": "24D01DD90F61A9565359AAA80C1AF9688A84A214231EE8B8522285F664D65EF8",
+      "bytes": 102554,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-D/resort-qa.md"
+    },
+    {
+      "id": "m4-token-ben",
+      "mapId": "ben-10-02",
+      "batch": "M4-D-Characters",
+      "path": "characters/m4-token-ben.webp",
+      "sourceRef": "source/m4-character-ben-token.png",
+      "prompt": "Full-body 3D ben board token; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        291,
+        92,
+        443,
+        900
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.96875
+      ],
+      "worldScale": 1.08,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "token-ben"
+      ],
+      "sha256": "71765C7F309EB18A6E4DB616AB8C9CEEE0FF7F043E19475F57492F6B4826B10D",
+      "bytes": 71714,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-D/character-qa.md"
+    },
+    {
+      "id": "m4-avatar-ben",
+      "mapId": "ben-10-02",
+      "batch": "M4-D-Characters",
+      "path": "../characters/ben.png",
+      "sourceRef": "../characters/ben.png",
+      "prompt": "Approved 3D bust avatar of ben; transparent; no frame or text.",
+      "canvas": [
+        512,
+        512
+      ],
+      "contentBounds": [
+        10,
+        9,
+        499,
+        500
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        1
+      ],
+      "worldScale": 1,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "avatar-ben"
+      ],
+      "sha256": "9D3A9075EBFE60EE81E3E142D63F61294AADAD80DFDA7B72E89DC063B3527D2B",
+      "bytes": 73450,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-D/character-qa.md"
+    },
+    {
+      "id": "m4-token-gwen",
+      "mapId": "ben-10-02",
+      "batch": "M4-D-Characters",
+      "path": "characters/m4-token-gwen.webp",
+      "sourceRef": "source/m4-character-gwen-token.png",
+      "prompt": "Full-body 3D gwen board token; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        266,
+        92,
+        492,
+        900
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.96875
+      ],
+      "worldScale": 1.08,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "token-gwen"
+      ],
+      "sha256": "37981BDFE1568D6B59618F870832CC97C121FAF314F3568046DEB2A2FB4AF51D",
+      "bytes": 97328,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-D/character-qa.md"
+    },
+    {
+      "id": "m4-avatar-gwen",
+      "mapId": "ben-10-02",
+      "batch": "M4-D-Characters",
+      "path": "../characters/gwen.png",
+      "sourceRef": "../characters/gwen.png",
+      "prompt": "Approved 3D bust avatar of gwen; transparent; no frame or text.",
+      "canvas": [
+        512,
+        512
+      ],
+      "contentBounds": [
+        63,
+        4,
+        438,
+        508
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        1
+      ],
+      "worldScale": 1,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "avatar-gwen"
+      ],
+      "sha256": "4BE84039498FD1BD92752A4CED239CED3897440E9B0D56FC28829CC7BA7B30FD",
+      "bytes": 75711,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-D/character-qa.md"
+    },
+    {
+      "id": "m4-token-kevin",
+      "mapId": "ben-10-02",
+      "batch": "M4-D-Characters",
+      "path": "characters/m4-token-kevin.webp",
+      "sourceRef": "source/m4-character-kevin-token.png",
+      "prompt": "Full-body 3D kevin board token; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        318,
+        92,
+        388,
+        900
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.96875
+      ],
+      "worldScale": 1.08,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "token-kevin"
+      ],
+      "sha256": "A7462205CF1BAB91711106ADBB87066F5AFBE7D53D753BCF4C6E9AF4077CD275",
+      "bytes": 63580,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-D/character-qa.md"
+    },
+    {
+      "id": "m4-avatar-kevin",
+      "mapId": "ben-10-02",
+      "batch": "M4-D-Characters",
+      "path": "../characters/kevin.png",
+      "sourceRef": "../characters/kevin.png",
+      "prompt": "Approved 3D bust avatar of kevin; transparent; no frame or text.",
+      "canvas": [
+        512,
+        512
+      ],
+      "contentBounds": [
+        3,
+        8,
+        504,
+        501
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        1
+      ],
+      "worldScale": 1,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "avatar-kevin"
+      ],
+      "sha256": "E4FF22B925EC8360DFCA33F1D483B2B59350330224A5840759C5511588A000AE",
+      "bytes": 78918,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-D/character-qa.md"
+    },
+    {
+      "id": "m4-token-rook",
+      "mapId": "ben-10-02",
+      "batch": "M4-D-Characters",
+      "path": "characters/m4-token-rook.webp",
+      "sourceRef": "source/m4-character-rook-token.png",
+      "prompt": "Full-body 3D rook board token; transparent; no text.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        319,
+        92,
+        387,
+        900
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.96875
+      ],
+      "worldScale": 1.08,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "token-rook"
+      ],
+      "sha256": "4580DE3EF1B4941A7327A061A7BE5295455284BF15C7B748C05D6D94D52DE851",
+      "bytes": 66670,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-D/character-qa.md"
+    },
+    {
+      "id": "m4-avatar-rook",
+      "mapId": "ben-10-02",
+      "batch": "M4-D-Characters",
+      "path": "../characters/rook.png",
+      "sourceRef": "../characters/rook.png",
+      "prompt": "Approved 3D bust avatar of rook; transparent; no frame or text.",
+      "canvas": [
+        512,
+        512
+      ],
+      "contentBounds": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        1
+      ],
+      "worldScale": 1,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "avatar-rook"
+      ],
+      "sha256": "24CBEB104312A5EAEF61D5C4371C6FB427AF971940D54D2057E0C07E877D5F10",
+      "bytes": 65074,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-D/character-qa.md"
+    },
+    {
+      "id": "m4-decor-a",
+      "mapId": "ben-10-02",
+      "batch": "M4-E-Decor",
+      "path": "decor/m4-decor-a.webp",
+      "sourceRef": "source/m4-decor-a.png",
+      "prompt": "Bellwood Orbit and Plumber urban prop cluster.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        202,
+        397,
+        620,
+        563
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.4,
+      "depthOffset": -0.32,
+      "tileIndexes": [],
+      "useCases": [
+        "city-group-A-decor"
+      ],
+      "sha256": "E7E07DAB06D57C63B09B15A22AE3BDCDDE61887F471ACE0F7B8092E3945C9C44",
+      "bytes": 63982,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-E/decor-qa.md"
+    },
+    {
+      "id": "m4-decor-b",
+      "mapId": "ben-10-02",
+      "batch": "M4-E-Decor",
+      "path": "decor/m4-decor-b.webp",
+      "sourceRef": "source/m4-decor-b.png",
+      "prompt": "Khoros Forge volcanic prop cluster.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        202,
+        504,
+        620,
+        456
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.4,
+      "depthOffset": -0.32,
+      "tileIndexes": [],
+      "useCases": [
+        "city-group-B-decor"
+      ],
+      "sha256": "BC7F14F4F0E1D139F4CA778FD5B89ADA17E00E974FAAFB3DC56D946847DE875F",
+      "bytes": 53926,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-E/decor-qa.md"
+    },
+    {
+      "id": "m4-decor-c",
+      "mapId": "ben-10-02",
+      "batch": "M4-E-Decor",
+      "path": "decor/m4-decor-c.webp",
+      "sourceRef": "source/m4-decor-c.png",
+      "prompt": "Ledgerdomain neon-purple energy prop cluster.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        202,
+        472,
+        620,
+        488
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.4,
+      "depthOffset": -0.32,
+      "tileIndexes": [],
+      "useCases": [
+        "city-group-C-decor"
+      ],
+      "sha256": "212CDA1CCB3B26D20A19271519C8344D0D9D45B8AEB768B7509E1CEB4B392921",
+      "bytes": 75274,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-E/decor-qa.md"
+    },
+    {
+      "id": "m4-decor-d",
+      "mapId": "ben-10-02",
+      "batch": "M4-E-Decor",
+      "path": "decor/m4-decor-d.webp",
+      "sourceRef": "source/m4-decor-d.png",
+      "prompt": "Petropia cyan crystal and scanner cluster.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        202,
+        414,
+        620,
+        546
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.4,
+      "depthOffset": -0.32,
+      "tileIndexes": [],
+      "useCases": [
+        "city-group-D-decor"
+      ],
+      "sha256": "DC354A7AD32DC7695235E2159F04F2CAE697BA8B3E0F7656B41C45B152D1E5DB",
+      "bytes": 49750,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-E/decor-qa.md"
+    },
+    {
+      "id": "m4-decor-e",
+      "mapId": "ben-10-02",
+      "batch": "M4-E-Decor",
+      "path": "decor/m4-decor-e.webp",
+      "sourceRef": "source/m4-decor-e.png",
+      "prompt": "Silver-tech metropolis prop cluster.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        227,
+        340,
+        571,
+        620
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.4,
+      "depthOffset": -0.32,
+      "tileIndexes": [],
+      "useCases": [
+        "city-group-E-decor"
+      ],
+      "sha256": "693934910A5048C7675A68C741509EC28BFC0D10AE38368117E537F8D5E73D0F",
+      "bytes": 58600,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-E/decor-qa.md"
+    },
+    {
+      "id": "m4-decor-f",
+      "mapId": "ben-10-02",
+      "batch": "M4-E-Decor",
+      "path": "decor/m4-decor-f.webp",
+      "sourceRef": "source/m4-decor-f.png",
+      "prompt": "Red desert monolith and alien relay cluster.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        202,
+        423,
+        620,
+        537
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.4,
+      "depthOffset": -0.32,
+      "tileIndexes": [],
+      "useCases": [
+        "city-group-F-decor"
+      ],
+      "sha256": "A40CCFB7693EE6FF48A17BCA99D0465016661E66A28CCD3DA8E954C5C2F537D5",
+      "bytes": 54704,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-E/decor-qa.md"
+    },
+    {
+      "id": "m4-decor-g",
+      "mapId": "ben-10-02",
+      "batch": "M4-E-Decor",
+      "path": "decor/m4-decor-g.webp",
+      "sourceRef": "source/m4-decor-g.png",
+      "prompt": "Bioluminescent alien jungle prop cluster.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        212,
+        340,
+        601,
+        620
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.4,
+      "depthOffset": -0.32,
+      "tileIndexes": [],
+      "useCases": [
+        "city-group-G-decor"
+      ],
+      "sha256": "575571E4663412454808A0D8FAC5CE48EFEEA83A1B6B00955A8BD6BD27953EBA",
+      "bytes": 84478,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-E/decor-qa.md"
+    },
+    {
+      "id": "m4-decor-h",
+      "mapId": "ben-10-02",
+      "batch": "M4-E-Decor",
+      "path": "decor/m4-decor-h.webp",
+      "sourceRef": "source/m4-decor-h.png",
+      "prompt": "Osmos industrial turbine and reactor cluster.",
+      "canvas": [
+        1024,
+        1024
+      ],
+      "contentBounds": [
+        202,
+        545,
+        620,
+        415
+      ],
+      "alpha": true,
+      "footAnchor": [
+        0.5,
+        0.9375
+      ],
+      "worldScale": 1.4,
+      "depthOffset": -0.32,
+      "tileIndexes": [],
+      "useCases": [
+        "city-group-H-decor"
+      ],
+      "sha256": "08397F0FE7490218DDF15DF215016D25082828ECD6D13276FC5427425D864E27",
+      "bytes": 55018,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-E/decor-qa.md"
+    },
+    {
+      "id": "m4-home-background",
+      "mapId": "ben-10-02",
+      "batch": "M4-E-UI",
+      "path": "ui/m4-home-background.webp",
+      "sourceRef": "docs/reviews/map34/ben-10-02/M4-E/decor-integration.png",
+      "prompt": "Derived Map 4 home-background output from the approved live board and master assets.",
+      "canvas": [
+        1920,
+        1080
+      ],
+      "contentBounds": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "alpha": false,
+      "footAnchor": null,
+      "worldScale": 1,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "home-background"
+      ],
+      "sha256": "6D6F855B650BB2DFC949CB974629BF4F7154E709D891C166D621C8FD7CA027F6",
+      "bytes": 103122,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-E/ui-qa.md"
+    },
+    {
+      "id": "m4-map-preview",
+      "mapId": "ben-10-02",
+      "batch": "M4-E-UI",
+      "path": "ui/m4-map-preview.webp",
+      "sourceRef": "docs/reviews/map34/ben-10-02/M4-E/decor-integration.png",
+      "prompt": "Derived Map 4 map-preview output from the approved live board and master assets.",
+      "canvas": [
+        640,
+        360
+      ],
+      "contentBounds": [
+        0,
+        0,
+        640,
+        360
+      ],
+      "alpha": false,
+      "footAnchor": null,
+      "worldScale": 1,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "map-selection-preview"
+      ],
+      "sha256": "61167F613B6AE9A5544DEF1519397960D887937735F57005F7785B8DCC283EC7",
+      "bytes": 34686,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-E/ui-qa.md"
+    },
+    {
+      "id": "m4-player-card-master",
+      "mapId": "ben-10-02",
+      "batch": "M4-E-UI",
+      "path": "ui/m4-player-card-master.webp",
+      "sourceRef": "public/maps/ben-10-02/assets/characters/ben.png",
+      "prompt": "Derived Map 4 player-card-master output from the approved live board and master assets.",
+      "canvas": [
+        720,
+        240
+      ],
+      "contentBounds": [
+        0,
+        0,
+        720,
+        240
+      ],
+      "alpha": false,
+      "footAnchor": null,
+      "worldScale": 1,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "player-card-review-master"
+      ],
+      "sha256": "7079A151DFEE554BAF1DE6571DEC26A25D072E1FFF3DCDF9D06178C060603814",
+      "bytes": 16214,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-E/ui-qa.md"
+    },
+    {
+      "id": "m4-popup-master",
+      "mapId": "ben-10-02",
+      "batch": "M4-E-UI",
+      "path": "ui/m4-popup-master.webp",
+      "sourceRef": "public/maps/ben-10-02/assets/buildings/ben10-02-ben-2.png",
+      "prompt": "Derived Map 4 popup-master output from the approved live board and master assets.",
+      "canvas": [
+        900,
+        700
+      ],
+      "contentBounds": [
+        0,
+        0,
+        900,
+        700
+      ],
+      "alpha": false,
+      "footAnchor": null,
+      "worldScale": 1,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "popup-review-master"
+      ],
+      "sha256": "CF540AC363DC65B5866B63946516CBEF9A9752B9960A4B2D3542E12E6B70DFB3",
+      "bytes": 31084,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-E/ui-qa.md"
+    },
+    {
+      "id": "m4-result-state-review",
+      "mapId": "ben-10-02",
+      "batch": "M4-E-UI",
+      "path": "ui/m4-result-state-review.webp",
+      "sourceRef": "docs/reviews/map34/ben-10-02/M4-E/decor-integration.png",
+      "prompt": "Derived Map 4 result-state-review output from the approved live board and master assets.",
+      "canvas": [
+        1100,
+        760
+      ],
+      "contentBounds": [
+        0,
+        0,
+        1100,
+        760
+      ],
+      "alpha": false,
+      "footAnchor": null,
+      "worldScale": 1,
+      "depthOffset": 0,
+      "tileIndexes": [],
+      "useCases": [
+        "result-state-review-master"
+      ],
+      "sha256": "B1248A5168D2EC59039DEDE1C0DF4BAA0B177553400278CC54A4BE7CA2C387BF",
+      "bytes": 30134,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10-02/M4-E/ui-qa.md"
+    }
+  ]
+}

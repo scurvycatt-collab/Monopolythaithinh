@@ -5,7 +5,8 @@ import { Pen, rgb, mix, canvas } from './pen.js';
 import { PIECES } from './packs.js';
 
 const SHARED = new URL('../../../assets/shared/', import.meta.url);
-export const KIT = {}, NAT = {}, NATMETA = {}, OWN = {};
+export const KIT = {}, NAT = {}, NATMETA = {}, OWN = {}, OWNMETA = {};
+const OWNSRC = {}, OWNLOAD = {};
 let NATPX = 150;
 const loadImg = (src) => new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => rej(new Error('Không tải được ảnh ' + src)); im.src = src; });
 
@@ -18,10 +19,25 @@ export async function loadAssets(skin, base, progress = () => {}) {
     NATPX = meta.px || 150; Object.assign(NATMETA, meta.sprites);
   }
   if (skin.packs.includes('kenney-nature')) for (const n of Object.keys(NATMETA)) if (!NAT[n]) jobs.push(() => loadImg(new URL(`kenney-nature/${n}.png`, SHARED)).then((im) => (NAT[n] = im)));
-  for (const [n, p] of Object.entries(skin.sprites || {})) jobs.push(() => loadImg(new URL(p, new URL(base, document.baseURI))).then((im) => (OWN[n] = im)));
+  for (const [n, p] of Object.entries(skin.sprites || {})) {
+    OWNSRC[n] = new URL(p, new URL(base, document.baseURI));
+    OWNMETA[n] = skin.spriteMeta && skin.spriteMeta[n] ? skin.spriteMeta[n] : null;
+    if (!OWNMETA[n]?.lazy) jobs.push(() => ensureAsset(n));
+  }
   let done = 0; progress(0, jobs.length);
   await Promise.all(jobs.map((j) => j().then(() => progress(++done, jobs.length))));
   if (document.fonts) await document.fonts.load('900 40px Rubik').catch(() => {});
+}
+
+export function ensureAsset(name) {
+  if (OWN[name]) return Promise.resolve(OWN[name]);
+  if (!OWNSRC[name]) return Promise.reject(new Error(`Sprite riêng không tồn tại: "${name}"`));
+  if (!OWNLOAD[name]) OWNLOAD[name] = loadImg(OWNSRC[name]).then((im) => (OWN[name] = im)).finally(() => delete OWNLOAD[name]);
+  return OWNLOAD[name];
+}
+
+export async function ensureAssets(names) {
+  await Promise.all([...new Set(names || [])].map(ensureAsset));
 }
 
 /* ---------- khối nhà Kenney ---------- */
@@ -104,8 +120,11 @@ Pen.prototype.nat = function (name, x, z, s = 1, mode = 'none', shadow = true) {
   if (shadow) this.ellipseShadow(x, z, (m[0] / NATPX) * s * 0.32, 0.14);
   c.save(); c.translate(sx, sy); c.scale(-sc, sc); c.drawImage(cv, -m[2], -m[3]); c.restore();
 };
-// pen.img(tên sprite riêng, x, z, cỡ): ảnh trong skin.sprites, đáy giữa chạm đất; cỡ = chiều cao (đơn vị thế giới)
+// pen.img(tên sprite riêng, x, z, cỡ): ảnh trong skin.sprites; mặc định đáy giữa chạm đất.
+// spriteMeta.<tên>.anchor = [x,y] cho phép asset vuông có safe margin mà vẫn neo chính xác.
 Pen.prototype.img = function (name, x, z, h = 1, y = 0) {
   const im = OWN[name]; if (!im) throw new Error(`Sprite riêng không tồn tại: "${name}"`);
-  const [sx, sy] = this.p(x, y, z), H = h * this.k, W = (im.width / im.height) * H; this.ctx.drawImage(im, sx - W / 2, sy - H, W, H);
+  const meta = OWNMETA[name] || {}, anchor = meta.anchor || [0.5, 1];
+  const [sx, sy] = this.p(x, y, z), H = h * this.k, W = (im.width / im.height) * H;
+  this.ctx.drawImage(im, sx - W * anchor[0], sy - H * anchor[1], W, H);
 };

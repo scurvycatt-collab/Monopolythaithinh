@@ -1,4 +1,5 @@
 import { existsSync, readFileSync, statSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -54,6 +55,10 @@ for (const [i, entry] of (Array.isArray(MAPS) ? MAPS : []).entries()) {
         if (width !== 512 || height !== 512) fail(id, `thumbnail ${pet.img} phải đúng 512×512, hiện ${width}×${height}.`);
         const hasAlpha = [4, 6].includes(colorType) || (colorType === 3 && png.indexOf(Buffer.from('tRNS')) >= 0);
         if (!hasAlpha) fail(id, `thumbnail ${pet.img} phải có kênh alpha trong suốt (RGBA hoặc indexed PNG + tRNS).`);
+        if (entry.id === 'ben-10') {
+          const tokenPath = typeof pet.tokenImg === 'string' ? path.join(PUBLIC, pet.tokenImg) : '';
+          if (!tokenPath || !isFile(tokenPath)) fail(id, `quân cờ toàn thân không tồn tại: ${pet.tokenImg || '(trống)'}.`);
+        }
       }
       const total = entry.pets.reduce((sum, pet) => { const p = pet && pet.img ? path.join(PUBLIC, pet.img) : ''; return sum + (p && isFile(p) ? statSync(p).size : 0); }, 0);
       if (total > 1.5 * 1024 * 1024) fail(id, `tổng thumbnail nhân vật ${(total / 1024 / 1024).toFixed(2)} MB vượt 1,5 MB.`);
@@ -114,6 +119,14 @@ for (const [i, entry] of (Array.isArray(MAPS) ? MAPS : []).entries()) {
                 if (png.toString('ascii', 1, 4) !== 'PNG' || png.readUInt32BE(16) !== 512 || png.readUInt32BE(20) !== 512) fail(id, `thumbnail công trình ${file} phải là PNG 512×512.`);
               }
             }
+            if (entry.id === 'ben-10') {
+              for (const key of ['m3BoardBase', 'm3CenterOmnitrix', 'm3DicePad']) {
+                if (!skin.spriteMeta || !skin.spriteMeta[key] || !Array.isArray(skin.spriteMeta[key].anchor)) fail(id, `sprite v2 ${key} phải khai báo anchor dùng thật trong renderer.`);
+              }
+              if (!Array.isArray(skin.diceAt) || skin.diceAt.length !== 2) fail(id, 'bệ xúc xắc Map 3 phải khai báo đúng hai vị trí xúc xắc.');
+              const expectedResortLevels = ['Cổng dịch chuyển', 'Trạm vệ tinh', 'Trạm trung chuyển quỹ đạo', 'Pháo đài Plumber'];
+              if (JSON.stringify(skin.labels?.resortLevels) !== JSON.stringify(expectedResortLevels)) fail(id, 'tên bốn cấp resort Map 3 phải khớp progression asset M3-D.');
+            }
           }
           for (const p of Object.values(skin.sprites || {})) if (!isFile(path.join(PUBLIC, path.dirname(rendererRel), p))) fail(id, `sprite riêng không tồn tại: ${p}`);
           for (const pack of skin.packs) if (!existsSync(path.join(PUBLIC, 'assets/shared', pack, 'LICENSE.txt'))) fail(id, `pack dùng chung "${pack}" thiếu public/assets/shared/${pack}/LICENSE.txt.`);
@@ -138,7 +151,12 @@ for (const [i, entry] of (Array.isArray(MAPS) ? MAPS : []).entries()) {
   if (!/scheduleFrame\(active \?[^:]+: 250\)/.test(src)) errors.push('Khung 2D phải giảm nhịp đánh thức khi cảnh đứng yên.');
   if (!/document\.hidden/.test(src) || !/visibilitychange/.test(src)) errors.push('Khung 2D phải dừng render khi tab bị ẩn như Map 1.');
   if (!/const sprites = new Map\(\)/.test(src) || !/function cached\(key, fn\)/.test(src)) errors.push('Khung 2D phải cache sprite đã nướng thay vì tạo lại mỗi frame.');
+  const assetSrc = readFileSync(path.join(PUBLIC, 'js/render-common/board2d/assets.js'), 'utf8');
+  if (!/OWNMETA\[name\]/.test(assetSrc) || !/meta\.anchor \|\| \[0\.5, 1\]/.test(assetSrc)) errors.push('Khung 2D phải dùng spriteMeta.anchor thật, không chỉ lưu metadata chết trong manifest.');
+  if (!/OWNMETA\[n\]\?\.lazy/.test(assetSrc) || !/export async function ensureAssets/.test(assetSrc)) errors.push('Khung 2D phải bỏ qua sprite lazy khi cold-load và chỉ tải theo state.');
+  if (!/ensureAssets\(stateAssets\(v\)\)/.test(src) || !/slot\.assets/.test(src)) errors.push('Khung 2D phải tải sprite công trình theo state trước khi dựng, không preload cả bộ map.');
   if (!/visual-scale\.js/.test(src) || !/H = TOKEN_HEIGHT \* K/.test(src) || !/PROPERTY_LEVEL_SCALE\[level\]/.test(src) || !/propertyRatio: PROPERTY_TILE_RATIO/.test(src)) errors.push('Khung 2D phải dùng chuẩn tỷ lệ quân, cấp nhà và ô đất chung của Map 1.');
+  if (!/def\.tokenImg \|\| def\.img/.test(src)) errors.push('Khung 2D phải ưu tiên quân cờ toàn thân tokenImg và chỉ fallback về avatar img.');
   if (/t\.price \+ 'K'/.test(src)) errors.push('Khung 2D không được hiện giá mua trên ô chưa có chủ.');
   if (!/own\.pet/.test(src) || !/\|\$\{pet\}/.test(src)) errors.push('Cache công trình phải gồm pet của chủ để bốn bộ nhà Ben 10 không dùng nhầm sprite.');
   for (const doc of ['PEN.md', 'KINDS.md']) if (!isFile(path.join(PUBLIC, path.dirname(BOARD2D), doc))) errors.push(`Khung xương thiếu ${doc}.`);
@@ -155,6 +173,12 @@ for (const [i, entry] of (Array.isArray(MAPS) ? MAPS : []).entries()) {
     const map1 = readFileSync(path.join(PUBLIC, DEFAULT_RENDERER), 'utf8');
     if (!/visual-scale\.js/.test(map1) || /const TOKEN_HEIGHT\s*=/.test(map1)) errors.push('Map 1 phải dùng visual-scale.js, không khai báo kích thước quân riêng.');
   }
+}
+{
+  const capture = readFileSync(path.join(ROOT, 'scripts/capture-map-review.mjs'), 'utf8');
+  if (!/mkdtempSync\(path\.join\(os\.tmpdir\(\), 'ttm-map-review-'\)\)/.test(capture)) errors.push('Script review map phải tạo profile trình duyệt trong thư mục temp của hệ điều hành.');
+  if (!/rmSync\(profile, \{ recursive: true, force: true/.test(capture)) errors.push('Script review map phải xoá profile trình duyệt trong finally.');
+  if (/path\.resolve\(`\.qa-cdp-profile-/.test(capture)) errors.push('Script review map không được tạo profile QA lẻ trong workspace.');
 }
 {
   const dicePath = path.join(PUBLIC, 'js', 'render-common', 'dice-roll.js');
@@ -190,6 +214,186 @@ for (const [i, entry] of (Array.isArray(MAPS) ? MAPS : []).entries()) {
 }
 if (defaults !== 1) errors.push(`Phải có đúng một map \`default: true\`, hiện có ${defaults}.`);
 
+{
+  const boardSrc = readFileSync(path.join(PUBLIC, BOARD2D), 'utf8');
+  const captureSrc = readFileSync(path.join(ROOT, 'scripts/capture-map-review.mjs'), 'utf8');
+  const m3 = readFileSync(path.join(PUBLIC, 'maps/ben-10/skin.js'), 'utf8');
+  if (!/SL\.bonus && SL\.bonus\.assets/.test(boardSrc) || !/SL\.outage && SL\.outage\.assets/.test(boardSrc)) errors.push('Banner festival va marker outage phai tai lazy theo state that.');
+  if (!/--state-assets/.test(captureSrc) || !/stateAssetLoad/.test(captureSrc)) errors.push('Script review map phai do request-list asset lazy truoc/sau state.');
+  for (const name of ['m3Start', 'm3NullVoid', 'm3Championship', 'm3Tour', 'm3Chance1', 'm3Chance2', 'm3Chance3', 'm3Tax', 'm3Festival', 'm3Outage']) {
+    if (!m3.includes(name)) errors.push(`Map 3 thieu asset M3-B: ${name}.`);
+  }
+  if (!/m3Festival: \{ anchor: \[0\.5, 0\.9375\], lazy: true \}/.test(m3) || !/m3Outage: \{ anchor: \[0\.5, 0\.9375\], lazy: true \}/.test(m3)) errors.push('Festival/outage Map 3 phai lazy.');
+  if (!/c\.tile === 20 \? 'm3Chance2' : c\.tile === 28 \? 'm3Chance3' : 'm3Chance1'/.test(m3)) errors.push('Ba o Chance Map 3 phai dung ba silhouette rieng.');
+}
+{
+  const id = 'ben-10-02';
+  const skinPath = path.join(PUBLIC, 'maps/ben-10-02/skin.js');
+  const skin = (await import(pathToFileURL(skinPath).href)).default;
+  const required = [
+    'm4BoardBase', 'm4CenterOmnitrix', 'm4AlienRing', 'm4MountRushmore',
+    'm4PyronVolcano', 'm4NeonCity', 'm4CrystalCitadel', 'm4TechMetropolis',
+    'm4DesertFortress', 'm4BlueDomes', 'm4PurpleCastle', 'm4JungleDomain',
+    'm4CardPadCharge', 'm4CardPadPlumber', 'm4DicePad', 'm4CenterProps'
+  ];
+  for (const key of required) {
+    if (!skin.sprites?.[key] || !skin.spriteMeta?.[key] || !Array.isArray(skin.spriteMeta[key].anchor)) fail(id, `sprite M4-A ${key} must declare a runtime path and anchor.`);
+  }
+  const manifestPath = path.join(PUBLIC, 'maps/ben-10-02/assets/v2/manifest.json');
+  if (!isFile(manifestPath)) fail(id, 'missing Map 4 v2 asset manifest.');
+  else {
+    const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+    const batch = (manifest.assets || []).filter((asset) => asset.batch === 'M4-A');
+    if (manifest.mapId !== id || batch.length !== 16) fail(id, 'Map 4 manifest must contain exactly 16 M4-A assets.');
+    const expectedBiomeTiles = {
+      'm4-tech-metropolis': [17, 19],
+      'm4-desert-fortress': [21, 22, 23],
+      'm4-blue-domes': [29, 31]
+    };
+    for (const [assetId, indexes] of Object.entries(expectedBiomeTiles)) {
+      const asset = batch.find((item) => item.id === assetId);
+      if (!asset || JSON.stringify(asset.tileIndexes) !== JSON.stringify(indexes)) fail(id, `${assetId} must remain mapped to tile indexes ${indexes.join(',')}.`);
+    }
+    for (const asset of batch) {
+      const full = path.join(PUBLIC, 'maps/ben-10-02/assets/v2', asset.path || '');
+      if (!isFile(full)) { fail(id, `missing M4-A asset: ${asset.path || asset.id}`); continue; }
+      const bytes = readFileSync(full);
+      const sha256 = createHash('sha256').update(bytes).digest('hex').toUpperCase();
+      if (bytes.length !== asset.bytes || sha256 !== asset.sha256) fail(id, `M4-A checksum/bytes do not match manifest: ${asset.id}.`);
+      if (bytes.length > 180 * 1024) fail(id, `M4-A asset ${asset.id} exceeds 180 KiB.`);
+    }
+    const specialBatch = (manifest.assets || []).filter((asset) => asset.batch === 'M4-B');
+    if (specialBatch.length !== 10) fail(id, 'Map 4 manifest must contain exactly 10 M4-B special assets.');
+    for (const asset of specialBatch) {
+      const full = path.join(PUBLIC, 'maps/ben-10-02/assets/v2', asset.path || '');
+      if (!isFile(full)) { fail(id, `missing M4-B asset: ${asset.path || asset.id}`); continue; }
+      const bytes = readFileSync(full);
+      const sha256 = createHash('sha256').update(bytes).digest('hex').toUpperCase();
+      if (bytes.length !== asset.bytes || sha256 !== asset.sha256) fail(id, `M4-B checksum/bytes do not match manifest: ${asset.id}.`);
+      if (bytes.length > 180 * 1024) fail(id, `M4-B asset ${asset.id} exceeds 180 KiB.`);
+    }
+    for (const key of ['m4SpecialStart', 'm4SpecialNullVoid', 'm4SpecialChampionship', 'm4SpecialTour', 'm4SpecialChance1', 'm4SpecialChance2', 'm4SpecialChance3', 'm4SpecialTax', 'm4SpecialFestival', 'm4SpecialOutage']) {
+      if (!skin.sprites?.[key] || !skin.spriteMeta?.[key]) fail(id, `missing runtime M4-B sprite mapping: ${key}.`);
+    }
+    if (!skin.spriteMeta?.m4SpecialFestival?.lazy || !skin.spriteMeta?.m4SpecialOutage?.lazy) fail(id, 'Map 4 festival and outage assets must remain lazy.');
+    if (!skin.slots?.bonus?.assets || !skin.slots?.outage?.assets) fail(id, 'Map 4 state overlays must declare lazy asset resolvers.');
+    const skinSource = readFileSync(skinPath, 'utf8');
+    if (!/c\.tile === 20 \? 'm4SpecialChance2' : c\.tile === 28 \? 'm4SpecialChance3' : 'm4SpecialChance1'/.test(skinSource)) fail(id, 'three Map 4 Chance tiles must use three distinct silhouettes.');
+    const benBuildings = (manifest.assets || []).filter((asset) => asset.batch === 'M4-C-Ben');
+    if (benBuildings.length !== 5) fail(id, 'Map 4 manifest must contain exactly five M4-C-Ben property levels.');
+    for (const asset of benBuildings) {
+      const full = path.join(PUBLIC, 'maps/ben-10-02/assets/v2', asset.path || '');
+      if (!isFile(full)) { fail(id, `missing M4-C-Ben asset: ${asset.path || asset.id}`); continue; }
+      const bytes = readFileSync(full);
+      const sha256 = createHash('sha256').update(bytes).digest('hex').toUpperCase();
+      if (bytes.length !== asset.bytes || sha256 !== asset.sha256) fail(id, `M4-C-Ben checksum/bytes do not match manifest: ${asset.id}.`);
+      if (bytes.length > 180 * 1024) fail(id, `M4-C-Ben asset ${asset.id} exceeds 180 KiB.`);
+    }
+    for (let level = 0; level < 5; level++) {
+      const key = `m4BuildingBen${level}`;
+      if (!skin.sprites?.[key] || !skin.spriteMeta?.[key]?.lazy) fail(id, `missing lazy runtime M4-C-Ben sprite mapping: ${key}.`);
+    }
+    const gwenBuildings = (manifest.assets || []).filter((asset) => asset.batch === 'M4-C-Gwen');
+    if (gwenBuildings.length !== 5) fail(id, 'Map 4 manifest must contain exactly five M4-C-Gwen property levels.');
+    for (const asset of gwenBuildings) {
+      const full = path.join(PUBLIC, 'maps/ben-10-02/assets/v2', asset.path || '');
+      if (!isFile(full)) { fail(id, `missing M4-C-Gwen asset: ${asset.path || asset.id}`); continue; }
+      const bytes = readFileSync(full);
+      const sha256 = createHash('sha256').update(bytes).digest('hex').toUpperCase();
+      if (bytes.length !== asset.bytes || sha256 !== asset.sha256) fail(id, `M4-C-Gwen checksum/bytes do not match manifest: ${asset.id}.`);
+      if (bytes.length > 180 * 1024) fail(id, `M4-C-Gwen asset ${asset.id} exceeds 180 KiB.`);
+    }
+    for (let level = 0; level < 5; level++) {
+      const key = `m4BuildingGwen${level}`;
+      if (!skin.sprites?.[key] || !skin.spriteMeta?.[key]?.lazy) fail(id, `missing lazy runtime M4-C-Gwen sprite mapping: ${key}.`);
+    }
+    const kevinBuildings = (manifest.assets || []).filter((asset) => asset.batch === 'M4-C-Kevin');
+    if (kevinBuildings.length !== 5) fail(id, 'Map 4 manifest must contain exactly five M4-C-Kevin property levels.');
+    for (const asset of kevinBuildings) {
+      const full = path.join(PUBLIC, 'maps/ben-10-02/assets/v2', asset.path || '');
+      if (!isFile(full)) { fail(id, `missing M4-C-Kevin asset: ${asset.path || asset.id}`); continue; }
+      const bytes = readFileSync(full);
+      const sha256 = createHash('sha256').update(bytes).digest('hex').toUpperCase();
+      if (bytes.length !== asset.bytes || sha256 !== asset.sha256) fail(id, `M4-C-Kevin checksum/bytes do not match manifest: ${asset.id}.`);
+      if (bytes.length > 180 * 1024) fail(id, `M4-C-Kevin asset ${asset.id} exceeds 180 KiB.`);
+    }
+    for (let level = 0; level < 5; level++) {
+      const key = `m4BuildingKevin${level}`;
+      if (!skin.sprites?.[key] || !skin.spriteMeta?.[key]?.lazy) fail(id, `missing lazy runtime M4-C-Kevin sprite mapping: ${key}.`);
+    }
+    const rookBuildings = (manifest.assets || []).filter((asset) => asset.batch === 'M4-C-Rook');
+    if (rookBuildings.length !== 5) fail(id, 'Map 4 manifest must contain exactly five M4-C-Rook property levels.');
+    for (const asset of rookBuildings) {
+      const full = path.join(PUBLIC, 'maps/ben-10-02/assets/v2', asset.path || '');
+      if (!isFile(full)) { fail(id, `missing M4-C-Rook asset: ${asset.path || asset.id}`); continue; }
+      const bytes = readFileSync(full);
+      const sha256 = createHash('sha256').update(bytes).digest('hex').toUpperCase();
+      if (bytes.length !== asset.bytes || sha256 !== asset.sha256) fail(id, `M4-C-Rook checksum/bytes do not match manifest: ${asset.id}.`);
+      if (bytes.length > 180 * 1024) fail(id, `M4-C-Rook asset ${asset.id} exceeds 180 KiB.`);
+    }
+    for (let level = 0; level < 5; level++) {
+      const key = `m4BuildingRook${level}`;
+      if (!skin.sprites?.[key] || !skin.spriteMeta?.[key]?.lazy) fail(id, `missing lazy runtime M4-C-Rook sprite mapping: ${key}.`);
+    }
+    if (!skin.slots?.house?.assets) fail(id, 'Map 4 houses must declare a lazy asset resolver.');
+    else {
+      const assets = skin.slots.house.assets({ pet: 'ben10-02-ben', level: 3 });
+      if (JSON.stringify(assets) !== JSON.stringify(['m4BuildingBen3'])) fail(id, 'Map 4 Ben house resolver must map owner and level to the matching raster asset.');
+      const gwenAssets = skin.slots.house.assets({ pet: 'ben10-02-gwen', level: 2 });
+      if (JSON.stringify(gwenAssets) !== JSON.stringify(['m4BuildingGwen2'])) fail(id, 'Map 4 Gwen house resolver must map owner and level to the matching raster asset.');
+      const kevinAssets = skin.slots.house.assets({ pet: 'ben10-02-kevin', level: 4 });
+      if (JSON.stringify(kevinAssets) !== JSON.stringify(['m4BuildingKevin4'])) fail(id, 'Map 4 Kevin house resolver must map owner and level to the matching raster asset.');
+      const rookAssets = skin.slots.house.assets({ pet: 'ben10-02-rook', level: 1 });
+      if (JSON.stringify(rookAssets) !== JSON.stringify(['m4BuildingRook1'])) fail(id, 'Map 4 Rook house resolver must map owner and level to the matching raster asset.');
+    }
+    const verifyBatch = (batchName, expectedCount, maxBytes = 180 * 1024) => {
+      const assets = (manifest.assets || []).filter((asset) => asset.batch === batchName);
+      if (assets.length !== expectedCount) fail(id, `Map 4 manifest must contain exactly ${expectedCount} ${batchName} assets.`);
+      for (const asset of assets) {
+        const full = path.resolve(PUBLIC, 'maps/ben-10-02/assets/v2', asset.path || '');
+        if (!isFile(full)) { fail(id, `missing ${batchName} asset: ${asset.path || asset.id}`); continue; }
+        const bytes = readFileSync(full);
+        const sha256 = createHash('sha256').update(bytes).digest('hex').toUpperCase();
+        if (bytes.length !== asset.bytes || sha256 !== asset.sha256) fail(id, `${batchName} checksum/bytes do not match manifest: ${asset.id}.`);
+        if (bytes.length > maxBytes) fail(id, `${batchName} asset ${asset.id} exceeds ${Math.round(maxBytes / 1024)} KiB.`);
+      }
+      return assets;
+    };
+    verifyBatch('M4-D-Resort', 5);
+    verifyBatch('M4-D-Characters', 8);
+    verifyBatch('M4-E-Decor', 8);
+    verifyBatch('M4-E-UI', 5, 180 * 1024);
+    const productionMap34 = isFile(path.join(ROOT, 'docs/plans/map-3-4-asset-production.md'));
+    for (const batchName of ['M4-D-Resort', 'M4-D-Characters', 'M4-E-Decor', 'M4-E-UI']) {
+      for (const asset of (manifest.assets || []).filter((item) => item.batch === batchName)) {
+        const [x, y, width, height] = asset.contentBounds || [];
+        const [canvasWidth, canvasHeight] = asset.canvas || [];
+        if (![x, y, width, height, canvasWidth, canvasHeight].every(Number.isFinite) || x < 0 || y < 0 || width <= 0 || height <= 0 || x + width > canvasWidth || y + height > canvasHeight) fail(id, `${asset.id} has invalid alpha content bounds.`);
+        if (!asset.qaEvidence || (productionMap34 && !isFile(path.join(ROOT, asset.qaEvidence)))) fail(id, `${asset.id} is missing its QA evidence file.`);
+      }
+    }
+    const runtimeReportPath = path.join(ROOT, 'docs/reviews/map34/ben-10-02/M4-E/runtime-request-list.json');
+    if (productionMap34 && !isFile(runtimeReportPath)) fail(id, 'Map 4 is missing its runtime request-list evidence.');
+    else if (isFile(runtimeReportPath)) {
+      const runtimeReport = JSON.parse(readFileSync(runtimeReportPath, 'utf8'));
+      if (runtimeReport.coldBytes > runtimeReport.coldBudgetBytes || runtimeReport.coldBytes > 2.5 * 1024 * 1024) fail(id, 'Map 4 cold assets exceed the 2.5 MiB budget.');
+      if (!runtimeReport.lazyAssets?.some((asset) => asset.path === 'resorts/m4-resort-4.webp')) fail(id, 'Map 4 request list must prove resort levels 1-4 are lazy.');
+    }
+    const assetsIgnore = path.join(PUBLIC, '.assetsignore');
+    if (!isFile(assetsIgnore) || !/maps\/\*\/assets\/v2\/source\/\*\*/.test(readFileSync(assetsIgnore, 'utf8'))) fail(id, 'Map source masters must be excluded from production static assets.');
+    for (let level = 0; level <= 4; level++) {
+      const key = `m4Resort${level}`;
+      if (!skin.sprites?.[key] || !skin.spriteMeta?.[key]) fail(id, `missing runtime M4-D resort sprite: ${key}.`);
+      if (level > 0 && !skin.spriteMeta?.[key]?.lazy) fail(id, `${key} must remain lazy.`);
+    }
+    if (!skin.slots?.resortHouse?.assets || JSON.stringify(skin.slots.resortHouse.assets({ level: 4 })) !== JSON.stringify(['m4Resort4'])) fail(id, 'Map 4 resort resolver must map count to matching raster level.');
+    for (const letter of 'ABCDEFGH') if (!skin.sprites?.[`m4Decor${letter}`] || !skin.spriteMeta?.[`m4Decor${letter}`]) fail(id, `missing Map 4 decor ${letter} runtime mapping.`);
+    if (!skin.slots?.deco?.assets || JSON.stringify(skin.slots.deco.assets({ group: 'H' })) !== JSON.stringify(['m4DecorH'])) fail(id, 'Map 4 decor resolver must map group to matching biome sprite.');
+    const mapEntry = MAPS.find((item) => item.id === 'ben-10-02');
+    if (!mapEntry?.preview?.includes('/assets/v2/ui/m4-map-preview.webp') || !mapEntry?.background?.includes('/assets/v2/ui/m4-home-background.webp')) fail(id, 'Map 4 must use approved v2 preview and home background outputs.');
+    for (const pet of mapEntry?.pets || []) if (!pet.tokenImg?.includes('/assets/v2/characters/m4-token-')) fail(id, `Map 4 pet ${pet.id} must use a full-body v2 token.`);
+  }
+}
 if (errors.length) {
   console.error('Map registry tests FAILED:\n- ' + errors.join('\n- '));
   process.exit(1);

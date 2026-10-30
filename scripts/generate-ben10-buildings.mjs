@@ -21,7 +21,19 @@ const expected = PETS.flatMap((pet) => LEVELS.map((_, level) => `${pet.id}-${lev
 const petIdFor = (output, pet) => output.variant === 'space' && pet.id === 'ben10-max' ? `${output.petPrefix}rook` : pet.id.replace(/^ben10-/, output.petPrefix);
 const petNameFor = (output, pet) => output.variant === 'space' && pet.id === 'ben10-max' ? 'Rook' : pet.name;
 const expectedFor = (output) => PETS.flatMap((pet) => LEVELS.map((_, level) => `${petIdFor(output, pet)}-${level}.png`));
-const sourceHash = () => crypto.createHash('sha256').update(fs.readFileSync(fileURLToPath(import.meta.url))).digest('hex');
+const masterPath = (output, pet, level) => {
+  const prefix = output.id === 'ben-10-02' ? 'm4' : 'm3';
+  const role = petIdFor(output, pet).replace(output.petPrefix, '');
+  return path.join(ROOT, 'public', 'maps', output.id, 'assets', 'v2', 'buildings', `${prefix}-building-${role}-${level}.webp`);
+};
+const sourceHash = (output) => {
+  const hash = crypto.createHash('sha256').update(fs.readFileSync(fileURLToPath(import.meta.url)));
+  const masters = PETS.flatMap((pet) => LEVELS.map((_, level) => masterPath(output, pet, level)))
+    .filter((file) => fs.existsSync(file))
+    .sort();
+  for (const file of masters) hash.update(path.relative(ROOT, file)).update(fs.readFileSync(file));
+  return hash.digest('hex');
+};
 let activeVariant = 'ground';
 
 const wrap = (body, color) => `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
@@ -118,11 +130,22 @@ async function generate() {
     }
     for (const pet of PETS) for (let level = 0; level < LEVELS.length; level++) {
       const petId = petIdFor(output, pet);
-      const svg = output.variant === 'space' ? renderSpace(pet, level) : render(pet, level);
-      await sharp(Buffer.from(svg)).png({ palette: true, quality: 92 }).toFile(path.join(output.dir, `${petId}-${level}.png`));
+      const master = masterPath(output, pet, level);
+      const target = path.join(output.dir, `${petId}-${level}.png`);
+      if (fs.existsSync(master)) {
+        await sharp(master)
+          .trim()
+          .resize({ width: 440, height: 440, fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+          .extend({ top: 36, bottom: 36, left: 36, right: 36, background: { r: 0, g: 0, b: 0, alpha: 0 } })
+          .png()
+          .toFile(target);
+      } else {
+        const svg = output.variant === 'space' ? renderSpace(pet, level) : render(pet, level);
+        await sharp(Buffer.from(svg)).png({ palette: true, quality: 92 }).toFile(target);
+      }
     }
     const pets = PETS.map((pet) => ({ ...pet, id: petIdFor(output, pet), name: petNameFor(output, pet) }));
-    fs.writeFileSync(path.join(output.dir, 'manifest.json'), JSON.stringify({ version: 1, mapId: output.id, variant: output.variant, sourceHash: sourceHash(), width: 512, height: 512, pets, levels: LEVELS, files: expectedFor(output) }, null, 2) + '\n');
+    fs.writeFileSync(path.join(output.dir, 'manifest.json'), JSON.stringify({ version: 1, mapId: output.id, variant: output.variant, sourceHash: sourceHash(output), width: 512, height: 512, pets, levels: LEVELS, files: expectedFor(output) }, null, 2) + '\n');
   }
   console.log(`Đã tạo ${expected.length * OUTPUTS.length} thumbnail công trình cho ${OUTPUTS.length} skin Ben 10`);
 }
@@ -132,7 +155,7 @@ async function check() {
     const manifestPath = path.join(output.dir, 'manifest.json');
     assert.ok(fs.existsSync(manifestPath), `Thiếu manifest thumbnail ${output.id}. Chạy: npm run ben10:buildings`);
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-    assert.equal(manifest.sourceHash, sourceHash(), `Thumbnail ${output.id} đã cũ. Chạy: npm run ben10:buildings`);
+    assert.equal(manifest.sourceHash, sourceHash(output), `Thumbnail ${output.id} đã cũ. Chạy: npm run ben10:buildings`);
     assert.equal(manifest.variant, output.variant, `Variant thumbnail ${output.id} không khớp`);
     assert.deepEqual(manifest.files, expectedFor(output), `Danh sách thumbnail ${output.id} không khớp`);
     for (const file of expectedFor(output)) {

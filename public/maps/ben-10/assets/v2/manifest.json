@@ -1,0 +1,357 @@
+{
+  "version": 2,
+  "mapId": "ben-10",
+  "reference": {
+    "path": "docs/references/map-3-ben10-approved.png",
+    "sha256": "8B85AC8F939279268AEE108D1C7D27D7B310BDC75A73CDEFB2D93A5D374473E5"
+  },
+  "generator": "OpenAI built-in ImageGen",
+  "camera": "isometric 3/4 fixed to approved Map 3 reference",
+  "assets": [
+    {
+      "id": "m3-board-base",
+      "mapId": "ben-10",
+      "batch": "M3-A",
+      "path": "board/m3-board-base.webp",
+      "prompt": "Create an isolated Map 3 board-base sprite matching the approved reference's polished 3D isometric Plumber-tech style and exact camera angle. Output a square transparent canvas. Show only one dark charcoal metallic diamond/isometric slab with subtle neon-green circuit inlays and beveled thickness. No track tiles, no buildings, no characters, no center device, no dice, no text. The complete slab must fit comfortably inside the canvas with at least 6% fully transparent margin on every edge; nothing may touch or be cropped by the canvas. Center it precisely.",
+      "sourceRef": "source/m3-board-base.png",
+      "canvas": [1024, 1024],
+      "contentBounds": [52, 385, 920, 579],
+      "alpha": true,
+      "footAnchor": [0.5, 0.94140625],
+      "worldScale": 19.45,
+      "depthOffset": -0.42,
+      "tileIndexes": [],
+      "useCases": ["board-base"],
+      "sha256": "E4C975BB74A1439187F0DC25A7CA979322E5784B096FC4B5F25E641FE798459E",
+      "bytes": 87910,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10/M3-A/qa.md"
+    },
+    {
+      "id": "m3-center-omnitrix",
+      "mapId": "ben-10",
+      "batch": "M3-A",
+      "path": "board/m3-center-omnitrix.webp",
+      "prompt": "Create an isolated Map 3 center Omnitrix landmark sprite matching the approved reference's polished 3D isometric Plumber-tech style and exact camera angle. Output a square transparent canvas. A compact low circular metallic platform with a bright green Omnitrix hourglass core, radial gray floor panels, subtle green light strips, clean readable silhouette. No surrounding terrain, no buildings, no characters, no dice, no text. The complete object including shadow must fit inside at least 8% fully transparent margin on every edge; nothing cropped. Center it with its ground contact point clearly visible.",
+      "sourceRef": "source/m3-center-omnitrix.png",
+      "canvas": [1024, 1024],
+      "contentBounds": [82, 380, 860, 568],
+      "alpha": true,
+      "footAnchor": [0.5, 0.92578125],
+      "worldScale": 4.8,
+      "depthOffset": 0.015,
+      "tileIndexes": [],
+      "useCases": ["center-landmark"],
+      "sha256": "CB20CAF232B0078A4179D494AC831C47E14288C25EF60311ABA9F559C1F4D446",
+      "bytes": 121826,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10/M3-A/qa.md"
+    },
+    {
+      "id": "m3-dice-pad",
+      "mapId": "ben-10",
+      "batch": "M3-A",
+      "path": "board/m3-dice-pad.webp",
+      "prompt": "Create an isolated Map 3 dice landing pad sprite matching the approved reference's polished 3D isometric Plumber-tech style and exact camera angle. Output a square transparent canvas. It must be a very low, flat octagonal landing pad: dark charcoal and pale metal panels, thin neon-green rim/circuit accents, completely empty neutral center sized for two dice. Absolutely NO Omnitrix/hourglass logo, NO raised central hub, NO dice, NO text, NO characters, NO scenery. The full pad and subtle shadow must fit inside at least 10% fully transparent margin on every edge; nothing cropped. Keep height very shallow and silhouette clearly different from the center Omnitrix landmark.",
+      "sourceRef": "source/m3-dice-pad.png",
+      "canvas": [1024, 1024],
+      "contentBounds": [102, 491, 820, 447],
+      "alpha": true,
+      "footAnchor": [0.5, 0.916015625],
+      "worldScale": 3.35,
+      "depthOffset": 0.02,
+      "tileIndexes": [],
+      "useCases": ["dice-pad"],
+      "sha256": "9C655A0460B498F0A1A772FDF7E1796B77BA6FEFAE60F9A6DFBF4D0D70ECD6F3",
+      "bytes": 92328,
+      "qaStatus": "PASS",
+      "qaEvidence": "docs/reviews/map34/ben-10/M3-A/qa.md"
+    },
+    {
+      "id": "m3-zone-bellwood", "mapId": "ben-10", "batch": "M3-A", "path": "zones/m3-zone-bellwood.webp",
+      "sourceRef": "source/m3-zone-bellwood.png", "prompt": "Isolated Bellwood and Plumber HQ campus, white charcoal buildings, green Omnitrix lights, trees and short road; approved fixed isometric camera; transparent square; no text.",
+      "canvas": [1024,1024], "contentBounds": [72,171,880,781], "alpha": true, "footAnchor": [0.5,0.9296875], "worldScale": 3.65, "depthOffset": 0.2,
+      "tileIndexes": [1,2,3], "useCases": ["visible-biome-A"], "sha256": "1A1A799591B8829EC961DF4A67027E5D6B54AB184DC4E6A8E991F138CF79FE83", "bytes": 136002, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-A/qa-gate2.md"
+    },
+    {
+      "id": "m3-zone-pyron", "mapId": "ben-10", "batch": "M3-A", "path": "zones/m3-zone-pyron.webp",
+      "sourceRef": "source/m3-zone-pyron.png", "prompt": "Isolated compact Pyron volcanic village with basalt, lava channels and fire-temple towers; approved fixed isometric camera; transparent square; no text.",
+      "canvas": [1024,1024], "contentBounds": [72,256,880,696], "alpha": true, "footAnchor": [0.5,0.9296875], "worldScale": 3.65, "depthOffset": 0.2,
+      "tileIndexes": [5,6,7], "useCases": ["visible-biome-B"], "sha256": "11D373662021467CEFF4459833A5F05B0F3D9EBC4989C13EBEDC5ECBE9C98B0B", "bytes": 145316, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-A/qa-gate2.md"
+    },
+    {
+      "id": "m3-zone-petropia", "mapId": "ben-10", "batch": "M3-A", "path": "zones/m3-zone-petropia.webp",
+      "sourceRef": "source/m3-zone-petropia.png", "prompt": "Isolated compact Petropia crystalline citadel with cyan crystals, white-silver pavilions and blue energy-water; approved fixed isometric camera; transparent square; no text.",
+      "canvas": [1024,1024], "contentBounds": [82,132,860,820], "alpha": true, "footAnchor": [0.5,0.9296875], "worldScale": 3.65, "depthOffset": 0.2,
+      "tileIndexes": [13,15], "useCases": ["visible-biome-D"], "sha256": "57EFCB02712DA894734C1FA4FD4FCE5B24BC653C8A63A263209E7688BC4B1A3C", "bytes": 181554, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-A/qa-gate2.md"
+    },
+    {
+      "id": "m3-zone-nullvoid", "mapId": "ben-10", "batch": "M3-A", "path": "zones/m3-zone-nullvoid.webp",
+      "sourceRef": "source/m3-zone-nullvoid.png", "prompt": "Isolated compact Null Void purple fortress and portal city with violet towers and magenta energy; approved fixed isometric camera; transparent square; no text.",
+      "canvas": [1024,1024], "contentBounds": [72,136,880,816], "alpha": true, "footAnchor": [0.5,0.9296875], "worldScale": 3.7, "depthOffset": 0.2,
+      "tileIndexes": [8], "useCases": ["visible-null-void"], "sha256": "5498DA2B7C4D36324A939813FB566222787D6BACB3392F09372C4C0129C8593C", "bytes": 176148, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-A/qa-gate2.md"
+    },
+    {
+      "id": "m3-center-prop-aliens", "mapId": "ben-10", "batch": "M3-A", "path": "zones/m3-center-prop-aliens.webp",
+      "sourceRef": "source/m3-center-prop-aliens.png", "prompt": "Ring of eight distinct neon-green alien hologram glyphs on low Plumber emitters, empty center; approved fixed isometric camera; transparent square; no text.",
+      "canvas": [1024,1024], "contentBounds": [119,184,787,760], "alpha": true, "footAnchor": [0.5,0.5], "worldScale": 5.6, "depthOffset": 0.8,
+      "tileIndexes": [], "useCases": ["center-decor"], "sha256": "03CAA86B4E0D7B896B56A9920A95FE63696D1EB3EAF6CED5D17E4E225E6B3EA4", "bytes": 152238, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-A/qa-gate2.md"
+    },
+    {
+      "id": "m3-board-edge-lights", "mapId": "ben-10", "batch": "M3-A", "path": "zones/m3-board-edge-lights.webp",
+      "sourceRef": "source/m3-board-edge-lights.png", "prompt": "Sparse low Plumber corner posts and thin neon-green diamond perimeter light strips, empty center; approved fixed isometric camera; transparent square; no text.",
+      "canvas": [1024,1024], "contentBounds": [62,324,900,620], "alpha": true, "footAnchor": [0.5,0.921875], "worldScale": 19.45, "depthOffset": -0.38,
+      "tileIndexes": [], "useCases": ["board-edge"], "sha256": "5495BA8B0BA5B47EF840A46945EC3F8167C3DD69398F1055B398475EE469A462", "bytes": 89506, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-A/qa-gate2.md"
+    },
+    {
+      "id": "m3-special-start", "mapId": "ben-10", "batch": "M3-B", "path": "special/m3-special-start.webp",
+      "sourceRef": "source/m3-special-start.png", "prompt": "Hero Start gate: low Plumber checkpoint arch around a glowing Omnitrix emblem and launch-arrow platform; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [102,201,820,759], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 2.75, "depthOffset": 0,
+      "tileIndexes": [0], "useCases": ["start-corner"], "sha256": "AA42E05BA9A194B00909866C604C8657AA2F842B4FBD5BBF21189C3705D69B9C", "bytes": 116162, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-B/qa.md"
+    },
+    {
+      "id": "m3-special-null-void", "mapId": "ben-10", "batch": "M3-B", "path": "special/m3-special-null-void.webp",
+      "sourceRef": "source/m3-special-null-void.png", "prompt": "Null Void detention island: purple-black prison platform, violet vortex and containment spires; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [104,160,817,800], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 2.85, "depthOffset": 0,
+      "tileIndexes": [8], "useCases": ["island-corner"], "sha256": "EFCA98D4769D7B395BD677EB61F42FA5E2AEB33DF1F708CCE4D6435EFB0C01DD", "bytes": 161314, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-B/qa.md"
+    },
+    {
+      "id": "m3-special-championship", "mapId": "ben-10", "batch": "M3-B", "path": "special/m3-special-championship.webp",
+      "sourceRef": "source/m3-special-championship.png", "prompt": "Galactic Cup arena: circular Plumber stadium, tournament dais, green pylons and cyan crystal trophies; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [102,236,820,724], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 2.95, "depthOffset": 0,
+      "tileIndexes": [16], "useCases": ["championship-corner"], "sha256": "E9C7A4D454E0453D1F6F53035080BFB6B461296E6ADDAA022EDE0807A9D55DCC", "bytes": 145406, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-B/qa.md"
+    },
+    {
+      "id": "m3-special-tour", "mapId": "ben-10", "batch": "M3-B", "path": "special/m3-special-tour.webp",
+      "sourceRef": "source/m3-special-tour.png", "prompt": "Plumber Tour spacecraft hovering over a cyan-green teleport landing pad; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [102,229,820,731], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 2.9, "depthOffset": 0,
+      "tileIndexes": [24], "useCases": ["world-tour-corner"], "sha256": "3E7D7C9251D9D0B26600C4D159D4A45C5549AAC36D009CFD29E5A2E194E99F9E", "bytes": 127950, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-B/qa.md"
+    },
+    {
+      "id": "m3-special-chance-1", "mapId": "ben-10", "batch": "M3-B", "path": "special/m3-special-chance-1.webp",
+      "sourceRef": "source/m3-special-chance-1.png", "prompt": "Omnitrix Chance discovery device: green holographic question orb on scanner pedestal; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [219,160,586,800], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.45, "depthOffset": 0,
+      "tileIndexes": [12], "useCases": ["chance-variant-1"], "sha256": "F5DB96F2331DBAAB07992B2632D2ED5750BB1612638CB6F3CF298954507FA6D7", "bytes": 112224, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-B/qa.md"
+    },
+    {
+      "id": "m3-special-chance-2", "mapId": "ben-10", "batch": "M3-B", "path": "special/m3-special-chance-2.webp",
+      "sourceRef": "source/m3-special-chance-2.png", "prompt": "Omnitrix Chance DNA roulette: ring of alien glyphs around a green central crystal; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [102,295,820,665], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.55, "depthOffset": 0,
+      "tileIndexes": [20], "useCases": ["chance-variant-2"], "sha256": "E246441BC0CD48EBA85554C2A3D25CC0CBA046E877E7E78CC5944F9FC52270F4", "bytes": 111992, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-B/qa.md"
+    },
+    {
+      "id": "m3-special-chance-3", "mapId": "ben-10", "batch": "M3-B", "path": "special/m3-special-chance-3.webp",
+      "sourceRef": "source/m3-special-chance-3.png", "prompt": "Omnitrix Chance unstable transformation capsule in dark mechanical claws with amber warning lamps; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [154,160,716,800], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.5, "depthOffset": 0,
+      "tileIndexes": [28], "useCases": ["chance-variant-3"], "sha256": "D156196818C20FE8248458BFF8AC7178AF3FED2020A5AC3033E35DEB927E6A7F", "bytes": 118830, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-B/qa.md"
+    },
+    {
+      "id": "m3-special-tax", "mapId": "ben-10", "batch": "M3-B", "path": "special/m3-special-tax.webp",
+      "sourceRef": "source/m3-special-tax.png", "prompt": "Plumber Tax customs kiosk with scan gate, credit-stack hologram and receipt slot; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [102,193,820,767], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.55, "depthOffset": 0,
+      "tileIndexes": [30], "useCases": ["tax-tile"], "sha256": "4573F91FAD59C07E4CD07D1AF0C72FDF5B1B5A91CB4B60BA2251EA949963C02C", "bytes": 123730, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-B/qa.md"
+    },
+    {
+      "id": "m3-special-festival", "mapId": "ben-10", "batch": "M3-B", "path": "special/m3-special-festival.webp",
+      "sourceRef": "source/m3-special-festival.png", "prompt": "Festival banner with exactly two Plumber poles joined by one lime-cyan holographic ribbon and pennants; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [102,281,820,679], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.7, "depthOffset": 0,
+      "tileIndexes": [], "useCases": ["festival-bonus-overlay"], "sha256": "23BF17FD8FC901CDCFB9BBE836C87668E34E6B9F60CC3497189AD770B21CFDAD", "bytes": 127728, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-B/qa.md"
+    },
+    {
+      "id": "m3-special-outage", "mapId": "ben-10", "batch": "M3-B", "path": "special/m3-special-outage.webp",
+      "sourceRef": "source/m3-special-outage.png", "prompt": "Broken Plumber power relay with blank dark count badge before a yellow lightning symbol and blue sparks; transparent; no number.",
+      "canvas": [1024,1024], "contentBounds": [102,185,820,775], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.45, "depthOffset": 0,
+      "tileIndexes": [], "useCases": ["power-outage-overlay"], "sha256": "BB29B2BB8981CD9F7DFC912FBDF7CAEE8C573C1C28982E763D6A20574EE92D40", "bytes": 122198, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-B/qa.md"
+    },
+    {
+      "id": "m3-building-ben-0", "mapId": "ben-10", "batch": "M3-C-Ben", "path": "buildings/m3-building-ben-0.webp", "sourceRef": "source/m3-building-ben-0.png",
+      "prompt": "Ben level 0 low Omnitrix claim pad; transparent; no text.", "canvas": [1024,1024], "contentBounds": [252,577,520,383], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.6, "depthOffset": 0,
+      "tileIndexes": [], "useCases": ["owner-ben-level-0"], "sha256": "7FDF930DE1E6CE42EB91034475703EC3D00569519F2069B71CB06399C24080D0", "bytes": 43278, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-C/ben-qa.md"
+    },
+    {
+      "id": "m3-building-ben-1", "mapId": "ben-10", "batch": "M3-C-Ben", "path": "buildings/m3-building-ben-1.webp", "sourceRef": "source/m3-building-ben-1.png",
+      "prompt": "Ben level 1 compact Omnitrix station; transparent; no text.", "canvas": [1024,1024], "contentBounds": [212,460,600,500], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.6, "depthOffset": 0,
+      "tileIndexes": [], "useCases": ["owner-ben-level-1"], "sha256": "DDFA1EC8986C56BC4A0F337C8C35ED63484E76CC0D356D742265F7DD9C7D3ECB", "bytes": 72788, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-C/ben-qa.md"
+    },
+    {
+      "id": "m3-building-ben-2", "mapId": "ben-10", "batch": "M3-C-Ben", "path": "buildings/m3-building-ben-2.webp", "sourceRef": "source/m3-building-ben-2.png",
+      "prompt": "Ben level 2 broad two-wing hero base; transparent; no text.", "canvas": [1024,1024], "contentBounds": [172,502,680,458], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.6, "depthOffset": 0,
+      "tileIndexes": [], "useCases": ["owner-ben-level-2"], "sha256": "10AA860E7107D43020964F4C8DDD250B4657EE4F7432125905FCA4EDFEE19075", "bytes": 77104, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-C/ben-qa.md"
+    },
+    {
+      "id": "m3-building-ben-3", "mapId": "ben-10", "batch": "M3-C-Ben", "path": "buildings/m3-building-ben-3.webp", "sourceRef": "source/m3-building-ben-3.png",
+      "prompt": "Ben level 3 command tower with side wings and radar ring; transparent; no text.", "canvas": [1024,1024], "contentBounds": [193,260,639,700], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.6, "depthOffset": 0,
+      "tileIndexes": [], "useCases": ["owner-ben-level-3"], "sha256": "FEE3E3F5BA83D76623693B6CBBD71C27695036BC0738F52223E76524CEFC430B", "bytes": 107838, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-C/ben-qa.md"
+    },
+    {
+      "id": "m3-building-ben-4", "mapId": "ben-10", "batch": "M3-C-Ben", "path": "buildings/m3-building-ben-4.webp", "sourceRef": "source/m3-building-ben-4.png",
+      "prompt": "Ben level 4 Hero HQ with central Omnitrix spire and energy fins; transparent; no text.", "canvas": [1024,1024], "contentBounds": [122,224,780,736], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.6, "depthOffset": 0,
+      "tileIndexes": [], "useCases": ["owner-ben-level-4"], "sha256": "20BAD25740CEC4F5FFD08FB6536049EADEEE59BF84F64FBA8C25361170BEB9EE", "bytes": 129062, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-C/ben-qa.md"
+    },
+    {
+      "id": "m3-building-gwen-0", "mapId": "ben-10", "batch": "M3-C-Gwen", "path": "buildings/m3-building-gwen-0.webp", "sourceRef": "source/m3-building-gwen-0.png", "prompt": "Gwen level 0 rune claim pad; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [252,564,520,396], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.6, "depthOffset": 0, "tileIndexes": [], "useCases": ["owner-gwen-level-0"], "sha256": "C4C65753145C18000810E1455EC0B1B7AB0E6B82F5C2CCD7B63C34DD3A3FA33D", "bytes": 53896, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-C/gwen-qa.md"
+    },
+    {
+      "id": "m3-building-gwen-1", "mapId": "ben-10", "batch": "M3-C-Gwen", "path": "buildings/m3-building-gwen-1.webp", "sourceRef": "source/m3-building-gwen-1.png", "prompt": "Gwen level 1 compact spell chamber; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [234,440,557,520], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.6, "depthOffset": 0, "tileIndexes": [], "useCases": ["owner-gwen-level-1"], "sha256": "706DFD007DA302DFB37D48F549103B4ACD90D61A9AF01D81472B20038D6B86F5", "bytes": 81066, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-C/gwen-qa.md"
+    },
+    {
+      "id": "m3-building-gwen-2", "mapId": "ben-10", "batch": "M3-C-Gwen", "path": "buildings/m3-building-gwen-2.webp", "sourceRef": "source/m3-building-gwen-2.png", "prompt": "Gwen level 2 broad two-wing magic academy; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [172,466,680,494], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.6, "depthOffset": 0, "tileIndexes": [], "useCases": ["owner-gwen-level-2"], "sha256": "98EBB6CD6AFA5676CEEE9DA84F1026245CED4760675D1459BB31723C366B94C1", "bytes": 96214, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-C/gwen-qa.md"
+    },
+    {
+      "id": "m3-building-gwen-3", "mapId": "ben-10", "batch": "M3-C-Gwen", "path": "buildings/m3-building-gwen-3.webp", "sourceRef": "source/m3-building-gwen-3.png", "prompt": "Gwen level 3 tall mana tower with academy wings; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [205,260,614,700], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.6, "depthOffset": 0, "tileIndexes": [], "useCases": ["owner-gwen-level-3"], "sha256": "429D93403FAE518A3C6CB89988733CC63CAFAD1368047F94C531AE4E9A1BEB5E", "bytes": 94566, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-C/gwen-qa.md"
+    },
+    {
+      "id": "m3-building-gwen-4", "mapId": "ben-10", "batch": "M3-C-Gwen", "path": "buildings/m3-building-gwen-4.webp", "sourceRef": "source/m3-building-gwen-4.png", "prompt": "Gwen level 4 Anodite Citadel with crystal spire and floating mana ring; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [132,180,760,780], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.6, "depthOffset": 0, "tileIndexes": [], "useCases": ["owner-gwen-level-4"], "sha256": "24761E74087F85E16EDA6703BBB0A07A5126F10B18AF348C97850009F662B56B", "bytes": 139902, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-C/gwen-qa.md"
+    },
+    {
+      "id": "m3-building-kevin-0", "mapId": "ben-10", "batch": "M3-C-Kevin", "path": "buildings/m3-building-kevin-0.webp", "sourceRef": "source/m3-building-kevin-0.png", "prompt": "Kevin level 0 low salvage claim pad; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [252,572,520,388], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.6, "depthOffset": 0, "tileIndexes": [], "useCases": ["owner-kevin-level-0"], "sha256": "4ED90BE7D72900020CC21DFE2A83980F7A2F3B6EB4031B1A590194166BB8D2E0", "bytes": 60518, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-C/kevin-qa.md"
+    },
+    {
+      "id": "m3-building-kevin-1", "mapId": "ben-10", "batch": "M3-C-Kevin", "path": "buildings/m3-building-kevin-1.webp", "sourceRef": "source/m3-building-kevin-1.png", "prompt": "Kevin level 1 compact industrial workshop; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [212,446,600,514], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.6, "depthOffset": 0, "tileIndexes": [], "useCases": ["owner-kevin-level-1"], "sha256": "28372F4B6B08A40D93850427BA0E53A34C96FEFA1A5B848C503336C06B580C2B", "bytes": 74494, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-C/kevin-qa.md"
+    },
+    {
+      "id": "m3-building-kevin-2", "mapId": "ben-10", "batch": "M3-C-Kevin", "path": "buildings/m3-building-kevin-2.webp", "sourceRef": "source/m3-building-kevin-2.png", "prompt": "Kevin level 2 broad two-bay garage and crane; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [172,473,680,487], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.6, "depthOffset": 0, "tileIndexes": [], "useCases": ["owner-kevin-level-2"], "sha256": "F1C8DFA1D46314D8CA3D7475BCC21022BB41F301AD07BCB348FFAE683CCBC0D5", "bytes": 114676, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-C/kevin-qa.md"
+    },
+    {
+      "id": "m3-building-kevin-3", "mapId": "ben-10", "batch": "M3-C-Kevin", "path": "buildings/m3-building-kevin-3.webp", "sourceRef": "source/m3-building-kevin-3.png", "prompt": "Kevin level 3 multi-tier foundry with molten channels; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [142,276,740,684], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.6, "depthOffset": 0, "tileIndexes": [], "useCases": ["owner-kevin-level-3"], "sha256": "7803765EF6E4C661E3F53E5DACE02601EFC38D276F47B28740FC12DA3A4D6503", "bytes": 149640, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-C/kevin-qa.md"
+    },
+    {
+      "id": "m3-building-kevin-4", "mapId": "ben-10", "batch": "M3-C-Kevin", "path": "buildings/m3-building-kevin-4.webp", "sourceRef": "source/m3-building-kevin-4.png", "prompt": "Kevin level 4 Tech Forge with fabrication tower, four crane arms and forge core; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [123,180,779,780], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.6, "depthOffset": 0, "tileIndexes": [], "useCases": ["owner-kevin-level-4"], "sha256": "F475B13DBC2D0D3B4359B1D84EC28ED9B2088D7571C19BB2AE2CE6C76746BAB1", "bytes": 169266, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-C/kevin-qa.md"
+    },
+    {
+      "id": "m3-building-max-0", "mapId": "ben-10", "batch": "M3-C-Max", "path": "buildings/m3-building-max-0.webp", "sourceRef": "source/m3-building-max-0.png", "prompt": "Max level 0 low Plumber claim pad; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [252,584,520,376], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.6, "depthOffset": 0, "tileIndexes": [], "useCases": ["owner-max-level-0"], "sha256": "4D5A31510009303837F799F7DB8372B95626117FD18E5E12B184C57D714F3F7C", "bytes": 42846, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-C/max-qa.md"
+    },
+    {
+      "id": "m3-building-max-1", "mapId": "ben-10", "batch": "M3-C-Max", "path": "buildings/m3-building-max-1.webp", "sourceRef": "source/m3-building-max-1.png", "prompt": "Max level 1 compact Plumber outpost; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [229,440,567,520], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.6, "depthOffset": 0, "tileIndexes": [], "useCases": ["owner-max-level-1"], "sha256": "001823990CAB73A4C226A93FB76142DAC225601579C17D22B45B504162E3BEBE", "bytes": 120066, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-C/max-qa.md"
+    },
+    {
+      "id": "m3-building-max-2", "mapId": "ben-10", "batch": "M3-C-Max", "path": "buildings/m3-building-max-2.webp", "sourceRef": "source/m3-building-max-2.png", "prompt": "Max level 2 broad Plumber bunker; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [181,360,662,600], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.6, "depthOffset": 0, "tileIndexes": [], "useCases": ["owner-max-level-2"], "sha256": "6C018BCEE9267F7D9A15ED3E937F8FE607352DB59C53D3FBF657470FA98A061A", "bytes": 84490, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-C/max-qa.md"
+    },
+    {
+      "id": "m3-building-max-3", "mapId": "ben-10", "batch": "M3-C-Max", "path": "buildings/m3-building-max-3.webp", "sourceRef": "source/m3-building-max-3.png", "prompt": "Max level 3 multi-tier Plumber command post; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [178,260,669,700], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.6, "depthOffset": 0, "tileIndexes": [], "useCases": ["owner-max-level-3"], "sha256": "4DAC5BD448FEA9CB3132921B0C82B337019FC3D2B70303BA971821C7214EB601", "bytes": 112808, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-C/max-qa.md"
+    },
+    {
+      "id": "m3-building-max-4", "mapId": "ben-10", "batch": "M3-C-Max", "path": "buildings/m3-building-max-4.webp", "sourceRef": "source/m3-building-max-4.png", "prompt": "Max level 4 Plumber HQ with command tower and cyan tactical displays; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [148,180,729,780], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.6, "depthOffset": 0, "tileIndexes": [], "useCases": ["owner-max-level-4"], "sha256": "EE730522F71EE97F3B4B27B2DEEBE9C0D5193D1EFD4F85BAAB00A8EA48D34EE1", "bytes": 125018, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-C/max-qa.md"
+    },
+    {
+      "id": "m3-resort-0", "mapId": "ben-10", "batch": "M3-D-Resort", "path": "resorts/m3-resort-0.webp", "sourceRef": "source/m3-resort-0.png", "prompt": "Unowned neutral Plumber landing pad; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [232,632,560,328], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.6, "depthOffset": 0, "tileIndexes": [4,14,18,25], "useCases": ["resort-unowned"], "sha256": "89EA1C60BA2BBF9AEDA8D9F5296FB5B11C2C2C66480F2618C1592070B3C79A02", "bytes": 37512, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-D/resort-qa.md"
+    },
+    {
+      "id": "m3-resort-1", "mapId": "ben-10", "batch": "M3-D-Resort", "path": "resorts/m3-resort-1.webp", "sourceRef": "source/m3-resort-1.png", "prompt": "Resort level 1 compact active Plumber portal gate; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [222,438,580,522], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.6, "depthOffset": 0, "tileIndexes": [4,14,18,25], "useCases": ["resort-level-1"], "sha256": "FF88C771AF4ECBB0D13E170B77781A56CD88E98C2752280A1E1977957E20CECB", "bytes": 79874, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-D/resort-qa.md"
+    },
+    {
+      "id": "m3-resort-2", "mapId": "ben-10", "batch": "M3-D-Resort", "path": "resorts/m3-resort-2.webp", "sourceRef": "source/m3-resort-2.png", "prompt": "Resort level 2 Plumber satellite relay and portal; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [192,373,640,587], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.6, "depthOffset": 0, "tileIndexes": [4,14,18,25], "useCases": ["resort-level-2"], "sha256": "5AB6F011EC9B0C2B311288FFCCB4D2E5412C304EE9DFA328B6D38CA4C3DE8DE1", "bytes": 91230, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-D/resort-qa.md"
+    },
+    {
+      "id": "m3-resort-3", "mapId": "ben-10", "batch": "M3-D-Resort", "path": "resorts/m3-resort-3.webp", "sourceRef": "source/m3-resort-3.png", "prompt": "Resort level 3 orbital transfer station with portal and docking arms; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [152,295,720,665], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.6, "depthOffset": 0, "tileIndexes": [4,14,18,25], "useCases": ["resort-level-3"], "sha256": "EC10784D5FF442C74B426157D27F58A6A702057DA60C5DF1F3CD06F5F1B35491", "bytes": 141570, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-D/resort-qa.md"
+    },
+    {
+      "id": "m3-resort-4", "mapId": "ben-10", "batch": "M3-D-Resort", "path": "resorts/m3-resort-4.webp", "sourceRef": "source/m3-resort-4.png", "prompt": "Resort level 4 grand Plumber orbital fortress; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [122,210,780,750], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.6, "depthOffset": 0, "tileIndexes": [4,14,18,25], "useCases": ["resort-level-4"], "sha256": "4579175153F366510A48FFD7E77E97837F03B1DF2A7E4DDD0CB506603C24A615", "bytes": 157476, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-D/resort-qa.md"
+    },
+    {
+      "id": "m3-token-ben", "mapId": "ben-10", "batch": "M3-D-Characters", "path": "characters/m3-token-ben.webp", "sourceRef": "source/m3-character-ben-token.png", "prompt": "Full-body 3D Ben board token; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [302,92,420,900], "alpha": true, "footAnchor": [0.5,0.96875], "worldScale": 1.08, "depthOffset": 0, "tileIndexes": [], "useCases": ["token-ben"], "sha256": "D3EB20B0E2CB4494963934DF21800F6035BFF9B914FDAE6206E45D30889E62D5", "bytes": 69272, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-D/character-qa.md"
+    },
+    {
+      "id": "m3-avatar-ben", "mapId": "ben-10", "batch": "M3-D-Characters", "path": "../characters/ben.png", "sourceRef": "source/m3-character-ben-avatar.png", "prompt": "3D bust avatar of Ben; transparent; no frame or text.",
+      "canvas": [512,512], "contentBounds": [77,24,358,468], "alpha": true, "footAnchor": [0.5,0.9609375], "worldScale": 1, "depthOffset": 0, "tileIndexes": [], "useCases": ["avatar-ben"], "sha256": "9ED3ABB559348892577AE16EBC45384031D15543D4726313C762444244B47864", "bytes": 52967, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-D/character-qa.md"
+    },
+    {
+      "id": "m3-token-gwen", "mapId": "ben-10", "batch": "M3-D-Characters", "path": "characters/m3-token-gwen.webp", "sourceRef": "source/m3-character-gwen-token.png", "prompt": "Full-body 3D Gwen board token; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [302,92,421,900], "alpha": true, "footAnchor": [0.5,0.96875], "worldScale": 1.08, "depthOffset": 0, "tileIndexes": [], "useCases": ["token-gwen"], "sha256": "916DF63905251876BB6280AF53567C1FBDE7D711E63F5BF720D905FE03F57B48", "bytes": 72156, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-D/character-qa.md"
+    },
+    {
+      "id": "m3-avatar-gwen", "mapId": "ben-10", "batch": "M3-D-Characters", "path": "../characters/gwen.png", "sourceRef": "source/m3-character-gwen-avatar.png", "prompt": "3D bust avatar of Gwen; transparent; no frame or text.",
+      "canvas": [512,512], "contentBounds": [69,24,375,468], "alpha": true, "footAnchor": [0.5,0.9609375], "worldScale": 1, "depthOffset": 0, "tileIndexes": [], "useCases": ["avatar-gwen"], "sha256": "0288D875457525C6DEEAF6E6194F6E3B7F1536D36B3B2C2FAB564C5FA62A9418", "bytes": 60730, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-D/character-qa.md"
+    },
+    {
+      "id": "m3-token-kevin", "mapId": "ben-10", "batch": "M3-D-Characters", "path": "characters/m3-token-kevin.webp", "sourceRef": "source/m3-character-kevin-token.png", "prompt": "Full-body 3D Kevin board token; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [302,92,420,900], "alpha": true, "footAnchor": [0.5,0.96875], "worldScale": 1.08, "depthOffset": 0, "tileIndexes": [], "useCases": ["token-kevin"], "sha256": "B0523603228372D54D75C09E4E86AF9DB600251055D82F70A959AD7683938072", "bytes": 61448, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-D/character-qa.md"
+    },
+    {
+      "id": "m3-avatar-kevin", "mapId": "ben-10", "batch": "M3-D-Characters", "path": "../characters/kevin.png", "sourceRef": "source/m3-character-kevin-avatar.png", "prompt": "3D bust avatar of Kevin; transparent; no frame or text.",
+      "canvas": [512,512], "contentBounds": [49,24,415,468], "alpha": true, "footAnchor": [0.5,0.9609375], "worldScale": 1, "depthOffset": 0, "tileIndexes": [], "useCases": ["avatar-kevin"], "sha256": "689E15E928955B61C8D63365ECDD14A2D1B1D78B9941280DDBF803EAB458CCE1", "bytes": 64420, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-D/character-qa.md"
+    },
+    {
+      "id": "m3-token-max", "mapId": "ben-10", "batch": "M3-D-Characters", "path": "characters/m3-token-max.webp", "sourceRef": "source/m3-character-max-token.png", "prompt": "Full-body 3D Grandpa Max board token; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [292,92,440,900], "alpha": true, "footAnchor": [0.5,0.96875], "worldScale": 1.08, "depthOffset": 0, "tileIndexes": [], "useCases": ["token-max"], "sha256": "3C1E2363AEE9F58897F730957F5AE7ADC6DC64A0FAA0B825C2115CF86BDFEF0D", "bytes": 78850, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-D/character-qa.md"
+    },
+    {
+      "id": "m3-avatar-max", "mapId": "ben-10", "batch": "M3-D-Characters", "path": "../characters/max.png", "sourceRef": "source/m3-character-max-avatar.png", "prompt": "3D bust avatar of Grandpa Max; transparent; no frame or text.",
+      "canvas": [512,512], "contentBounds": [22,28,468,464], "alpha": true, "footAnchor": [0.5,0.9609375], "worldScale": 1, "depthOffset": 0, "tileIndexes": [], "useCases": ["avatar-max"], "sha256": "633F66C9014352C522535E97A89EC282F2F374D841D9713AF3E42E850E8030D9", "bytes": 65630, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-D/character-qa.md"
+    },
+    {
+      "id": "m3-decor-a", "mapId": "ben-10", "batch": "M3-E-Decor", "path": "decor/m3-decor-a.webp", "sourceRef": "source/m3-decor-a.png", "prompt": "Bellwood and Plumber green urban prop cluster; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [202,457,620,503], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.4, "depthOffset": -0.32, "tileIndexes": [], "useCases": ["city-group-A-decor"], "sha256": "C24C1EF513C2E265099EB762A1A0F775A2AC03D960AC3E0AA4EDBB3E44A12876", "bytes": 70986, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-E/decor-qa.md"
+    },
+    {
+      "id": "m3-decor-b", "mapId": "ben-10", "batch": "M3-E-Decor", "path": "decor/m3-decor-b.webp", "sourceRef": "source/m3-decor-b.png", "prompt": "Pyronite forge and lava prop cluster; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [202,512,620,448], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.4, "depthOffset": -0.32, "tileIndexes": [], "useCases": ["city-group-B-decor"], "sha256": "A6771165210E8AC811DE40AB2871565A8AFC68B0768C4A28E8DB3614C1ECACEE", "bytes": 79276, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-E/decor-qa.md"
+    },
+    {
+      "id": "m3-decor-c", "mapId": "ben-10", "batch": "M3-E-Decor", "path": "decor/m3-decor-c.webp", "sourceRef": "source/m3-decor-c.png", "prompt": "Null Void purple energy gate cluster; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [209,340,607,620], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.4, "depthOffset": -0.32, "tileIndexes": [], "useCases": ["city-group-C-decor"], "sha256": "7D906A7BC27E9B404D252E8D65CB2616EC6954B638190D485B5C2A3C081A9941", "bytes": 84976, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-E/decor-qa.md"
+    },
+    {
+      "id": "m3-decor-d", "mapId": "ben-10", "batch": "M3-E-Decor", "path": "decor/m3-decor-d.webp", "sourceRef": "source/m3-decor-d.png", "prompt": "Petropia cyan crystal and scanner cluster; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [202,362,620,598], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.4, "depthOffset": -0.32, "tileIndexes": [], "useCases": ["city-group-D-decor"], "sha256": "AD0DF24C6B6F6FBFE6D2D8343156FE12493C079EF23DF78D42D033CBEAD01915", "bytes": 87462, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-E/decor-qa.md"
+    },
+    {
+      "id": "m3-decor-e", "mapId": "ben-10", "batch": "M3-E-Decor", "path": "decor/m3-decor-e.webp", "sourceRef": "source/m3-decor-e.png", "prompt": "Silver-cyan futuristic metropolis prop cluster; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [245,340,535,620], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.4, "depthOffset": -0.32, "tileIndexes": [], "useCases": ["city-group-E-decor"], "sha256": "80A935061EB121A1F6F3760AE5ED38C08DE9C274F93DA3255EEFD9A386A2CF98", "bytes": 84630, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-E/decor-qa.md"
+    },
+    {
+      "id": "m3-decor-f", "mapId": "ben-10", "batch": "M3-E-Decor", "path": "decor/m3-decor-f.webp", "sourceRef": "source/m3-decor-f.png", "prompt": "Red desert monolith and alien relay cluster; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [202,352,620,608], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.4, "depthOffset": -0.32, "tileIndexes": [], "useCases": ["city-group-F-decor"], "sha256": "B6118925F3ADE0D0E7F899FCB50B48BE088D6F33D965F095858EFC985CEC770E", "bytes": 110060, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-E/decor-qa.md"
+    },
+    {
+      "id": "m3-decor-g", "mapId": "ben-10", "batch": "M3-E-Decor", "path": "decor/m3-decor-g.webp", "sourceRef": "source/m3-decor-g.png", "prompt": "Bioluminescent alien jungle prop cluster; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [202,454,620,506], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.4, "depthOffset": -0.32, "tileIndexes": [], "useCases": ["city-group-G-decor"], "sha256": "3F965384326A331167E99AC42435B3920371DD48359BE4A0694F91802E2D18CF", "bytes": 106732, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-E/decor-qa.md"
+    },
+    {
+      "id": "m3-decor-h", "mapId": "ben-10", "batch": "M3-E-Decor", "path": "decor/m3-decor-h.webp", "sourceRef": "source/m3-decor-h.png", "prompt": "Brown industrial tank, pipes and turbine cluster; transparent; no text.",
+      "canvas": [1024,1024], "contentBounds": [202,469,620,491], "alpha": true, "footAnchor": [0.5,0.9375], "worldScale": 1.4, "depthOffset": -0.32, "tileIndexes": [], "useCases": ["city-group-H-decor"], "sha256": "DE9B1D9A71C808F7B66BBEF7AE69517EADCA21DAE250B6810A13AE89CAFCFE30", "bytes": 82468, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-E/decor-qa.md"
+    },
+    {
+      "id": "m3-home-background", "mapId": "ben-10", "batch": "M3-E-UI", "path": "ui/m3-home-background.webp", "sourceRef": "docs/reviews/map34/ben-10/M3-E/decor-integration.png", "prompt": "Derived from the independently approved live Map 3 master; left-aligned board with clean form-safe area.",
+      "canvas": [1920,1080], "contentBounds": [0,0,1920,1080], "alpha": false, "footAnchor": null, "worldScale": 1, "depthOffset": 0, "tileIndexes": [], "useCases": ["home-background"], "sha256": "05E4E5199875F51A74E620028FA961E53F870B3B573B1984F5F794B86F9A6431", "bytes": 106228, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-E/ui-qa.md"
+    },
+    {
+      "id": "m3-map-preview", "mapId": "ben-10", "batch": "M3-E-UI", "path": "ui/m3-map-preview.webp", "sourceRef": "docs/reviews/map34/ben-10/M3-E/decor-integration.png", "prompt": "Derived from the independently approved live Map 3 master; complete-board selection preview.",
+      "canvas": [640,360], "contentBounds": [0,0,640,360], "alpha": false, "footAnchor": null, "worldScale": 1, "depthOffset": 0, "tileIndexes": [], "useCases": ["map-selection-preview"], "sha256": "91BA7CAFD05FA7123E0575EBE4B3B0680A2B09D3C0795200CB4934CFEBBDFEE8", "bytes": 37578, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-E/ui-qa.md"
+    },
+    {
+      "id": "m3-player-card-master", "mapId": "ben-10", "batch": "M3-E-UI", "path": "ui/m3-player-card-master.webp", "sourceRef": "public/maps/ben-10/assets/characters/ben.png", "prompt": "Map 3 player-card visual master derived from approved Ben avatar and live board palette.",
+      "canvas": [720,240], "contentBounds": [0,0,720,240], "alpha": false, "footAnchor": null, "worldScale": 1, "depthOffset": 0, "tileIndexes": [], "useCases": ["player-card-review-master"], "sha256": "5E54A13C0D02F706E472D32E88F1C2A5F5D630939F5860E0BF44BBDEC0CFC274", "bytes": 25676, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-E/ui-qa.md"
+    },
+    {
+      "id": "m3-popup-master", "mapId": "ben-10", "batch": "M3-E-UI", "path": "ui/m3-popup-master.webp", "sourceRef": "public/maps/ben-10/assets/buildings/ben10-ben-2.png", "prompt": "Map 3 purchase-popup visual master derived from approved property thumbnail and runtime popup structure.",
+      "canvas": [900,700], "contentBounds": [0,0,900,700], "alpha": false, "footAnchor": null, "worldScale": 1, "depthOffset": 0, "tileIndexes": [], "useCases": ["popup-review-master"], "sha256": "9B093A5627A1E0E1FEE0D695C2EA120EE73A0876504A3E6ED30ED724A615C632", "bytes": 23802, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-E/ui-qa.md"
+    },
+    {
+      "id": "m3-result-state-review", "mapId": "ben-10", "batch": "M3-E-UI", "path": "ui/m3-result-state-review.webp", "sourceRef": "docs/reviews/map34/ben-10/M3-E/decor-integration.png", "prompt": "Map 3 result-state visual review derived from approved live board and shared result-modal structure.",
+      "canvas": [1100,760], "contentBounds": [0,0,1100,760], "alpha": false, "footAnchor": null, "worldScale": 1, "depthOffset": 0, "tileIndexes": [], "useCases": ["result-state-review-master"], "sha256": "1E88F3E5BA9A1914FE8B5A83EB66519BFD18854550451FDF32460572655F13F8", "bytes": 34758, "qaStatus": "PASS", "qaEvidence": "docs/reviews/map34/ben-10/M3-E/ui-qa.md"
+    }
+  ]
+}
