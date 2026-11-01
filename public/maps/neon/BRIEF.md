@@ -34,7 +34,7 @@ Màu người chơi lấy từ game (palette neon mới T25); xem mục Màu ch�
 | Chance | 12, 20, 28 | Data Cube magenta nổi, dấu ? |
 | Tax | 30 | cổng thu thuế acid green |
 | Resort | 4, 14, 18, 25 | bệ sạc → 1–4 trụ pin màu chủ (Trạm sạc, Cụm pin, Trạm điện, Nhà máy năng lượng) |
-| Giữa bàn | | Reactor Core (cột cyan, vòng xoay, vòng pulse ở ambient), mạch 4 hướng, 2 trụ mỗi cạnh |
+| Giữa bàn | | Data Tower + đường vành đai + cụm cao ốc (T26, xem mục Giữa bàn) |
 
 Bốn cạnh theo thứ tự bàn và tiến trình giá: cạnh 0 (ô 1–7, nhóm A,B, rẻ) **Back Alley** (cam rỉ, dây điện) → cạnh 1 (9–15, C,D) **Nightlife** (magenta/tím) → cạnh 2 (17–23, E,F) **Cyber Financial** (cyan/trắng lạnh) → cạnh 3 (25–31, G,H, đắt nhất) **Megacorp HQ** (đen vàng). Tên 32 ô: `MAPS[].tileNames` trong `public/rules.js`.
 
@@ -52,7 +52,7 @@ Cấp nhà (T12, chủ sản phẩm chọn phương án B ngày 02/11; vẽ bằ
 ## 7. Ngân sách đề xuất
 - Ảnh rời: 0 PNG riêng (hiện), tất cả vẽ bằng bút; pack dùng chung `kenney-iso-buildings` chỉ cần ~24 mảnh đã có sẵn. Mục tiêu tải map ≤ 1 MB (< 2 MB của contract), `assets/` ≤ 0,3 MB nếu thêm sprite biển hiệu hán tự/katakana.
 - Kích thước sprite: theo cửa sổ nướng chuẩn (ô 6 × 6 đv màn hình, `k` 110/150/170); dựng ≈ 0,8 s ở `low` (đo `meta.buildMs` 760 ms), mục tiêu ≤ 1,5 s ở `high`.
-- Draw call: giữ như khung xương (sprite nướng); `ambient.animate` chỉ 1 vòng pulse (< 0,2 ms); `low` bỏ ambient.
+- Draw call: giữ như khung xương (sprite nướng); `ambient.animate` chỉ 5 chấm xe + 1 chấm vòng hologram (< 0,2 ms); `low` bỏ ambient.
 
 ## 8. Cần khung xương
 Những chỗ khung xương hiện cản bản neon đẹp hơn (đề xuất cho owner render, không sửa trong T24):
@@ -69,3 +69,13 @@ Những chỗ khung xương hiện cản bản neon đẹp hơn (đề xuất ch
 
 ## Màu chủ (T12, chốt 02/11)
 Một chế độ duy nhất, gộp hai kiểu cũ: **bệ sáng** màu chủ dưới nhà / resort (hai lớp glow + vòng) và **nhuốm** (biển hologram, tháp phụ, viền neon dọc, viền kính, vòng đỉnh). Mọi độ sáng / alpha màu chủ nhân hệ số `OWN = 0.95` (giảm 5%): màu qua `mixHex(c.color, OWN)`, alpha bệ 0.38→0.361 và 0.72→0.684, hologram 0.28→0.266. Resort dùng quầng bệ thu nhỏ (`bl = 0.6`, bán kính 0.56) để không lem sang nhãn giá. Không còn công tắc `OWNER_MODE`. Màu luôn lấy từ `c.color`.
+
+## Giữa bàn (T26, theo ảnh tham khảo `docs/maps/neon-ref-board.png` của chủ sản phẩm, chỉ lấy bố cục / không khí, không chép)
+Vẽ hoàn toàn bằng bút, một lần (`center.draw` chỉ chạy ở `side 0`, mọi vật qua `c.add` để xếp chiều sâu chung); không chữ, không logo.
+- **Data Tower** lùi về phía xa (tâm −1.2, −1.2) để chừa chỗ xúc xắc: đế 3 bậc trụ thép với vòng neon cyan / magenta / cyan, 8 cột đèn vàng, sọc sáng quanh bậc trên; cột sáng dọc (3 lớp nét glow) cao tới y ≈ 3.3, một đĩa vành vàng giữa thân, nắp + quả cầu cyan; 3 vòng hologram nổi (y 1.5 / 1.95 / 2.4) tách nửa sau (vẽ trước cột) và nửa trước (vẽ sau, có chấm sáng).
+- **Đường vành đai trên cao**: hình vuông bo góc (nửa cạnh 1.9, góc 0.6, rộng 0.34, cao 0.5) trên trụ, viền ngoài cyan / trong magenta, vạch giữa vàng, đèn xe (pha trắng / hậu đỏ) nướng sẵn; chia ~32 đoạn để xếp chiều sâu đúng với nhà và tháp.
+- **Cụm cao ốc** tối (`#0c1530`), cửa sổ sáng, viền neon góc trước + vòng mái theo 5 màu nhấn, biển dọc glyph giả, biển hologram, biển cá chép neon (motif chung), antenna. Trong vành đai: sau cao (~2.1) → trước thấp (0.5). Ngoài vành đai: hai dải L dọc hai cạnh xa, bậc thang thấp dần ra mép; chiều cao bị kẹp bởi `hMax(x, z)` để đỉnh nhà luôn nằm dưới mép trong của dải ô phía xa trên màn hình (không che giá / nhãn).
+- **Chồng Data Cube** (thẻ Cơ hội) ở (−1.3, 2.9): 4 khối trong suốt magenta / cyan / tím, dấu ?, bệ vòng magenta. **Bảng hologram bản đồ thế giới** ở (2.9, −1.3): lưới chấm theo vài elip giản lược (không chép bản đồ có bản quyền).
+- **Bệ xúc xắc**: vẽ phẳng trong `paint` quanh (1.3, 1.3), nơi khung xương đặt xúc xắc: quầng cyan, vòng cyan, vòng đứt magenta, 48 vạch chia. Phần còn lại của mặt giữa bàn giữ navy trơn `#0d1932`, chỉ thêm một quảng trường tối mờ dưới cụm nhà và 2 vạch dẫn mờ.
+- **Chuyển động** (`ambient.animate.cityFx`, `low` bỏ qua): 5 chấm xe chạy trên nửa trước vành đai + 1 chấm sáng quay trên vòng hologram giữa. Vòng hologram quay thật và xe che khuất đúng chiều sâu cần khung xương cho `animate` chèn vào danh sách chiều sâu: để sau.
+- Đo `?low` (bàn 4 chủ, cấp trộn, resort): `stats().ms` ≈ 2.3 ms/khung, `buildMs` 61.5 ms (lần dựng), 56 sprite.

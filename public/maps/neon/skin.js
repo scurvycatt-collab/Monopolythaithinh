@@ -181,32 +181,138 @@ const deco = (p, c) => {   // ô trống: cột đèn, thùng máy, hơi nước
   if (r() < 0.5) { p.box(-x - 0.12, 0, -0.85, 0.24, 0.22, 0.2, '#161d33', { edge: null }); neon(p, [[-x - 0.1, 0.15, -0.649], [-x + 0.1, 0.15, -0.649]], z.acc, 0.02, 0.06); }
 };
 
-/* ---------- giữa bàn: Reactor Core ---------- */
-function reactorFloor(g, c) {
-  const { T, px } = c, [cx, cy] = T(0, 0); g.save();
-  g.strokeStyle = '#27e6ff'; g.shadowColor = '#27e6ff'; g.shadowBlur = 10; g.lineCap = 'round';
-  for (let i = 0; i < 4; i++) { const a = Math.PI / 4 + (i * Math.PI) / 2, [ex, ey] = T(Math.cos(a - Math.PI / 4 + Math.PI / 4) * 0, 0); void ex; void ey; }
-  const arms = [[1, 1], [-1, 1], [-1, -1], [1, -1]]; arms.forEach(([x, z], i) => { g.globalAlpha = 0.7; g.lineWidth = 0.05 * px; g.strokeStyle = [N.cyan, N.mag, N.gold, N.lime][i]; g.beginPath(); g.moveTo(cx, cy); const [mx, my] = T(x * 2.2, z * 0.6); g.lineTo(mx, my); g.lineTo(...T(x * 4.6, z * 0.6)); g.lineTo(...T(x * 5.2, z * 5.2)); g.stroke(); });
-  g.globalAlpha = 1; for (let r = 1; r <= 3; r++) { g.strokeStyle = r === 2 ? N.mag : N.cyan; g.lineWidth = 0.03 * px; g.beginPath(); g.arc(cx, cy, r * 0.75 * px, 0, 7); g.stroke(); }
-  g.shadowBlur = 0; g.fillStyle = 'rgba(8,12,28,.75)'; g.beginPath(); g.arc(cx, cy, 0.6 * px, 0, 7); g.fill(); g.restore();
+/* ---------- giữa bàn (T26): tháp dữ liệu + đường vành đai trên cao + cụm cao ốc, theo ảnh tham khảo của chủ sản phẩm ---------- */
+/*  Bố cục (toạ độ thế giới, camera ở phía +x+z): tháp lùi về sau (TX, TZ) để chừa chỗ xúc xắc phía trước;
+    xúc xắc khung xương rơi quanh (1.3, 1.3) → bệ hologram tròn vẽ phẳng trong paint. Cao ốc bậc thang thấp dần ra mép;
+    chiều cao bị kẹp bởi hMax() để không che dải giá/nhãn của ô phía xa (−x, −z). Không chữ, không logo. */
+const TX = -1.2, TZ = -1.2, RH = 1.9, RR = 0.6, RW = 0.34, RY = 0.5;   // tâm tháp, nửa cạnh / bán kính góc / bề rộng / độ cao đường vành đai
+const PADX = 1.3, PADZ = 1.3, PADR = 0.95;                                // bệ xúc xắc
+const hMax = (x0, z0) => Math.max(0.3, ((2 * Math.min(x0, z0) + 11.9) * 0.354 - 0.3) / 0.866);   // đỉnh nhà phải thấp hơn mép trong ô phía xa trên màn hình
+const ROAD = (() => {   // đường tâm vành đai: hình vuông bo góc, chia đoạn ngắn để xếp chiều sâu đúng
+  const pts = [], a = RH - RR, C = [[a, a, 0], [-a, a, 1], [-a, -a, 2], [a, -a, 3]];
+  C.forEach(([cx, cz, k]) => {
+    for (let i = 0; i <= 5; i++) { const t = (k + i / 5) * (Math.PI / 2); pts.push([TX + cx + Math.cos(t) * RR, TZ + cz + Math.sin(t) * RR]); }
+    const [nx, nz] = C[(k + 1) % 4], t1 = (k + 1) * (Math.PI / 2), s = [TX + cx + Math.cos(t1) * RR, TZ + cz + Math.sin(t1) * RR], e = [TX + nx + Math.cos(t1) * RR, TZ + nz + Math.sin(t1) * RR];
+    for (let i = 1; i < 4; i++) pts.push([s[0] + (e[0] - s[0]) * (i / 4), s[1] + (e[1] - s[1]) * (i / 4)]);
+  });
+  const n = pts.length, N2 = pts.map((q, i) => { const a0 = pts[(i + n - 1) % n], a1 = pts[(i + 1) % n]; let nx = a1[1] - a0[1], nz = -(a1[0] - a0[0]); const l = Math.hypot(nx, nz) || 1; nx /= l; nz /= l; if (nx * (q[0] - TX) + nz * (q[1] - TZ) < 0) { nx = -nx; nz = -nz; } return [nx, nz]; });
+  let L = 0; const acc = pts.map((q, i) => { const r = L; const b = pts[(i + 1) % n]; L += Math.hypot(b[0] - q[0], b[1] - q[1]); return r; });
+  return { pts, nrm: N2, acc, len: L };
+})();
+function arc(p, x, y, z, r, a0, a1, col, w = 0.03, n = 20) { neon(p, Array.from({ length: n + 1 }, (_, i) => { const a = a0 + ((a1 - a0) * i) / n; return [x + Math.cos(a) * r, y, z + Math.sin(a) * r]; }), col, w); }
+const BACK = [0.75 * Math.PI, 1.75 * Math.PI], FRONT = [-0.25 * Math.PI, 0.75 * Math.PI];   // nửa sau / nửa trước so với camera
+
+function cityFloor(g, c) {   // mặt phẳng: quảng trường tối hơn chút dưới cụm nhà, bóng đường vành đai, bệ xúc xắc hologram; ngoài ra để navy trơn
+  const { T, px } = c; g.save();
+  const rr = (x0, z0, x1, z1, r) => { g.beginPath(); const P = []; for (let k = 0; k < 4; k++) { const cx = k === 0 || k === 3 ? x1 - r : x0 + r, cz = k < 2 ? z1 - r : z0 + r; for (let i = 0; i <= 6; i++) { const t = (k + i / 6) * (Math.PI / 2); P.push(T(cx + Math.cos(t) * r, cz + Math.sin(t) * r)); } } P.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.closePath(); };
+  rr(-5.3, -5.3, 0.9, 0.9, 1.4); g.fillStyle = 'rgba(18,32,64,.6)'; g.fill(); g.strokeStyle = 'rgba(39,230,255,.22)'; g.lineWidth = 0.03 * px; g.stroke();
+  rr(TX - RH - 0.1, TZ - RH - 0.1, TX + RH + 0.25, TZ + RH + 0.25, RR + 0.1); g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 0.38 * px; g.stroke();
+  [[0.9, -0.2, 5.0, -0.2], [-0.2, 0.9, -0.2, 5.0]].forEach(([a, b, x1, z1], i) => { g.strokeStyle = i ? N.mag : N.cyan; g.globalAlpha = 0.3; g.lineWidth = 0.025 * px; g.beginPath(); g.moveTo(...T(a, b)); g.lineTo(...T(x1, z1)); g.stroke(); });
+  g.globalAlpha = 1; const [cx, cy] = T(PADX, PADZ), R = PADR * px;
+  const gr = g.createRadialGradient(cx, cy, 0, cx, cy, R * 1.15); gr.addColorStop(0, 'rgba(39,230,255,.22)'); gr.addColorStop(0.8, 'rgba(39,230,255,.08)'); gr.addColorStop(1, 'rgba(39,230,255,0)'); g.fillStyle = gr; g.beginPath(); g.arc(cx, cy, R * 1.15, 0, 7); g.fill();
+  g.shadowColor = N.cyan; g.shadowBlur = 8; g.strokeStyle = N.cyan; g.lineWidth = 0.045 * px; g.beginPath(); g.arc(cx, cy, R, 0, 7); g.stroke();
+  g.strokeStyle = N.mag; g.lineWidth = 0.02 * px; g.setLineDash([0.12 * px, 0.08 * px]); g.beginPath(); g.arc(cx, cy, R * 0.8, 0, 7); g.stroke(); g.setLineDash([]);
+  g.shadowBlur = 0; g.strokeStyle = 'rgba(191,246,255,.7)'; g.lineWidth = 0.015 * px; for (let i = 0; i < 48; i++) { const a = (i / 48) * 6.283, l = i % 4 ? 0.06 : 0.14; g.beginPath(); g.moveTo(cx + Math.cos(a) * (R + 0.04 * px), cy + Math.sin(a) * (R + 0.04 * px)); g.lineTo(cx + Math.cos(a) * (R + l * px), cy + Math.sin(a) * (R + l * px)); g.stroke(); }
+  g.restore();
 }
-function reactorCore(p) {
-  p.ellipseShadow(0, 0, 1, 0.2); p.cyl(0, 0, 0, 1.0, 0.12, N.steel); p.cyl(0, 0.12, 0, 0.8, 0.1, N.steel2); ring(p, 0, 0.23, 0, 0.78, N.cyan, 0.04, 48);
-  p.cyl(0, 0.22, 0, 0.4, 0.3, '#121a30'); glow(p, N.cyan, 0.4, () => p.cyl(0, 0.52, 0, 0.26, 0.9, 'rgba(39,230,255,.85)')); p.cyl(0, 0.52, 0, 0.1, 0.9, '#e9fdff');
-  for (let i = 0; i < 3; i++) ring(p, 0, 0.7 + i * 0.4, 0, 0.42 - (i % 2) * 0.06, i === 1 ? N.mag : N.cyan, 0.035, 36);
-  glow(p, N.cyan, 0.5, () => p.ball(0, 1.78, 0, 0.17, N.cyan)); p.ball(0, 1.78, 0, 0.09, '#ffffff');
-  for (let i = 0; i < 4; i++) { const a = (i / 4) * 6.283 + 0.78, x = Math.cos(a) * 0.9, z = Math.sin(a) * 0.9; p.box(x - 0.06, 0.1, z - 0.06, 0.12, 0.5, 0.12, N.steel2, { edge: null }); glow(p, [N.gold, N.mag, N.lime, N.cyan][i], 0.14, () => p.ball(x, 0.66, z, 0.06, [N.gold, N.mag, N.lime, N.cyan][i])); }
+function tower(p) {   // tháp dữ liệu: đế 3 bậc vòng neon, cột sáng dọc, 3 vòng hologram nổi (nửa sau vẽ trước cột, nửa trước vẽ sau)
+  const X = TX, Z = TZ, H = [[1.5, 0.92, N.cyan], [1.95, 1.08, N.mag], [2.4, 0.8, N.cyan]];
+  p.ellipseShadow(X, Z, 1.25, 0.3);
+  p.cyl(X, 0, Z, 1.05, 0.22, N.steel); ring(p, X, 0.23, Z, 1.03, N.cyan, 0.035, 48);
+  for (let i = 0; i < 8; i++) { const a = (i / 8) * 6.283 + 0.39, x = X + Math.cos(a) * 0.93, z = Z + Math.sin(a) * 0.93; p.box(x - 0.05, 0.22, z - 0.05, 0.1, 0.18, 0.1, N.steel2, { edge: null }); glow(p, N.gold, 0.1, () => p.ball(x, 0.43, z, 0.03, N.gold)); }
+  p.cyl(X, 0.22, Z, 0.8, 0.3, N.steel2); ring(p, X, 0.53, Z, 0.78, N.mag, 0.03, 44);
+  p.cyl(X, 0.52, Z, 0.56, 0.38, '#121a30'); ring(p, X, 0.91, Z, 0.55, N.cyan, 0.03, 40);
+  for (let i = 0; i < 12; i++) { const a = (i / 12) * 6.283; if (Math.cos(a) + Math.sin(a) < -0.2) continue; const x = X + Math.cos(a) * 0.565, z = Z + Math.sin(a) * 0.565; neon(p, [[x, 0.6, z], [x, 0.82, z]], i % 2 ? N.cyan : '#7fd8ff', 0.012, 0.05); }
+  H.forEach(([y, r, col]) => { p.flatEllipse(X, y, Z, r, r, hexA(col, 0.07)); arc(p, X, y, Z, r, BACK[0], BACK[1], col, 0.022, 18); });
+  glow(p, N.cyan, 0.5, () => p.line3([[X, 0.9, Z], [X, 3.15, Z]], 'rgba(39,230,255,.55)', 0.46)); glow(p, N.cyan, 0.25, () => p.line3([[X, 0.9, Z], [X, 3.15, Z]], '#7ff2ff', 0.24)); p.line3([[X, 0.9, Z], [X, 3.15, Z]], '#f2feff', 0.1);
+  p.cyl(X, 2.1, Z, 0.36, 0.1, '#121a30'); ring(p, X, 2.21, Z, 0.36, N.gold, 0.025, 32);
+  p.cyl(X, 3.12, Z, 0.32, 0.08, N.steel); ring(p, X, 3.2, Z, 0.32, N.cyan, 0.03, 32);
+  glow(p, N.cyan, 0.5, () => p.ball(X, 3.32, Z, 0.14, N.cyan)); p.ball(X, 3.33, Z, 0.07, '#ffffff');
+  H.forEach(([y, r, col]) => { arc(p, X, y, Z, r, FRONT[0], FRONT[1], col, 0.026, 18); for (let i = 0; i < 6; i++) { const a = FRONT[0] + (i + 0.5) * ((FRONT[1] - FRONT[0]) / 6); glow(p, col, 0.08, () => p.ball(X + Math.cos(a) * r, y, Z + Math.sin(a) * r, 0.022, '#ffffff')); } });
 }
-function sidePylon(p, x, z, col, cube) {
-  p.ellipseShadow(x, z, 0.3, 0.2); p.box(x - 0.28, 0, z - 0.28, 0.56, 0.12, 0.56, N.steel, { edge: null });
-  if (cube) { p.box(x - 0.2, 0.3, z - 0.2, 0.4, 0.4, 0.4, '#1a1030', { top: '#3a1f5c', edge: col }); neon(p, [[x, 0.12, z], [x, 0.3, z]], col, 0.02, 0.08); }
-  else { p.box(x - 0.1, 0.12, z - 0.1, 0.2, 0.9, 0.2, '#16223a', { edge: null }); neon(p, [[x, 0.2, z + 0.101], [x, 0.95, z + 0.101]], col, 0.04, 0.1); }
+function roadPiece(p, i) {   // một đoạn đường vành đai: trụ, mặt cầu, viền neon, đèn xe nướng sẵn
+  const { pts, nrm } = ROAD, n = pts.length, j = (i + 1) % n, [ax, az] = pts[i], [bx, bz] = pts[j], [anx, anz] = nrm[i], [bnx, bnz] = nrm[j], h = RW / 2;
+  const o = (x, z, nx, nz, s, y) => [x + nx * h * s, y, z + nz * h * s];
+  if (i % 4 === 0) { p.box(ax - 0.05, 0, az - 0.05, 0.1, RY - 0.06, 0.1, N.steel2, { edge: null }); }
+  p.poly([o(ax, az, anx, anz, 1, RY - 0.08), o(bx, bz, bnx, bnz, 1, RY - 0.08), o(bx, bz, bnx, bnz, 1, RY), o(ax, az, anx, anz, 1, RY)], '#0e1528');
+  p.poly([o(ax, az, anx, anz, -1, RY - 0.08), o(bx, bz, bnx, bnz, -1, RY - 0.08), o(bx, bz, bnx, bnz, -1, RY), o(ax, az, anx, anz, -1, RY)], '#121a30');
+  p.poly([o(ax, az, anx, anz, 1, RY), o(bx, bz, bnx, bnz, 1, RY), o(bx, bz, bnx, bnz, -1, RY), o(ax, az, anx, anz, -1, RY)], '#1b2544');
+  neon(p, [o(ax, az, anx, anz, 1, RY + 0.005), o(bx, bz, bnx, bnz, 1, RY + 0.005)], N.cyan, 0.018, 0.08);
+  p.line3([o(ax, az, anx, anz, -1, RY + 0.005), o(bx, bz, bnx, bnz, -1, RY + 0.005)], N.mag, 0.012);
+  if (i % 2) p.line3([[ax, RY + 0.004, az], [(ax + bx) / 2, RY + 0.004, (az + bz) / 2]], 'rgba(255,225,77,.45)', 0.01);
+  if (i % 5 === 2) { const m = [(ax + bx) / 2, (az + bz) / 2]; glow(p, '#fff6c8', 0.08, () => p.ball(m[0] + anx * 0.07, RY + 0.03, m[1] + anz * 0.07, 0.026, '#fff6c8')); glow(p, N.red, 0.08, () => p.ball(m[0] - anx * 0.07 + (bx - ax) * 0.3, RY + 0.03, m[1] - anz * 0.07 + (bz - az) * 0.3, 0.022, N.red)); }
 }
-function centerSide(pen, c) {
-  const col = Z[c.side].acc;
-  [[-1.8, 3.6], [1.8, 3.6]].forEach(([u, v], i) => { const [x, z] = c.toWorld(u, v); c.add(x, z, (p) => sidePylon(p, x, z, col, i === 0)); });
+function koi(p, x0, x1, y0, y1, z) {   // biển quảng cáo cá chép neon (motif chung, không thương hiệu)
+  p.quadZ(z, x0, x1, y0, y1, '#0a0d1a'); neon(p, [[x0, y0, z + 0.003], [x1, y0, z + 0.003], [x1, y1, z + 0.003], [x0, y1, z + 0.003], [x0, y0, z + 0.003]], N.mag, 0.014, 0.08);
+  const fish = (cx, cy, s, rot, col) => { const P = (u, v) => [cx + (u * Math.cos(rot) - v * Math.sin(rot)) * s, cy + (u * Math.sin(rot) + v * Math.cos(rot)) * s, z + 0.006];
+    const body = Array.from({ length: 16 }, (_, i) => { const a = (i / 16) * 6.283; return P(Math.cos(a) * 1, Math.sin(a) * 0.38 * (1 - 0.35 * Math.max(0, -Math.cos(a)))); });
+    glow(p, col, 0.12, () => { p.poly(body, col); p.poly([P(-0.85, 0), P(-1.5, 0.45), P(-1.3, 0), P(-1.5, -0.45)], col); p.poly([P(0.1, 0.3), P(-0.25, 0.65), P(-0.35, 0.3)], col); });
+    p.poly([P(0.35, 0.05), P(0.1, 0.2), P(-0.2, 0.1), P(0.05, -0.08)], '#ffffff'); p.ball(...P(0.7, 0.08), 0.012, '#0a0d1a'); };
+  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, s = (x1 - x0) * 0.22;
+  fish(cx - s * 0.5, cy + (y1 - y0) * 0.18, s, -0.5, '#ff8a3d'); fish(cx + s * 0.6, cy - (y1 - y0) * 0.18, s * 0.85, 2.6, '#ff3fb4');
 }
-function coreFx(p, t) { const r = 0.9 + Math.sin(t * 2) * 0.06; ring(p, 0, 0.24, 0, r, N.cyan, 0.02, 32); }
+function vsign(p, x, y, z, h, col, r) {   // biển neon dọc trên mặt +z: thanh tối + glyph giả
+  p.box(x - 0.045, y, z, 0.09, h, 0.03, '#0a0d1a', { edge: null });
+  glow(p, col, 0.1, () => { for (let yy = y + 0.04; yy < y + h - 0.06; yy += 0.085) { const t = r(); if (t < 0.5) p.quadZ(z + 0.032, x - 0.03, x + 0.03, yy, yy + 0.02, col); else { p.quadZ(z + 0.032, x - 0.03, x - 0.01, yy, yy + 0.05, col); p.quadZ(z + 0.032, x + 0.01, x + 0.03, yy, yy + 0.05, col); } } });
+  neon(p, [[x - 0.045, y, z + 0.031], [x - 0.045, y + h, z + 0.031]], col, 0.008, 0.05);
+}
+function tall(p, b) {   // cao ốc tối, cửa sổ sáng, viền neon góc trước; tuỳ chọn biển dọc / hologram / cá chép / antenna
+  const { x, z, w, d, acc } = b, r = p.u.rng(b.seed), h = Math.min(b.h, hMax(x, z)), x0 = x - w / 2, z0 = z - d / 2;
+  p.shadow(x0, z0, w, d, h, 0.3);
+  block(p, x0, 0, z0, w, h, d, '#0c1530', r, { cw: 0.075, ch: 0.1, lit: 0.48, cols: WINB, mx: 0.16, my: 0.22, edge: 'rgba(120,160,255,.18)' });
+  neon(p, [[x0 + w, 0.02, z0 + d], [x0 + w, h, z0 + d]], acc, 0.014, 0.08);
+  neonLoop(p, x0, z0, x0 + w, z0 + d, h + 0.005, acc, 0.012, 0.06);
+  if (h > 0.9 && w > 0.3) { p.box(x0 + w * 0.2, h, z0 + d * 0.2, w * 0.6, 0.12, d * 0.6, '#101a34', { edge: 'rgba(120,160,255,.2)' }); }
+  if (b.sign && h > 0.6) vsign(p, x0 + w * 0.78, h * 0.3, z0 + d, h * 0.55, b.sign, r);
+  if (b.holo && h > 0.6) holo(p, x0 + 0.03, x0 + w - 0.03, h * 0.42, h * 0.82, z0 + d + 0.06, b.holo, r);
+  if (b.koi) koi(p, x0 + 0.02, x0 + w - 0.02, h * 0.35, h * 0.85, z0 + d + 0.035);
+  if (b.ant && h > 1) antenna(p, x, h + 0.12, z, 0.3, N.red);
+}
+const CITY = (() => {   // danh sách cao ốc [x, z, w, d, h, acc, tuỳ chọn]
+  const A = [N.cyan, N.mag, N.lime, N.gold, N.violet], L = [], T = (dx, dz) => [TX + dx, TZ + dz];
+  const put = ([x, z], w, d, h, i, o = {}) => L.push({ x, z, w, d, h, acc: A[i % A.length], seed: 300 + L.length * 17, ...o });
+  // trong vành đai, quanh chân tháp: sau cao, trước thấp
+  put(T(-1.45, -1.45), 0.46, 0.46, 2.1, 0, { ant: 1 }); put(T(-1.5, -0.45), 0.42, 0.5, 1.75, 1, { sign: N.mag }); put(T(-0.45, -1.5), 0.5, 0.42, 1.85, 4, { sign: N.cyan, ant: 1 });
+  put(T(-1.5, 0.6), 0.42, 0.44, 1.35, 3, { holo: N.cyan }); put(T(0.6, -1.5), 0.44, 0.42, 1.45, 2, { sign: N.gold });
+  put(T(1.5, -0.55), 0.42, 0.44, 1.05, 1, { holo: N.mag }); put(T(-0.55, 1.5), 0.48, 0.4, 1.0, 0, { koi: 1 });
+  put(T(1.45, 0.5), 0.4, 0.4, 0.75, 4, { sign: N.lime }); put(T(0.5, 1.45), 0.4, 0.4, 0.7, 3); put(T(1.3, 1.3), 0.34, 0.34, 0.5, 2);
+  // ngoài vành đai, phía sau-trái / sau-phải: bậc thang thấp dần ra mép (hMax kẹp thêm)
+  [[-4.0, -3.3, 1.5], [-4.1, -2.1, 1.7, { holo: N.mag }], [-4.0, -0.9, 1.8, { sign: N.cyan, ant: 1 }], [-3.95, 0.35, 1.4, { sign: N.mag }], [-4.15, 1.5, 0.95], [-3.4, 2.5, 0.7],
+    [-4.95, -2.6, 0.7], [-5.0, -1.3, 0.75], [-5.0, 0.0, 0.7], [-4.9, 1.2, 0.55], [-4.6, 2.5, 0.45]].forEach(([x, z, h, o], i) => { put([x, z], 0.52, 0.5, h, i + 1, o); put([z, x], 0.5, 0.52, h * 0.97, i + 3, o && { sign: o.sign, holo: o.holo }); });
+  put([-4.15, -4.15], 0.6, 0.6, 1.3, 1, { ant: 1 }); put([-4.95, -4.0], 0.5, 0.5, 0.6, 0); put([-4.0, -4.95], 0.5, 0.5, 0.6, 2); put([-5.0, -5.0], 0.5, 0.5, 0.4, 4);
+  return L;
+})();
+function cubeStack(p, x, z) {   // chồng Data Cube trong suốt (thẻ Cơ hội)
+  p.ellipseShadow(x, z, 0.6, 0.2); p.cyl(x, 0, z, 0.62, 0.1, N.steel); ring(p, x, 0.11, z, 0.55, N.mag, 0.03, 36);
+  glow(p, N.mag, 0.25, () => p.flatEllipse(x, 0.115, z, 0.48, 0.48, 'rgba(255,63,180,.18)'));
+  const C = [[-0.18, -0.12, 0.11, N.mag], [0.16, 0.1, 0.11, N.cyan], [-0.02, -0.02, 0.5, N.mag], [0.05, 0.02, 0.87, N.violet]], s = 0.34;
+  C.forEach(([dx, dz, y, col]) => { const x0 = x + dx - s / 2, z0 = z + dz - s / 2; glow(p, col, 0.18, () => p.box(x0, y, z0, s, s, s, '#3a1f5c', { top: hexA(col, 0.55), left: hexA(col, 0.3), right: hexA(col, 0.42), edge: col })); neonLoop(p, x0, z0, x0 + s, z0 + s, y + s, '#ffffff', 0.006, 0.04); });
+  glow(p, N.mag, 0.2, () => { const [sx, sy] = p.p(x + 0.05, 1.04, z + 0.2), g = p.ctx; g.fillStyle = '#fff'; g.font = `900 ${p.k * 0.2}px sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('?', sx, sy); });
+}
+function worldPanel(p, x, z) {   // bảng hologram bản đồ thế giới giản lược (chấm theo vài elip, không theo bản đồ có bản quyền)
+  const z0 = z - 0.75, z1 = z + 0.75, y0 = 0.55, y1 = 1.4;
+  p.box(x - 0.08, 0, z - 0.08, 0.16, 0.1, 0.16, N.steel, { edge: null }); p.box(x - 0.02, 0.1, z - 0.02, 0.04, 0.45, 0.04, N.steel2, { edge: null });
+  glow(p, N.cyan, 0.25, () => p.quadX(x, z0, z1, y0, y1, 'rgba(39,230,255,.16)'));
+  const E = [[0.22, 0.62, 0.16, 0.14], [0.32, 0.32, 0.06, 0.16], [0.52, 0.66, 0.08, 0.1], [0.56, 0.4, 0.08, 0.17], [0.74, 0.62, 0.17, 0.13], [0.84, 0.3, 0.07, 0.06]];
+  glow(p, N.cyan, 0.06, () => { for (let i = 0; i < 26; i++) for (let j = 0; j < 14; j++) { const u = (i + 0.5) / 26, v = (j + 0.5) / 14; if (!E.some(([a, b, ra, rb]) => ((u - a) / ra) ** 2 + ((v - b) / rb) ** 2 < 1)) continue; const zz = z0 + u * (z1 - z0), yy = y0 + v * (y1 - y0); p.quadX(x + 0.003, zz - 0.018, zz + 0.018, yy - 0.018, yy + 0.018, '#bff6ff'); } });
+  neon(p, [[x, y0, z0], [x, y0, z1], [x, y1, z1], [x, y1, z0], [x, y0, z0]], N.cyan, 0.014, 0.08);
+}
+function centerCity(pen, c) {   // vẽ một lần (cạnh 0), mọi vật vào danh sách chiều sâu chung
+  if (c.side !== 0) return;
+  c.add(TX, TZ, tower);
+  ROAD.pts.forEach((q, i) => { const b = ROAD.pts[(i + 1) % ROAD.pts.length]; c.add((q[0] + b[0]) / 2, (q[1] + b[1]) / 2, (p) => roadPiece(p, i), 0.05); });
+  CITY.forEach((b) => c.add(b.x, b.z, (p) => tall(p, b)));
+  c.add(-1.3, 2.9, (p) => cubeStack(p, -1.3, 2.9)); c.add(2.9, -1.3, (p) => worldPanel(p, 2.9, -1.3));
+}
+function cityFx(p, t) {   // chuyển động rẻ: 5 xe chạy trên nửa trước vành đai + chấm sáng quay trên vòng hologram giữa
+  const { pts, acc, len } = ROAD, n = pts.length;
+  for (let k = 0; k < 5; k++) {
+    const s = ((t * 0.35 + (k * len) / 5) % len + len) % len; let i = 0; while (i < n - 1 && acc[i + 1] <= s) i++;
+    const a = pts[i], b = pts[(i + 1) % n], f = (s - acc[i]) / (Math.hypot(b[0] - a[0], b[1] - a[1]) || 1), x = a[0] + (b[0] - a[0]) * f, z = a[1] + (b[1] - a[1]) * f;
+    if (x - TX + (z - TZ) < 0.6) continue; p.ball(x, RY + 0.03, z, 0.03, k % 2 ? '#fff6c8' : N.red);
+  }
+  const a = (t * 0.8) % 6.283; if (Math.cos(a) + Math.sin(a) > 0.3) p.ball(TX + Math.cos(a) * 1.08, 1.95, TZ + Math.sin(a) * 1.08, 0.035, '#ffffff');
+}
 
 export default defineSkin({
   id: 'neon',
@@ -232,8 +338,8 @@ export default defineSkin({
     festival: { paint: cornerPaint('#150a24', '#2a1244', N.mag), label: false, draw: named(arcade, 'NEON ARCADE', N.mag) },
     tour: { paint: cornerPaint('#0c0a24', '#1c1448', N.violet), label: false, draw: named(warpGate, 'WARP GATE', N.violet) },
     base: { draw: (p, c) => { const a = c.half + c.margin - 0.1, y = c.y + 0.002; neon(p, [[-a, y, a], [a, y, a], [a, y, -a], [-a, y, -a], [-a, y, a]], N.cyan, 0.03, 0.12); } },
-    center: { paint: reactorFloor, draw: centerSide, core: reactorCore },
+    center: { paint: cityFloor, draw: centerCity },
   },
-  ambient: { animate: { coreFx } },
+  ambient: { animate: { cityFx } },
   labels: { chance: 'DATA CUBE', tax: 'THUẾ DỮ LIỆU', resortLevels: ['Trạm sạc', 'Cụm pin', 'Trạm điện', 'Nhà máy năng lượng'] },
 });
