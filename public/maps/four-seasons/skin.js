@@ -335,7 +335,7 @@ const FAIR = {
   },
 };
 /* ---------- nhãn ô góc: bảng tên vẽ SAU CÙNG trong sprite, luôn nằm trên nhà/cây/khán đài ---------- */
-const CORNER_NAMES = { start: 'HỒ GƯƠM', island: 'ĐẢO GIỮA HỒ', festival: 'LỄ HỘI HÀ NỘI', tour: 'DU NGOẠN HÀ NỘI' };
+const CORNER_NAMES = { start: 'START', island: 'THÁP RÙA', festival: 'DUYỆT BINH AN LIỄNG', tour: 'ĐÁ VỈA' };
 function cornerPlaque(p, c, text, hk = 0.17) {
   const [sx, sy] = p.p(1.1, 0.05, 1.1), g = p.ctx, fs = p.k * hk;
   g.save(); g.font = `900 ${fs}px ${c.font}`; g.textAlign = 'center'; g.textBaseline = 'middle';
