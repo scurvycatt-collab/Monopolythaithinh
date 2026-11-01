@@ -83,10 +83,10 @@ export async function createBoard2D(ctx, skin) {
   function drawKit(slot, pen, c) {
     const lv = c.level, plan = slot.levels[c.slot === 'resortHouse' ? lv - 1 : lv], S0 = 0.72, w = plan.length * S0, p = pen.at(0, 0, c.gz), z = c.zone || {};
     const hs = slot.heights || [0.1, 0.6, 0.95, 1.3, 2.1], top = hs[c.slot === 'resortHouse' ? lv - 1 : lv];
-    const wall = slot.wall === 'zone' ? z.wall : slot.wall, snow = slot.snow === 'zone' ? !!z.snow : !!slot.snow;
+    const wall = slot.wall === 'zone' ? z.wall : slot.wall, bright = slot.bright, snow = slot.snow === 'zone' ? !!z.snow : !!slot.snow;
     p.shadow(-w / 2, -S0 / 2, w, S0, top, 0.16);
     if (slot.under) slot.under(p, { ...c, w });
-    raw(p).sprite(cached(`kit|${c.slot}|${lv}|${c.color}|${wall}|${snow}|${pen.swapped ? 'z' : 'x'}`, () => composeKit(plan, c.color, q.k, { wall, snow, axis: pen.swapped ? 'z' : 'x' })));
+    raw(p).sprite(cached(`kit|${c.slot}|${lv}|${c.color}|${wall}|${bright}|${snow}|${pen.swapped ? 'z' : 'x'}`, () => composeKit(plan, c.color, q.k, { wall, bright, snow, axis: pen.swapped ? 'z' : 'x' })));
     const big = lv === 4;
     if (c.slot === 'house' && lv === 0) p.flag(-0.05, -0.05, 0.7, c.color);
     const sign = slot.sign === false ? null : slot.sign || (c.slot === 'house' ? LB.hotel : LB.resort);
@@ -141,7 +141,7 @@ export async function createBoard2D(ctx, skin) {
       const nameShadow = cityBandH ? (nameInk === '#ffffff' ? 'rgba(0,0,0,.38)' : 'rgba(255,255,255,.48)') : pal.labelShadow;
       fitText(c2, displayName(i).toUpperCase(), cw / 2, gH - 26, 34, cw - 12, 0, nameInk, nameShadow);
       if (out) fitText(c2, `${outRounds(i)} ⚡`, cw / 2, sy, 60, cw - 16, 0, '#ffd23a', 'rgba(0,0,0,.45)');
-      else if (own) fitText(c2, shortK(G.rentOf(S, i)), cw / 2, sy, 58, cw - 16, 0, '#ffffff', 'rgba(0,0,0,.35)');
+      else if (own) fitText(c2, shortK(G.rentOf(S, i)), cw / 2, sy, 58, cw - 16, 0, pal.rentText || '#ffffff', pal.rentShadow || 'rgba(0,0,0,.35)');
     } else fitText(c2, LB[t.type] || t.type.toUpperCase(), cw / 2, sy, 40, cw - 16, 0, ink, inkSh);
     return tex;
   }

@@ -47,7 +47,7 @@ const isGlass = (r, g, b) => b > r + 25 && b >= g - 6;
 const lum = (r, g, b) => (0.3 * r + 0.59 * g + 0.11 * b) / 255;
 const sat = (r, g, b) => { const mx = Math.max(r, g, b), mn = Math.min(r, g, b); return mx ? (mx - mn) / mx : 0; };
 export function recolorKit(n, hex, opt = {}) {
-  const wall = opt.wall || '#ffffff', key = n + hex + wall + (opt.snow ? 's' : '');
+  const wall = opt.wall || '#ffffff', bright = opt.bright ?? WALL_BRIGHT, key = n + hex + wall + bright + (opt.snow ? 's' : '');
   if (kitCache.has(key)) return kitCache.get(key);
   const im = KIT[n]; if (!im) throw new Error(`Thiếu mảnh khối "${n}" (pack kenney-iso-buildings chưa khai báo trong skin.packs?)`);
   const c = canvas(im.width, im.height), x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(im, 0, 0);
@@ -65,7 +65,7 @@ export function recolorKit(n, hex, opt = {}) {
     }
     if (isGlass(r, g, b)) { p[i] = Math.min(255, r * 1.12); p[i + 1] = Math.min(255, g * 1.1); p[i + 2] = Math.min(255, b * 1.08); continue; }
     if (L < 0.24) continue;                                                   // cửa, chi tiết tối giữ nguyên
-    const v = sat(r, g, b) >= 0.15 ? Math.min(1, L / wallRef) * 0.95 : Math.min(1, L / 0.82), o = (0.56 + 0.44 * v) * WALL_BRIGHT;
+    const v = sat(r, g, b) >= 0.15 ? Math.min(1, L / wallRef) * 0.95 : Math.min(1, L / 0.82), o = (0.56 + 0.44 * v) * bright;
     p[i] = wr * o; p[i + 1] = wg * o; p[i + 2] = Math.min(255, wb * o + 2);
   }
   x.putImageData(d, 0, 0); kitCache.set(key, c); return c;
