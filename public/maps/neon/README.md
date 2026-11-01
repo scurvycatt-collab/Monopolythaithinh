@@ -1,6 +1,6 @@
 # Lumina-01 (2D, khung xương board2d)
 
-Map khung do `npm run map:new neon` sinh ra. Đang dùng skin mẫu: chạy được nhưng chưa có phong cách riêng.
+Đô thị neon nửa đêm. Bản duyệt hướng (T24), chưa phải asset cuối. Xem `BRIEF.md`.
 
 ## File
 
@@ -11,11 +11,11 @@ Map khung do `npm run map:new neon` sinh ra. Đang dùng skin mẫu: chạy đư
 
 ## Phong cách
 
-(Mô tả ý tưởng: chủ đề, mỗi cạnh một zone hay cả bàn một theme, tông màu.)
+4 zone theo giai tầng: Back Alley, Nightlife, Cyber Financial, Megacorp HQ. Nền tối, neon vẽ bằng bút, lõi Reactor Core giữa bàn.
 
 ## Asset
 
-- Kenney Isometric Buildings và Nature Kit (CC0), dùng chung ở `public/assets/shared/`.
+- Kenney Isometric Buildings (CC0), dùng chung ở `public/assets/shared/`.
 - (Ghi nguồn asset CC0 khác nếu thêm. Không dùng asset gốc Business Tour.)
 
 ## Còn thiếu
