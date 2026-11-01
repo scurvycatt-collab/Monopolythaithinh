@@ -199,7 +199,7 @@ export default defineSkin({
   packs: ['kenney-iso-buildings'],
   palette: {
     groups: { A: '#c98a4b', B: '#ec4f7c', C: '#2fb5a3', D: '#f7a21b', E: '#ef5a3c', F: '#2f55c9', G: '#8a63e8', H: '#3aa0f0' },
-    ground: '#a6dc8c', priceStrip: '#c6cdd6', priceText: '#5b6676', labelText: '#ffffff', labelShadow: '#344854',
+    ground: '#a6dc8c', priceStrip: '#c6cdd6', priceText: '#5b6676', labelText: '#000000', labelShadow: '#e8eef2',
     boardSide: '#7fcfd8', boardSideDark: '#62b6c2', boardTop: '#8fd8e0', tileSide: '#c89d7b', tileSideDark: '#a47c5d', water: '#8fd6ef', sand: '#f7e2b5', resortBand: '#7fd3dd',
   },
   zones: null,
