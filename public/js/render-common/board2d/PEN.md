@@ -51,6 +51,18 @@ Chiếu isometric cố định, nắng từ +x: mặt +x sáng, mặt +z tối h
 - `c.layer()`: danh sách vẽ theo chiều sâu, `L.add(x, z, (p) => …, d?)` rồi `L.flush(pen)`.
 - `c.grass(g, x, y, w, h, seed?, zone?)`: tô cỏ theo màu zone trên texture (dùng trong `paint`).
 
+## Cửa sổ nướng
+
+Mỗi sprite nướng vào một khung cố định, gốc bút ở tâm ô (hoặc tâm bàn cho `center`). Đơn vị **màn hình** (nhân `pen.k` ra điểm ảnh), không phải toạ độ thế giới; phần ra ngoài khung bị cắt, vùng trống tự cắt gọn sau khi nướng.
+
+| Sprite | Trái … Phải | Dưới … Trên (so với gốc, lên là dương) |
+|---|---|---|
+| ô thường | −3 … 3 | −2.2 … 3.8 |
+| ô góc | −3.4 … 3.4 | −2.4 … 4.6 |
+| `center` | −9.4 … 9.4 | −5.2 … 7.2 (độ phân giải 0.72·`k`) |
+
+`pen.k` theo mức chất lượng: 170 (high), 150 (medium), 110 (low). Đổi toạ độ thế giới sang màn hình: `sx/k = (x − z)·0.707`, `sy/k = (x + z)·0.354 − y·0.866`. `c.add(x, z, fn, d?)` (chỉ trong `center`) và `c.layer()` đều là danh sách vẽ theo chiều sâu; xem `map-skin.md` §5.
+
 ## Quy tắc
 
 - `draw` thuần: không đọc thời gian, không giữ trạng thái. Kết quả được nướng một lần theo (slot, ô, cấp, màu).

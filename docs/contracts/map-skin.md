@@ -88,15 +88,26 @@ Mọi trường trong zone ghi đè `palette` cùng tên cho cạnh đó. Ô gó
 | ★ `resortHouse` | công trình resort | `level` 1–4 = số resort cùng chủ |
 | ★ `start` `island` `festival` `tour` | 4 ô góc | |
 | ★ `chance` `tax` | ô đặc biệt | |
-| `base` | đế bàn dưới 32 ô | |
-| `center` | giữa bàn | `paint(g, c)` mặt đất một lần; `draw(pen, c)` mỗi zone; `core(pen, c)` vật ở tâm |
+| `base` | đồ trang trí thêm lên đế bàn | `draw(pen, c)` một lần mỗi lần dựng cảnh |
+| `center` | giữa bàn | `paint(g, c)` mặt đất một lần; `draw(pen, c)` **4 lần** (mỗi cạnh một lần); `core(pen, c)` vật ở tâm |
+| `bonus` `outage` | băng rôn lễ hội ×2 / ô mất điện | `bonus`: `level` = hệ số; `outage`: `level` = số vòng còn lại |
 
-★ = bắt buộc. Slot không ★ để trống → khung xương dùng bản mặc định.
+★ = bắt buộc. Slot không ★ để trống → **không vẽ gì thêm**, trừ khi bảng dưới ghi bản mặc định:
+
+| Slot bỏ trống | Kết quả |
+|---|---|
+| `deco` | ô đất không có cây / vật trang trí nào |
+| `base` | chỉ còn khối đế phẳng màu `palette.boardSide` (mặt trên `boardTop` → `boardSide`, mặt tối `boardSideDark`; mặc định `#7fcfd8` / `#62b6c2` / `#8fd8e0`) và tấm nền bàn viền `palette.tileSide` / `tileSideDark` (mặc định `#c89d7b` / `#a47c5d`). `base.draw` vẽ **thêm lên trên** đế này, không thay thế |
+| `center` | chỉ có cỏ từng zone, không vật giữa bàn |
+| `bonus` | băng rôn đỏ "LỄ HỘI ×n" có dây cờ |
+| `outage` | không có sprite; số vòng mất điện vẫn hiện trên dải giá |
+
+Khoá palette tuỳ chọn khung xương có đọc thêm: `boardTop`, `tileSide`, `tileSideDark`, `ground2`, `ground3` (màu `#hex`).
 
 Mỗi slot nhận **một trong ba dạng**, từ đơn giản tới tự do:
 
 ```js
-house: { kind: 'kit', stacks: [['000'], ['000','016'], …5 cấp], recolor: 'roof' }  // A. khai báo: ghép mảnh Kenney, tô màu chủ
+house: { kind: 'kit', levels: [[[0,0,['128']]], [[0,0,['016'],'069']], …5 cấp], wall: 'zone' }  // A. khai báo: ghép mảnh Kenney, tô màu chủ
 deco:  { kind: 'sprite', pick: ['tree_oak', 'tree_fat'], tint: 'zone' }            // B. chọn sprite từ pack
 center: { draw(pen, c) { … } }                                                       // C. tự vẽ bằng Pen
 ```
@@ -109,12 +120,25 @@ Danh sách `kind` có sẵn và tham số: `public/js/render-common/board2d/KIND
 | `side`, `zone` | cạnh 0–3, zone tương ứng (hoặc `null`) |
 | `level`, `color` | cấp và màu chủ (slot `house`, `resortHouse`) |
 | `seed` | số cố định theo ô, dùng cho ngẫu nhiên lặp lại được |
-| `w`, `d` | bề ngang / sâu vùng vẽ (đơn vị thế giới) |
+| `w`, `d` | bề ngang / sâu ô (đơn vị thế giới): ô thường 1.7 × 3.1, ô góc 3.1 × 3.1 |
+| `gz`, `strip` | `z` tâm vùng cỏ và `z` mép vùng cỏ / dải giá (ô thường: −0.74 và 0.26) |
+| `cw`, `ch`, `px` | chỉ có trong `paint(g, c)`, xem dưới |
+| `add(x, z, fn, d?)` | chỉ có trong `center.draw` / `core`, xem dưới |
 | `sprite(name)` | lấy sprite đã tải |
 
-Toạ độ trong `draw` là **toạ độ cục bộ của ô**: gốc ở tâm ô trên mặt bàn, `x` dọc cạnh (−`w`/2 … `w`/2), `z` vuông góc cạnh, **dương = phía dải giá, luôn quay về camera**, `y` lên trên. Phép chiếu isometric cố định (nắng từ +x), nên khung xương **không xoay** ô: cạnh 0/2 vẽ nguyên, cạnh 1/3 soi gương x ↔ z (bút tự đổi, mặt sáng vẫn bên phải). Vùng cỏ là `z` ∈ [−`d`/2, `c.strip`], tâm vùng cỏ `c.gz`. Ô góc: gốc ở tâm ô góc, trục thế giới, không soi gương. Slot `paint(g, c)` vẽ phẳng lên texture (điểm ảnh, `c.cw × c.ch`).
+Toạ độ trong `draw` là **toạ độ cục bộ của ô**: gốc ở tâm ô trên mặt bàn, `x` dọc cạnh (−`w`/2 … `w`/2), `z` vuông góc cạnh, **dương = phía dải giá, luôn quay về camera**, `y` lên trên. Phép chiếu isometric cố định (nắng từ +x), nên khung xương **không xoay** ô: cạnh 0/2 vẽ nguyên, cạnh 1/3 soi gương x ↔ z (bút tự đổi, mặt sáng vẫn bên phải). Vùng cỏ là `z` ∈ [−`d`/2, `c.strip`], tâm vùng cỏ `c.gz`. Ô góc: gốc ở tâm ô góc, trục thế giới, không soi gương. Slot `paint(g, c)` vẽ phẳng lên texture:
 
-Slot `center`: `paint(g, c)` tô thêm mặt đất (khung xương đã tô cỏ từng zone; `c.T(x, z)` → điểm ảnh). `draw(pen, c)` gọi một lần cho mỗi zone, bút ở tâm bàn theo trục thế giới; `c.toWorld(u, v)` đổi toạ độ zone (u dọc cạnh, v từ tâm ra cạnh của zone) sang thế giới. `core(pen, c)` vẽ vật ở tâm (ví dụ đài phun).
+- `c.cw`, `c.ch`: bề ngang / cao **vùng vẽ của `paint`**, đơn vị **điểm ảnh** của canvas `g` (gốc ở góc trên trái). `c.px` = 110 điểm ảnh / đơn vị thế giới (cố định, không phụ thuộc mức chất lượng).
+- Ô thường: `cw` = 187, `ch` = 259. `ch` chỉ là vùng cỏ (76 % chiều sâu ô); dải giá phía dưới do khung xương vẽ sau, đừng tô vào đó. `x` điểm ảnh = (x thế giới + `w`/2)·`px`, `y` = (z + `d`/2)·`px`.
+- Ô góc: `cw` = `ch` = 341, toàn ô.
+- Dùng `c.cw` / `c.ch` thay vì số cứng, ví dụ `c.grass(g, 0, 0, c.cw, c.ch)`.
+
+Slot `center`: `paint(g, c)` tô thêm mặt đất (khung xương đã tô cỏ từng zone; `c.T(x, z)` → điểm ảnh, `c.px`, `c.half` = nửa cạnh bàn = 5.95; không có `cw`/`ch`). `draw(pen, c)` bút ở tâm bàn theo trục thế giới; `c.toWorld(u, v)` đổi toạ độ zone (u dọc cạnh, v từ tâm ra cạnh của zone) sang thế giới. `core(pen, c)` vẽ vật ở tâm (ví dụ đài phun).
+
+- **`draw` luôn gọi đúng 4 lần**, `c.side` = 0…3, kể cả khi `zones: null` (khi đó `c.zone === null`, nên không được đọc `c.zone.id`). Mỗi lần ứng với một phần tư bàn (tam giác từ tâm tới cạnh `side`); `toWorld` đổi toạ độ phần tư đó sang thế giới.
+- Skin **không zone** muốn vẽ một lần: hoặc đặt vật vào `core` (gọi đúng 1 lần, nên làm vậy cho vật ở tâm), hoặc `draw(pen, c) { if (c.side !== 0) return; … }`. Nếu vẽ cả 4 lần cùng một vật, nó bị chồng 4 lần (viền đậm lên, tốn thời gian nướng).
+- `c.add(x, z, fn, d?)`: đẩy một vật vào **danh sách vẽ theo chiều sâu chung** của cả 4 lần `draw` và `core`. `x`, `z` là toạ độ **thế giới** (dùng `toWorld` trước), `fn(pen)` vẽ vật (bút vẫn ở tâm bàn, truyền toạ độ thế giới cho `fn`), `d` (mặc định 0) cộng vào khoá sắp xếp `x + z + d`. Sau 4 lần `draw` khung xương mới xếp và vẽ danh sách (sau `core` cũng vào danh sách tại (0, 0)). Vẽ trực tiếp bằng `pen` thì ra ngay, **nằm dưới** mọi vật qua `c.add`. Tương đương `c.layer()` ở các slot khác.
+- **Cửa sổ nướng cố định**: ảnh `center` nướng một lần trong khung 18.8 × 12.4 đơn vị màn hình (L −9.4 … R 9.4, dưới −5.2, trên 7.2), gốc là tâm bàn, độ phân giải = 0.72 × `k` của mức chất lượng. Đơn vị là màn hình chứ không phải toạ độ thế giới; phần ngoài khung bị cắt. Đổi: `sx/k = (x − z)·0.707`, `sy/k = (x + z)·0.354 − y·0.866`. Bàn rộng ±5.95 (góc trái / phải chạm ±8.41, góc xa −4.2, góc gần +4.2), nên còn dư khoảng 1 đơn vị ở trái / phải / dưới và vật có thể cao tới khoảng y = 3.5 ở góc xa. Bảng cửa sổ của slot ô: `PEN.md`.
 
 Kết quả `draw` được **nướng thành ảnh một lần** cho mỗi tổ hợp (slot, ô, level, màu) rồi dùng lại; vì vậy `draw` phải thuần, không đọc thời gian hay biến toàn cục.
 
