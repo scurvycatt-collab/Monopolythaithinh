@@ -91,4 +91,5 @@ function checkKit(v, s, err, packs) {
     });
   });
   if (v.heights !== undefined && (!Array.isArray(v.heights) || v.heights.length !== n)) err(`slots.${s}.heights`, `phải có ${n} số.`);
+  if (v.bright !== undefined && !(Number.isFinite(v.bright) && v.bright > 0 && v.bright <= 1.25)) err(`slots.${s}.bright`, 'phải là số trong (0, 1.25].');
 }

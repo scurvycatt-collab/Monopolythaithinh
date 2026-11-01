@@ -62,6 +62,7 @@ export default defineSkin({
 | `ground` | mặt cỏ / mặt ô mặc định |
 | `priceStrip`, `priceText` | dải giá phía gần camera |
 | `labelText`, `labelShadow` | chữ tên ô |
+| `rentText`, `rentShadow` | số tiền thuê trên dải giá ô đã có chủ (mặc định trắng, bóng tối) |
 | `boardSide`, `boardSideDark` | thành đế bàn |
 | `water`, `sand` | dùng bởi slot mặc định |
 

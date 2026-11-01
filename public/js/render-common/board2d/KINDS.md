@@ -17,6 +17,7 @@ house: { kind: 'kit', levels: [ /* 5 cấp 0–4 */ [[0, 0, ['128']]], [[0, 0, [
 |---|---|---|---|
 | `levels` | mảng 5 (`house`) / 4 (`resortHouse`) cấp | bắt buộc | mỗi cấp là mảng chồng khối, xem dưới |
 | `wall` | `'zone'` \| `'#hex'` | trắng (`#ffffff`) | màu tường; `'zone'` = `zone.wall` (không có zone / thiếu `wall` → trắng) |
+| `bright` | số (0, 1.25] | `0.8` | hệ số sáng tường sau khi tô `wall`; `wall: '#ffffff'` + `bright: 0.8` ra xám ~204. Tăng (ví dụ `1`) cho tường sáng hơn |
 | `snow` | `'zone'` \| `true` \| `false` | `false` | phủ tuyết nửa trên mái |
 | `heights` | mảng 5 (`house`) / 4 (`resortHouse`) số | `[0.1, 0.6, 0.95, 1.3, 2.1]` (`resortHouse` dùng 4 số đầu) | chiều cao khối theo cấp (đơn vị thế giới), dùng cho bóng đổ và `signY` mặc định của `resortHouse`; sai độ dài → lỗi lúc tải |
 | `sign` | `string` \| `false` | `labels.hotel` (`house`, mặc định `HOTEL`) / `labels.resort` (`resortHouse`, mặc định `RESORT`) | chữ biển trên nóc, chỉ ở cấp 4; `false` ẩn biển và 2 cờ |
