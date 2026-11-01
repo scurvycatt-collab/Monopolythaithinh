@@ -68,4 +68,4 @@ Những chỗ khung xương hiện cản bản neon đẹp hơn (đề xuất ch
 10. (T12) `kind` nhà không cho kích thước chân đế / mái phẳng / cửa sổ sáng theo tầng: nhà neon phải dùng `draw` thuần nên mất cờ cấp 0, biển cấp 4 và hai cờ tự có của `kit`; tự vẽ lại. Cần hoặc `kit` hỗ trợ mảnh tối + cửa sổ phát sáng, hoặc `kind: 'tower'` (mô-đun xếp tầng, lưới cửa sổ, biển dọc).
 
 ## Màu chủ (T12)
-`OWNER_MODE` trong skin.js: `base` (mặc định) = nền dưới nhà/resort sáng rực màu chủ; `tint` = bảng hologram, tháp phụ, viền góc nhuốm màu chủ. Màu luôn lấy từ `c.color`.
+Màu chủ (T12): gộp base + tint, giảm 5% (OWN=0.95); không còn công tắc. Pad dưới nhà/resort + hologram, tháp phụ, viền neon dọc, viền kính nhuốm màu chủ. Màu luôn lấy từ `c.color`.
