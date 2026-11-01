@@ -173,7 +173,14 @@
   const MAPS = [
     { id: 'map-1', name: 'Map 1', description: 'Bản đồ Thái Thịnh mặc định', preview: 'maps/map-1/preview.svg', renderer: 'maps/map-1/renderer.js', default: true },
     { id: 'four-seasons', name: 'Bốn Mùa Hà Nội', description: 'Hà Nội qua bốn mùa: Xuân, Hạ, Thu, Đông. Hội chợ bốn mùa và đài phun nước giữa bàn. Bàn 2D nhẹ, hợp máy yếu.', preview: 'maps/four-seasons/preview.svg', renderer: 'maps/four-seasons/renderer.js', tileNames: HANOI_TILE_NAMES },
-    { id: 'neon', name: 'Lumina-01', description: 'Đại đô thị neon lúc nửa đêm sau mưa: Back Alley, Nightlife, Cyber Financial, Megacorp HQ. Lõi năng lượng giữa bàn. Bàn 2D.', preview: 'maps/neon/preview.svg', renderer: 'maps/neon/renderer.js', tileNames: NEON_TILE_NAMES },
+    { id: 'neon', name: 'Lumina-01', description: 'Đại đô thị neon lúc nửa đêm sau mưa: Back Alley, Nightlife, Cyber Financial, Megacorp HQ. Lõi năng lượng giữa bàn. Bàn 2D.', preview: 'maps/neon/preview.svg', renderer: 'maps/neon/renderer.js', tileNames: NEON_TILE_NAMES,
+      // T25: 4 nhân vật riêng của Lumina-01 (SVG vẽ bằng code, xem maps/neon/assets/pets/build-pets.mjs)
+      pets: [
+        { id: 'neon-runner', n: 'Hacker', c: '#ff2fa0', img: 'maps/neon/assets/pets/neon-runner-avatar.png', tokenImg: 'maps/neon/assets/pets/neon-runner-token.svg' },
+        { id: 'neon-courier', n: 'Shipper', c: '#3d7bff', img: 'maps/neon/assets/pets/neon-courier-avatar.png', tokenImg: 'maps/neon/assets/pets/neon-courier-token.svg' },
+        { id: 'neon-cat', n: 'Mèo Chrome', c: '#9dff2e', img: 'maps/neon/assets/pets/neon-cat-avatar.png', tokenImg: 'maps/neon/assets/pets/neon-cat-token.svg' },
+        { id: 'neon-drone', n: 'Drone', c: '#ff9f1a', img: 'maps/neon/assets/pets/neon-drone-avatar.png', tokenImg: 'maps/neon/assets/pets/neon-drone-token.svg' },
+      ] },
   ];
 
   /* ===================== LỚP 2 — SƠ ĐỒ TRẠNG THÁI ===================== */
