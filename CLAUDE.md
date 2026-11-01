@@ -47,6 +47,10 @@ Cần biết hàm X nằm đâu: `grep -n "function X" public/js/*.js` rồi đ�
 7. Asset: chỉ Kenney CC0 hoặc dựng bằng code. Không dùng asset gốc Business Tour.
 8. Server luôn là trọng tài: client và renderer không tự đổi `state`.
 
+## Agent theo vai
+
+Định nghĩa trong `.claude/agents/` (render, render-heavy, map-skin, game, qa, docs): model, effort, file được đọc/sửa. Điều phối: `docs/LEAD.md`.
+
 ## Trạng thái
 
 Trạng thái ngắn và việc đang làm: `docs/HANDOFF.md`. Lịch sử thay đổi: `docs/CHANGELOG.md`.
