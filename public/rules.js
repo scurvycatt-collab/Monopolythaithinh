@@ -181,6 +181,7 @@
         { id: 'neon-seraphina', n: 'Seraphina', c: '#ff2fd2', img: 'maps/neon/assets/pets/neon-seraphina-avatar.png', tokenImg: 'maps/neon/assets/pets/neon-seraphina-token.svg' },
         { id: 'neon-k9000', n: 'K-9000', c: '#a4ff1c', img: 'maps/neon/assets/pets/neon-k9000-avatar.png', tokenImg: 'maps/neon/assets/pets/neon-k9000-token.svg' },
       ] },
+    { id: 'isometric', name: 'Isometric', description: 'Thành phố khối Kenney, đảo nhiệt đới, sân bay giữa bàn', preview: 'maps/isometric/preview.svg', renderer: 'maps/isometric/renderer.js' },
   ];
 
   /* ===================== LỚP 2 — SƠ ĐỒ TRẠNG THÁI ===================== */
