@@ -118,9 +118,18 @@
   const byId = (s, id) => s.players.find((p) => p.id === id);
   const alive = (s) => s.players.filter((p) => !p.bankrupt);
   function ensureHost(s) {
-    // Đồng bộ màu theo nhân vật để các room/file lưu từ phiên bản cũ cũng nhận bảng màu mới.
+    // Nâng cấp room/file cũ khi một map hoặc bộ nhân vật đã bị gỡ khỏi phiên bản hiện tại.
+    if (!s.settings || !MAPS.some((map) => map.id === s.settings.mapId)) {
+      s.settings = Object.assign({}, s.settings, { mapId: MAPS[0].id });
+    }
     const pets = petsForState(s);
-    s.players.forEach((p) => { const pet = pets.find((x) => x.id === p.pet); if (pet) p.color = pet.c; if (typeof p.ready !== 'boolean') p.ready = !!p.bot; });
+    const usedPets = new Set();
+    s.players.forEach((p) => {
+      let pet = pets.find((x) => x.id === p.pet && !usedPets.has(x.id));
+      if (!pet) pet = pets.find((x) => !usedPets.has(x.id)) || pets[0];
+      if (pet) { p.pet = pet.id; p.color = pet.c; usedPets.add(pet.id); }
+      if (typeof p.ready !== 'boolean') p.ready = !!p.bot;
+    });
     const host = s.hostId && byId(s, s.hostId);
     if (!host || host.bot) s.hostId = (s.players.find((p) => !p.bot) || {}).id || null;
     return s.hostId;

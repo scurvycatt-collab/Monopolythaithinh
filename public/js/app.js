@@ -263,20 +263,15 @@ function showDiceSum(n, dbl) {
 
 // Thumbnail công trình được sinh sẵn khi build và phục vụ như asset tĩnh. Không dựng
 // WebGL/toDataURL mỗi lần vào game; browser/CDN có thể cache trực tiếp các PNG này.
-const propertyThumbnail = (kind, level, color, pet = '', mapId = S && S.settings && S.settings.mapId) => {
-  if ((mapId === 'ben-10' || mapId === 'ben-10-02') && kind === 'city' && /^ben10-(?:02-)?(ben|gwen|kevin|max|rook)$/.test(pet)) {
-    return `maps/${mapId}/assets/buildings/${pet}-${level}.png?v=1`;
-  }
-  return `thumbnails/property/${kind}-${String(color || '#9aa4b1').replace('#', '').toLowerCase()}-${level}.png?v=${PROPERTY_THUMBNAIL_VERSION.slice(0, 12)}`;
-};
+const propertyThumbnail = (kind, level, color) => `thumbnails/property/${kind}-${String(color || '#9aa4b1').replace('#', '').toLowerCase()}-${level}.png?v=${PROPERTY_THUMBNAIL_VERSION.slice(0, 12)}`;
 // Ảnh popup là file tĩnh đã sinh ở build-time. Khi người chơi thực sự vào một map, nạp và giải mã
 // đúng bộ thumbnail của map đó một lần để lần mở popup đầu tiên không còn chờ mạng/giải mã ảnh.
 // Trang chủ không gọi hàm này nên vẫn không tải asset của map trước khi vào phòng.
 async function preloadMapPropertyThumbnails(mapId) {
   const urls = new Set();
   for (const pet of G.petsForMap(mapId)) {
-    for (let level = 0; level <= 4; level++) urls.add(propertyThumbnail('city', level, pet.c, pet.id, mapId));
-    for (let level = 1; level <= 4; level++) urls.add(propertyThumbnail('resort', level, pet.c, pet.id, mapId));
+    for (let level = 0; level <= 4; level++) urls.add(propertyThumbnail('city', level, pet.c));
+    for (let level = 1; level <= 4; level++) urls.add(propertyThumbnail('resort', level, pet.c));
   }
   await Promise.allSettled([...urls].map((src) => new Promise((resolve) => {
     const image = new Image();
@@ -517,7 +512,7 @@ function renderModal() {
     if (!choosable.includes(pickLevel) || !can(pickLevel)) pickLevel = choosable.filter(can).pop() ?? choosable[0];
     const NAMES = G.LEVEL_NAMES;
     const bl = resort ? Math.min(4, beachLevel(p.id) + 1) : 0;
-    const imageUrl = (l) => propertyThumbnail(resort ? 'resort' : 'city', resort ? bl : l, col, p.pet);
+    const imageUrl = (l) => propertyThumbnail(resort ? 'resort' : 'city', resort ? bl : l, col);
     const rentAt = (l) => (resort ? CFG.RESORT_TOLL[bl] : G.toll(i, l));
     const card = (l) => {
       const built = st.kind === 'upgrade' && l <= cur, on = built || (l <= pickLevel && (choosable.includes(l) || l === 0 || (st.kind === 'buy'))), lock = built || !can(l);
@@ -538,7 +533,7 @@ function renderModal() {
     $('#yes').onclick = (e) => act(st.kind, { level: pickLevel }, e.currentTarget);
   } else if (st.kind === 'takeover') {
     const pr = S.props[st.tile], owner = G.byId(S, pr.owner);
-    const imageUrl = propertyThumbnail('city', pr.level, seatOf[owner.id].color, owner.pet);
+    const imageUrl = propertyThumbnail('city', pr.level, seatOf[owner.id].color);
     m.innerHTML = sheet('#f5a20a', 'Mua lại?', `${esc(tileName(st.tile))} của ${esc(owner.name)}`, `<div class="tinfo"><div class="pic"><img alt="" src="${imageUrl}"></div><div>
       <p style="margin:2px 0 6px">Nhận luôn <b>${G.LEVEL_NAMES[pr.level]}</b></p>
       <div class="kv"><span>Giá mua lại</span><b>${money(st.price)}</b></div><div class="kv"><span>Bạn có</span><b>${money(p.money)}</b></div>
@@ -676,7 +671,7 @@ function showInfo(i) {
     const rows = [0, 1, 2, 3, 4].map((l) => `<tr class="${l === lv ? 'cur' : ''}"><td><span class="ck">${l <= lv ? '✓' : ''}</span>${G.LEVEL_NAMES[l]}</td>
       <td>${money(G.value(i, l))}</td><td>${money(G.toll(i, l))}</td><td>${money(G.value(i, l) * CFG.SELL_MULT)}</td></tr>`).join('');
     if (pr && G.ownsGroup(S, pr.owner, t.group)) notes.push(`Độc quyền nhóm ${GROUPS[t.group].name}: tiền thuê x${CFG.MONOPOLY_MULT}`);
-    const citySnapshot = propertyThumbnail('city', Math.max(0, lv), hex, owner && owner.pet);
+    const citySnapshot = propertyThumbnail('city', Math.max(0, lv), hex);
     body = `<div class="tinfo"><div class="pic"><img alt="" src="${citySnapshot}"></div><div>
       <table class="lvl"><thead><tr><th>Công trình</th><th>Giá theo cấp</th><th>Tiền thuê</th><th>Bán ngân hàng</th></tr></thead><tbody>${rows}</tbody></table>
       ${pr ? `<div class="kv"><span>Tiền thuê hiện tại</span><b>${money(G.rentOf(S, i))}</b></div>

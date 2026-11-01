@@ -49,8 +49,7 @@ có thay đổi bản đồ.
 - Khi thêm nhà, cấp nhà, màu hoặc model: cập nhật generator, chạy `npm run thumbnails`, rồi
   commit cả asset sinh ra và manifest/hash tương ứng.
 - Map có bộ công trình riêng theo nhân vật phải đưa `pet` của chủ vào chữ ký cache sprite, sinh đủ thumbnail
-  cho từng `pet × cấp`, và route popup tới đúng thư mục map. Hai skin Ben 10 dùng `npm run ben10:buildings`
-  để tạo và kiểm tra 20 PNG cho mỗi skin trước khi commit.
+  cho từng `pet × cấp`, route popup tới đúng thư mục map và có lệnh generator/check riêng trước khi commit.
 - Chỉ dùng asset CC0 hoặc tự dựng; ghi nguồn trong README của map.
 
 ## 5. Tải và hiệu năng

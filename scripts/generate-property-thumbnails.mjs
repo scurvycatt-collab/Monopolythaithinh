@@ -223,6 +223,9 @@ async function generate() {
     assert.equal(images.properties.length, expected.length, 'Số thumbnail trình duyệt tạo ra không đúng');
     assert.equal(images.statics.length, staticExpected.length, 'Số asset tĩnh trình duyệt tạo ra không đúng');
     fs.mkdirSync(OUT, { recursive: true }); fs.mkdirSync(STATIC_OUT, { recursive: true });
+    // Manifest là nguồn chuẩn: loại asset sinh từ màu/map đã bị gỡ để chúng không còn được deploy.
+    for (const file of fs.readdirSync(OUT)) if (file.endsWith('.png') && !expected.includes(file)) fs.rmSync(path.join(OUT, file));
+    for (const file of fs.readdirSync(STATIC_OUT)) if (file.endsWith('.png') && !staticExpected.includes(file)) fs.rmSync(path.join(STATIC_OUT, file));
     images.properties.forEach(({ file, data }) => { assert.ok(expected.includes(file)); fs.writeFileSync(path.join(OUT, file), Buffer.from(data, 'base64')); });
     images.statics.forEach(({ file, data }) => { assert.ok(staticExpected.includes(file)); fs.writeFileSync(path.join(STATIC_OUT, file), Buffer.from(data, 'base64')); });
     const runtimeCheck = await send('Runtime.evaluate', {
