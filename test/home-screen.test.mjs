@@ -204,7 +204,8 @@ assert.match(app, /fetch\(roomEndpoint\(location\.href, 'api\/watch', room\)/, '
 assert.match(app, /loadMapId = mapEntry\(result\.mapId\)\.id/, 'an existing room must load its selected map directly without first building Map 1');
 assert.match(app, /await prepareBoard\(loadMapId\)/, 'room entry must build exactly the resolved room map');
 assert.match(app, /pendingJoinName && !me && d\.state\.players\.length === 0[\s\S]*autoJoinRoom\(d\.state\); return/, 'new rooms must not briefly replace their selected map with the empty default room map');
-assert.match(app, /me = watch \? null : loadMe\(\)/, 'spectator mode must not authenticate with a saved player token');
+assert.match(app, /me = watch \|\| create \? null : loadMe\(\)/, "spectator and fresh room creation must not authenticate with a saved player token");
+assert.match(app, /api\/watch[\s\S]{0,200}bản đồ do chủ phòng chọn/, "creating over an existing room must warn instead of silently keeping the host map");
 assert.match(app, /WATCH_MODE \? \{ viewer: lobbyDraftName \} : \{\}/, 'spectator SSE must carry its username without a player token');
 assert.match(app, /Thoát đảo\$\{p\.escapeCards > 1 \? ' ×' \+ p\.escapeCards : ''\}/, 'player card must show stacked escape-card quantity');
 assert.match(app, /vipUsed: \(mine, n, x\) =>/, 'using a VIP rent shield must show a full-screen notice');
