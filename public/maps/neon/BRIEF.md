@@ -8,7 +8,7 @@ Trung tâm một đại đô thị lúc nửa đêm sau mưa: mặt đường đ
 ## 2. Bảng màu
 | Vai | Màu | Hex |
 |---|---|---|
-| Nền (Dark Charcoal / Midnight / Obsidian) | mặt ô theo cạnh | `#141a1c` `#1a1230` `#0e1a2c` `#15120c` |
+| Nền chung (T12) | mặt ô, tâm bàn, mặt bàn: navy đặc, phẳng, không lưới / mạch | `#0d1932` (Chance `#150f33`, Tax `#0c2030`, Resort `#0b1630`) |
 | Đế bàn / thành | obsidian | `#0b0f1c` `#070a14` `#121a2e` |
 | Neon cyan | công nghệ, dữ liệu, viền bàn | `#27e6ff` |
 | Neon magenta | giải trí, may rủi (Data Cube) | `#ff3fb4` |
@@ -17,10 +17,10 @@ Trung tâm một đại đô thị lúc nửa đêm sau mưa: mặt đường đ
 | Cảnh báo | Firewall | `#ff3b4e` |
 | Portal | Warp Gate | `#9b6bff` |
 Nhóm đất A…H: `#e8742a` rỉ cam, `#2fb87a` lục tối (Back Alley); `#ff3fb4`, `#9b6bff` (Nightlife); `#27e6ff`, `#3d7bff` (Cyber Financial); `#d9a521`, `#ffe14d` (Megacorp). Chữ giá thuê tối `#0a0e1a` vì dải nhóm đều sáng.
-Màu người chơi giữ nguyên từ game (mái, cờ, bệ neon dưới nhà).
+Màu người chơi lấy từ game (palette neon mới T25); xem mục Màu chủ.
 
 ## 3. Vật liệu, ánh sáng, mật độ
-- Vật liệu: khối Kenney tường tối (kit `wall` theo zone + `bright 0.9`), mái màu chủ; đế kim loại tối; mặt ô là lưới mờ + mạch điện (Circuit Traces) vẽ ngẫu nhiên lặp lại được theo `seed`.
+- Vật liệu: khối Kenney tường tối (kit `wall` theo zone + `bright 0.9`), mái màu chủ; đế kim loại tối; mặt ô là navy đặc `#0d1932`, phẳng (T12 bỏ lưới và mạch điện cho dịu mắt; chỉ giữ viền ô, dải giá, vòng đồng tâm ô góc).
 - Ánh sáng: không có đèn thật. Neon = nét sáng + `shadowBlur` trên `pen.ctx`, **nướng sẵn vào sprite** (lõi trắng, quầng màu). Mỗi nhà có bệ neon màu chủ ("mạch thắp sáng ô").
 - Mật độ: vừa. Mỗi ô đất ≤ ~6 nét neon; ô góc và trung tâm dày hơn; ô trống chỉ một cột đèn + thùng máy.
 
@@ -67,5 +67,5 @@ Những chỗ khung xương hiện cản bản neon đẹp hơn (đề xuất ch
 9. **Sprite ô góc là ô vuông 3.1**: portal/laser cao dễ bị cắt ở mép trên cửa sổ nướng (−2.4…4.6).
 10. (T12) `kind` nhà không cho kích thước chân đế / mái phẳng / cửa sổ sáng theo tầng: nhà neon phải dùng `draw` thuần nên mất cờ cấp 0, biển cấp 4 và hai cờ tự có của `kit`; tự vẽ lại. Cần hoặc `kit` hỗ trợ mảnh tối + cửa sổ phát sáng, hoặc `kind: 'tower'` (mô-đun xếp tầng, lưới cửa sổ, biển dọc).
 
-## Màu chủ (T12)
-Màu chủ (T12): gộp base + tint, giảm 5% (OWN=0.95); không còn công tắc. Pad dưới nhà/resort + hologram, tháp phụ, viền neon dọc, viền kính nhuốm màu chủ. Màu luôn lấy từ `c.color`.
+## Màu chủ (T12, chốt 02/11)
+Một chế độ duy nhất, gộp hai kiểu cũ: **bệ sáng** màu chủ dưới nhà / resort (hai lớp glow + vòng) và **nhuốm** (biển hologram, tháp phụ, viền neon dọc, viền kính, vòng đỉnh). Mọi độ sáng / alpha màu chủ nhân hệ số `OWN = 0.95` (giảm 5%): màu qua `mixHex(c.color, OWN)`, alpha bệ 0.38→0.361 và 0.72→0.684, hologram 0.28→0.266. Resort dùng quầng bệ thu nhỏ (`bl = 0.6`, bán kính 0.56) để không lem sang nhãn giá. Không còn công tắc `OWNER_MODE`. Màu luôn lấy từ `c.color`.

@@ -5,16 +5,16 @@ import { defineSkin } from '../../js/render-common/board2d/skin.js';
 
 const N = { cyan: '#27e6ff', mag: '#ff3fb4', lime: '#b6ff3c', gold: '#ffc83d', red: '#ff3b4e', violet: '#9b6bff', ink: '#070a14', steel: '#2a3350', steel2: '#39446a' };
 const Z = [   // 4 cạnh: 0 Back Alley · 1 Nightlife · 2 Cyber Financial · 3 Megacorp HQ
-  { id: 'alley', ground: '#141a1c', ground2: '#182022', ground3: '#1d2729', wall: '#8a6a52', acc: '#ff8a3d', particles: 'none' },
-  { id: 'night', ground: '#1a1230', ground2: '#20163c', ground3: '#271c48', wall: '#8a5a9c', acc: N.mag, particles: 'none' },
-  { id: 'fin', ground: '#0e1a2c', ground2: '#122238', ground3: '#162a44', wall: '#6f9ab8', acc: N.cyan, particles: 'none' },
-  { id: 'hq', ground: '#15120c', ground2: '#1b170e', ground3: '#221c10', wall: '#8c7a4a', acc: N.gold, particles: 'none' },
+  { id: 'alley', ground: '#0d1932', ground2: '#101d3a', ground3: '#13223f', wall: '#8a6a52', acc: '#ff8a3d', particles: 'none' },
+  { id: 'night', ground: '#0d1932', ground2: '#101d3a', ground3: '#13223f', wall: '#8a5a9c', acc: N.mag, particles: 'none' },
+  { id: 'fin', ground: '#0d1932', ground2: '#101d3a', ground3: '#13223f', wall: '#6f9ab8', acc: N.cyan, particles: 'none' },
+  { id: 'hq', ground: '#0d1932', ground2: '#101d3a', ground3: '#13223f', wall: '#8c7a4a', acc: N.gold, particles: 'none' },
 ];
 /* Màu chủ (gộp base + tint): mảng sáng màu chủ dưới nhà/resort + bảng hologram, tháp phụ, viền neon dọc, viền kính nhuốm màu chủ.
    Chế độ gộp giảm 5%: mọi độ sáng/alpha màu chủ nhân 0.95 (OWN) — màu qua mixHex(c.color, 0.95), alpha pad 0.38→0.361 và 0.72→0.684, viền kính 0.6→0.57, tấm hologram 0.28→0.266, nền bãi trống 0.45/0.7→0.4275/0.665, đế 0.45/0.8→0.4275/0.76. */
 const OWN = 0.95;
 const mixHex = (h, k) => '#' + [1, 3, 5].map((i) => Math.round(parseInt(h.slice(i, i + 2), 16) * k).toString(16).padStart(2, '0')).join('');
-const zid = (c) => (c.zone ? c.zone : { acc: N.cyan, ground: '#0d1226' });
+const zid = (c) => (c.zone ? c.zone : { acc: N.cyan, ground: NAVY });
 
 /* ---------- glow: shadowBlur trên pen.ctx (nướng sẵn, không phải phát sáng thật) ---------- */
 function glow(p, col, blur, fn) { const g = p.ctx; g.save(); g.shadowColor = col; g.shadowBlur = p.k * blur; fn(g); g.restore(); }
@@ -25,19 +25,12 @@ function ring(p, x, y, z, r, col, w = 0.03, n = 40) { neon(p, Array.from({ lengt
 function slab(p, x, z, w, d, h, col) { p.box(x - w / 2, 0, z - d / 2, w, h, d, col, { edge: 'rgba(120,160,255,.18)' }); }
 function screen(p, x, y, z, w, h, col) { glow(p, col, 0.1, () => p.quadZ(z, x - w / 2, x + w / 2, y, y + h, col)); }
 
-/* ---------- mặt phẳng (texture điểm ảnh): nền tối + mạch điện ---------- */
-function circuit(g, c, x, y, w, h, seed, col, alpha = 0.4) {
-  const r = c.rng(seed + 3); g.save(); g.beginPath(); g.rect(x, y, w, h); g.clip();
-  g.strokeStyle = 'rgba(120,150,255,.07)'; g.lineWidth = 1; for (let i = 0; i <= w; i += 24) { g.beginPath(); g.moveTo(x + i, y); g.lineTo(x + i, y + h); g.stroke(); } for (let j = 0; j <= h; j += 24) { g.beginPath(); g.moveTo(x, y + j); g.lineTo(x + w, y + j); g.stroke(); }
-  g.strokeStyle = col; g.fillStyle = col; g.lineWidth = 2; g.lineJoin = 'round'; g.globalAlpha = alpha; g.shadowColor = col; g.shadowBlur = 6;
-  for (let t = 0; t < 5; t++) { let px = x + Math.floor(r() * (w / 24)) * 24, py = y + Math.floor(r() * (h / 24)) * 24; g.beginPath(); g.moveTo(px, py); for (let s = 0; s < 3 + Math.floor(r() * 3); s++) { if (r() < 0.5) px += (r() < 0.5 ? -1 : 1) * (1 + Math.floor(r() * 3)) * 24; else py += (r() < 0.5 ? -1 : 1) * (1 + Math.floor(r() * 3)) * 24; g.lineTo(px, py); } g.stroke(); g.beginPath(); g.arc(px, py, 4, 0, 7); g.fill(); }
-  g.restore();
-}
-function floor(g, c, col, acc, seed = c.seed) { g.fillStyle = col; g.fillRect(0, 0, c.cw, c.ch); circuit(g, c, 0, 0, c.cw, c.ch, seed, acc); }
-const tilePaint = (g, c) => { const z = zid(c); floor(g, c, z.ground, z.acc); g.strokeStyle = 'rgba(0,0,0,.45)'; g.lineWidth = 4; g.strokeRect(2, 2, c.cw - 4, c.ch - 4); };
+/* ---------- mặt phẳng: nền xanh navy đặc, phẳng (T12: bỏ lưới + mạch điện cho dịu mắt) ---------- */
+const NAVY = '#0d1932';
+function floor(g, c, col) { g.fillStyle = col; g.fillRect(0, 0, c.cw, c.ch); }
+const tilePaint = (g, c) => { const z = zid(c); floor(g, c, z.ground); g.strokeStyle = 'rgba(0,0,0,.45)'; g.lineWidth = 4; g.strokeRect(2, 2, c.cw - 4, c.ch - 4); };
 const cornerPaint = (a, b, ring2) => (g, c) => {
   const gr = g.createRadialGradient(c.cw / 2, c.ch / 2, 10, c.cw / 2, c.ch / 2, c.cw * 0.72); gr.addColorStop(0, b); gr.addColorStop(1, a); g.fillStyle = gr; g.fillRect(0, 0, c.cw, c.ch);
-  circuit(g, c, 0, 0, c.cw, c.ch, c.seed + 11, ring2, 0.5);
   g.save(); g.strokeStyle = ring2; g.globalAlpha = 0.55; g.shadowColor = ring2; g.shadowBlur = 8; g.lineWidth = 3; for (let i = 1; i <= 3; i++) { g.strokeRect(c.cw * (0.5 - i * 0.14), c.ch * (0.5 - i * 0.14), c.cw * i * 0.28, c.ch * i * 0.28); } g.restore();
 };
 
@@ -222,18 +215,18 @@ export default defineSkin({
   palette: {
     // A rỉ cam · B lục tối (Back Alley) · C magenta · D tím (Nightlife) · E cyan · F xanh điện (Cyber Financial) · G vàng đậm · H vàng sáng (Megacorp)
     groups: { A: '#e8742a', B: '#2fb87a', C: '#ff3fb4', D: '#9b6bff', E: '#27e6ff', F: '#3d7bff', G: '#d9a521', H: '#ffe14d' },
-    ground: '#0e1a2c', priceStrip: '#080b18', priceText: '#6fe9ff', labelText: '#eaf6ff', labelShadow: '#000000', rentText: '#0a0e1a', rentShadow: '#ffffff',
-    boardSide: '#0b0f1c', boardSideDark: '#070a14', boardTop: '#121a2e', tileSide: '#222d4a', tileSideDark: '#141c32', water: '#0d1226', sand: '#1a2038', gold: N.cyan,
+    ground: '#0d1932', priceStrip: '#080b18', priceText: '#6fe9ff', labelText: '#eaf6ff', labelShadow: '#000000', rentText: '#0a0e1a', rentShadow: '#ffffff',
+    boardSide: '#0b0f1c', boardSideDark: '#070a14', boardTop: '#0d1932', tileSide: '#222d4a', tileSideDark: '#141c32', water: '#0d1932', sand: '#13223f', gold: N.cyan,
   },
   zones: Z,
   slots: {
     tile: { paint: tilePaint },
     deco: { draw: deco },
     house: { draw: houseDraw },
-    resort: { paint: (g, c) => floor(g, c, '#0c1428', N.cyan, c.seed + 1), draw: chargePad },
+    resort: { paint: (g, c) => floor(g, c, '#0b1630'), draw: chargePad },
     resortHouse: { draw: chargeHub },
-    chance: { paint: (g, c) => floor(g, c, '#1b0f2e', N.mag), draw: dataCube },
-    tax: { paint: (g, c) => floor(g, c, '#0f1c12', N.lime), draw: taxTerminal },
+    chance: { paint: (g, c) => floor(g, c, '#150f33'), draw: dataCube },
+    tax: { paint: (g, c) => floor(g, c, '#0c2030'), draw: taxTerminal },
     start: { paint: cornerPaint('#0a1a10', '#16301c', N.lime), label: false, draw: named(powerGrid, 'START', N.lime) },
     island: { paint: cornerPaint('#1c0a10', '#321018', N.red), label: false, side: ['#3a1018', '#24090e'], draw: named(firewall, 'FIREWALL', N.red) },
     festival: { paint: cornerPaint('#150a24', '#2a1244', N.mag), label: false, draw: named(arcade, 'NEON ARCADE', N.mag) },
