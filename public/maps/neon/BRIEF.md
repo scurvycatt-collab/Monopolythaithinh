@@ -66,3 +66,6 @@ Những chỗ khung xương hiện cản bản neon đẹp hơn (đề xuất ch
 8. **Chữ**: font ô lấy từ khung xương, không có font digital/LED hay chữ Hán/Katakana; chữ nhỏ trên ô thường khó đọc ở `low`.
 9. **Sprite ô góc là ô vuông 3.1**: portal/laser cao dễ bị cắt ở mép trên cửa sổ nướng (−2.4…4.6).
 10. (T12) `kind` nhà không cho kích thước chân đế / mái phẳng / cửa sổ sáng theo tầng: nhà neon phải dùng `draw` thuần nên mất cờ cấp 0, biển cấp 4 và hai cờ tự có của `kit`; tự vẽ lại. Cần hoặc `kit` hỗ trợ mảnh tối + cửa sổ phát sáng, hoặc `kind: 'tower'` (mô-đun xếp tầng, lưới cửa sổ, biển dọc).
+
+## Màu chủ (T12)
+`OWNER_MODE` trong skin.js: `base` (mặc định) = nền dưới nhà/resort sáng rực màu chủ; `tint` = bảng hologram, tháp phụ, viền góc nhuốm màu chủ. Màu luôn lấy từ `c.color`.

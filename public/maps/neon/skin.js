@@ -10,6 +10,10 @@ const Z = [   // 4 cạnh: 0 Back Alley · 1 Nightlife · 2 Cyber Financial · 3
   { id: 'fin', ground: '#0e1a2c', ground2: '#122238', ground3: '#162a44', wall: '#6f9ab8', acc: N.cyan, particles: 'none' },
   { id: 'hq', ground: '#15120c', ground2: '#1b170e', ground3: '#221c10', wall: '#8c7a4a', acc: N.gold, particles: 'none' },
 ];
+/* Cách hiện màu chủ: 'base' = nền dưới nhà sáng rực màu chủ (tháp giữ cyan/magenta/vàng); 'tint' = bảng hologram, tháp phụ, viền neon góc, vòng mái nhuốm màu chủ (đế như cũ). */
+const OWNER_MODE = 'base';
+const TINT = OWNER_MODE === 'tint';
+const mixHex = (h, k) => '#' + [1, 3, 5].map((i) => Math.round(parseInt(h.slice(i, i + 2), 16) * k).toString(16).padStart(2, '0')).join('');
 const zid = (c) => (c.zone ? c.zone : { acc: N.cyan, ground: '#0d1226' });
 
 /* ---------- glow: shadowBlur trên pen.ctx (nướng sẵn, không phải phát sáng thật) ---------- */
@@ -98,7 +102,7 @@ function chargePad(p, c) {   // resort chưa mua: bệ sạc
   for (let i = 0; i < 3; i++) { const x = (i - 1) * 0.3; p.box(x - 0.08, 0.08, z - 0.1, 0.16, 0.3, 0.2, '#16223a', { edge: null }); neon(p, [[x, 0.14, z + 0.101], [x, 0.34, z + 0.101]], N.lime, 0.03, 0.08); }
 }
 function chargeHub(p, c) {   // resort đã mua: n trụ pin màu chủ trên bệ
-  const z = c.gz, n = c.level, col = c.color; p.ellipseShadow(0, z, 0.8, 0.2); p.cyl(0, 0, z, 0.72, 0.1, N.steel); ring(p, 0, 0.11, z, 0.62, col, 0.035);
+  const z = c.gz, n = c.level, col = c.color; if (!TINT) ownerPad(p, z, col, 0.78); p.ellipseShadow(0, z, 0.8, 0.2); p.cyl(0, 0, z, 0.72, 0.1, N.steel); ring(p, 0, 0.11, z, 0.62, col, 0.035);
   const P = [[-0.35, -0.2], [0.35, -0.2], [-0.35, 0.3], [0.35, 0.3]];
   for (let i = 0; i < n; i++) { const [dx, dz] = P[i], h = 0.45 + i * 0.12; p.cyl(dx, 0.1, z + dz, 0.12, h, '#16223a'); glow(p, col, 0.16, () => p.cyl(dx, 0.1 + h, z + dz, 0.12, 0.05, col)); neon(p, [[dx, 0.2, z + dz + 0.121], [dx, h, z + dz + 0.121]], col, 0.03, 0.08); }
   if (n === 4) neon(p, [[-0.35, 1.05, z - 0.2], [0.35, 1.05, z - 0.2], [0.35, 1.05, z + 0.3], [-0.35, 1.05, z + 0.3], [-0.35, 1.05, z - 0.2]], col, 0.02);
@@ -123,10 +127,15 @@ function block(p, x, y, z, w, h, d, col, r, o = {}) {   // hộp + cửa sổ tr
 function antenna(p, x, y, z, h, col = N.red) { p.box(x - 0.012, y, z - 0.012, 0.024, h, 0.024, '#9aa6c8', { edge: null }); p.box(x - 0.07, y + h * 0.55, z - 0.01, 0.14, 0.014, 0.02, '#9aa6c8', { edge: null }); glow(p, col, 0.2, () => p.ball(x, y + h + 0.02, z, 0.03, col)); }
 function dish(p, x, y, z) { p.cyl(x, y, z, 0.018, 0.1, N.steel2); p.rbox(x, y + 0.1, z, 0.2, 0.035, 0.2, '#c9d2ea', 0.7, 0.8); }
 function vent(p, x, y, z, w = 0.16, d = 0.12) { p.box(x, y, z, w, 0.09, d, '#1f263c', { edge: null }); for (let i = 0; i < 3; i++) Q(p, 'z', z + d + 0.002, x + 0.02 + i * (w / 3), x + 0.02 + i * (w / 3) + w / 6, y + 0.03, y + 0.07, '#0a0e1c'); }
+function ownerPad(p, z, col, r0 = 0.62) {   // chế độ 'base': mảng sáng đặc màu chủ trải ra ô quanh chân nhà (nhìn rõ từ xa)
+  glow(p, col, 0.5, () => p.flatEllipse(0, 0.003, z, r0 + 0.3, r0 + 0.3, hexA(col, 0.38)));
+  glow(p, col, 0.3, () => p.flatEllipse(0, 0.004, z, r0 + 0.1, r0 + 0.1, hexA(col, 0.72)));
+  ring(p, 0, 0.012, z, r0 + 0.2, col, 0.04, 36);
+}
 function ownerBand(p, x0, z0, x1, z1, y, col) { neonLoop(p, x0, z0, x1, z1, y, col, 0.026, 0.14); }
 function lot(p, c, extra) {   // cấp 0: bãi đất trống, cờ neon màu chủ
   const gz = c.gz, col = c.color;
-  p.box(-0.5, 0, gz - 0.5, 1, 0.04, 1, '#222a3e', { top: '#2a3350', edge: 'rgba(150,180,255,.2)' });
+  p.box(-0.5, 0, gz - 0.5, 1, 0.04, 1, TINT ? '#222a3e' : mixHex(col, 0.45), { top: TINT ? '#2a3350' : mixHex(col, 0.7), edge: 'rgba(150,180,255,.2)' });
   for (let i = 0; i < 5; i++) Q(p, 'z', gz + 0.502, -0.46 + i * 0.2, -0.46 + i * 0.2 + 0.09, 0.005, 0.035, i % 2 ? '#0b0f1c' : N.gold);
   neon(p, [[0.38, 0.04, gz - 0.38], [0.38, 0.72, gz - 0.38]], '#aab4d6', 0.02, 0.03);
   p.flag(0.38, gz - 0.38, 0.72, col); neonLoop(p, -0.5, gz - 0.5, 0.5, gz + 0.5, 0.045, col, 0.02, 0.1);
@@ -134,11 +143,13 @@ function lot(p, c, extra) {   // cấp 0: bãi đất trống, cờ neon màu ch
 }
 
 const WINB = ['#27e6ff', '#bff6ff', '#ffe14d', '#ff3fb4', '#7fd8ff'];
-function spire(p, x, z, w, d, h, r, col, steps = 0) {   // tháp kính, cửa sổ dày, viền neon dọc
-  block(p, x, 0, z, w, h, d, '#0f2a44', r, { cw: 0.07, ch: 0.1, lit: 0.72, cols: WINB, mx: 0.12, my: 0.18, y0: 0.08, edge: 'rgba(120,220,255,.35)' });
-  neon(p, [[x + w, 0.02, z + d], [x + w, h, z + d]], N.cyan, 0.02, 0.1);
+function spire(p, x, z, w, d, h, r, col, steps = 0) {
+  const ec = TINT ? col : N.cyan, eb = TINT ? hexA(col, 0.6) : 'rgba(120,220,255,.35)';   // tháp kính, cửa sổ dày, viền neon dọc
+  block(p, x, 0, z, w, h, d, '#0f2a44', r, { cw: 0.07, ch: 0.1, lit: 0.72, cols: WINB, mx: 0.12, my: 0.18, y0: 0.08, edge: eb });
+  neon(p, [[x + w, 0.02, z + d], [x + w, h, z + d]], ec, 0.02, 0.1);
+  if (TINT) { neon(p, [[x, 0.02, z + d], [x, h, z + d]], ec, 0.02, 0.1); neon(p, [[x + w, 0.02, z], [x + w, h, z]], ec, 0.02, 0.1); }
   let y = h, cx = x + w / 2, cz = z + d / 2, ww = w, dd = d;
-  for (let i = 0; i < steps; i++) { ww *= 0.72; dd *= 0.72; const hh = 0.28 + (steps - i) * 0.05; block(p, cx - ww / 2, y, cz - dd / 2, ww, hh, dd, '#0f2a44', r, { cw: 0.06, ch: 0.09, lit: 0.8, cols: WINB, y0: 0.04, edge: 'rgba(120,220,255,.35)' }); y += hh; }
+  for (let i = 0; i < steps; i++) { ww *= 0.72; dd *= 0.72; const hh = 0.28 + (steps - i) * 0.05; block(p, cx - ww / 2, y, cz - dd / 2, ww, hh, dd, '#0f2a44', r, { cw: 0.06, ch: 0.09, lit: 0.8, cols: WINB, y0: 0.04, edge: eb }); y += hh; }
   ownerBand(p, cx - ww / 2, cz - dd / 2, cx + ww / 2, cz + dd / 2, y + 0.012, col);
   return { y, cx, cz };
 }
@@ -147,19 +158,19 @@ function holo(p, x0, x1, y0, y1, z, col, r) {   // biển hologram nổi: tấm 
   glow(p, col, 0.12, () => { for (let y = y0 + 0.05; y < y1 - 0.07; y += 0.09) { const t = r(); if (t < 0.55) p.quadZ(z + 0.002, x0 + 0.04, x0 + 0.04 + (x1 - x0 - 0.08) * (0.4 + r() * 0.6), y, y + 0.025, col); else { p.quadZ(z + 0.002, x0 + 0.05, x0 + 0.07, y, y + 0.06, col); p.quadZ(z + 0.002, x1 - 0.07, x1 - 0.05, y, y + 0.06, col); } } p.line3([[x0, y0, z], [x1, y0, z], [x1, y1, z], [x0, y1, z], [x0, y0, z]], col, 0.014); });
 }
 function houseB(p, c) {
-  const lv = c.level, gz = c.gz, col = c.color, r = p.u.rng(c.seed + 57);
+  const lv = c.level, gz = c.gz, col = c.color, r = p.u.rng(c.seed + 57), A = TINT ? col : N.cyan, M = TINT ? col : N.mag;
   if (!lv) return lot(p, c, (pp, z) => { glow(pp, N.cyan, 0.2, () => pp.flatEllipse(-0.1, 0.045, z, 0.3, 0.3, 'rgba(39,230,255,.2)')); ring(pp, -0.1, 0.05, z, 0.26, N.cyan, 0.02, 24); neon(pp, [[-0.1, 0.05, z], [-0.1, 0.5, z]], N.cyan, 0.016, 0.1); neon(pp, [[-0.3, 0.05, z - 0.3], [-0.3, 0.3, z - 0.3]], N.mag, 0.016, 0.08); });
   p.shadow(-0.5, gz - 0.5, 1, 1, 0.6, 0.35);
-  p.box(-0.5, 0, gz - 0.5, 1, 0.05, 1, '#161d33', { edge: 'rgba(150,180,255,.2)' });   // đế podium chung
+  p.box(-0.5, 0, gz - 0.5, 1, 0.05, 1, TINT ? '#161d33' : mixHex(col, 0.45), { top: TINT ? undefined : mixHex(col, 0.8), edge: 'rgba(150,180,255,.2)' });   // đế podium chung
   let top;
   if (lv === 1) { top = spire(p, -0.2, gz - 0.2, 0.42, 0.42, 0.95, r, col); block(p, -0.46, 0.05, gz - 0.12, 0.26, 0.3, 0.4, '#2c3552', r, { lit: 0.4 }); vent(p, -0.44, 0.35, gz - 0.05, 0.14, 0.1); holo(p, -0.18, 0.2, 0.2, 0.72, gz + 0.3, col, r); antenna(p, top.cx, 0.95 + 0.0, top.cz, 0.35, N.red); }
-  else if (lv === 2) { top = spire(p, -0.05, gz - 0.28, 0.4, 0.4, 1.5, r, col, 1); spire(p, -0.46, gz + 0.02, 0.3, 0.3, 0.85, r, N.cyan); holo(p, -0.4, 0.0, 0.3, 1.0, gz + 0.36, col, r); antenna(p, top.cx, top.y, top.cz, 0.4, N.red); dish(p, -0.31, 0.85, gz + 0.17); }
-  else if (lv === 3) { top = spire(p, -0.02, gz - 0.3, 0.42, 0.42, 1.9, r, col, 2); spire(p, -0.48, gz - 0.02, 0.3, 0.3, 1.2, r, N.mag); spire(p, 0.18, gz + 0.14, 0.3, 0.3, 0.9, r, N.cyan); p.line3([[-0.18, 1.0, gz + 0.13], [-0.02, 1.0, gz - 0.09]], '#8fa0d0', 0.04); holo(p, -0.48, -0.1, 0.35, 1.2, gz + 0.36, N.mag, r); holo(p, 0.0, 0.36, 0.2, 0.8, gz + 0.5, N.cyan, r); antenna(p, top.cx, top.y, top.cz, 0.5, N.red); dish(p, 0.33, 0.9, gz + 0.29); }
+  else if (lv === 2) { top = spire(p, -0.05, gz - 0.28, 0.4, 0.4, 1.5, r, col, 1); spire(p, -0.46, gz + 0.02, 0.3, 0.3, 0.85, r, A); holo(p, -0.4, 0.0, 0.3, 1.0, gz + 0.36, col, r); antenna(p, top.cx, top.y, top.cz, 0.4, N.red); dish(p, -0.31, 0.85, gz + 0.17); }
+  else if (lv === 3) { top = spire(p, -0.02, gz - 0.3, 0.42, 0.42, 1.9, r, col, 2); spire(p, -0.48, gz - 0.02, 0.3, 0.3, 1.2, r, M); spire(p, 0.18, gz + 0.14, 0.3, 0.3, 0.9, r, A); p.line3([[-0.18, 1.0, gz + 0.13], [-0.02, 1.0, gz - 0.09]], '#8fa0d0', 0.04); holo(p, -0.48, -0.1, 0.35, 1.2, gz + 0.36, M, r); holo(p, 0.0, 0.36, 0.2, 0.8, gz + 0.5, A, r); antenna(p, top.cx, top.y, top.cz, 0.5, N.red); dish(p, 0.33, 0.9, gz + 0.29); }
   else {
     top = spire(p, -0.14, gz - 0.14, 0.48, 0.48, 2.0, r, col, 3);
-    spire(p, -0.5, gz - 0.02, 0.28, 0.28, 1.5, r, N.mag); spire(p, 0.22, gz + 0.1, 0.28, 0.28, 1.1, r, N.cyan);
+    spire(p, -0.5, gz - 0.02, 0.28, 0.28, 1.5, r, M); spire(p, 0.22, gz + 0.1, 0.28, 0.28, 1.1, r, A);
     p.line3([[-0.22, 1.1, gz + 0.12], [-0.14, 1.1, gz + 0.1]], '#8fa0d0', 0.04); p.line3([[0.34, 0.9, gz + 0.2], [0.34, 0.9, gz + 0.1]], '#8fa0d0', 0.04);
-    holo(p, -0.5, -0.2, 0.4, 1.4, gz + 0.32, N.mag, r); holo(p, 0.18, 0.5, 0.2, 0.9, gz + 0.6, N.cyan, r); holo(p, -0.1, 0.34, 0.5, 1.6, gz + 0.5, col, r);
+    holo(p, -0.5, -0.2, 0.4, 1.4, gz + 0.32, M, r); holo(p, 0.18, 0.5, 0.2, 0.9, gz + 0.6, A, r); holo(p, -0.1, 0.34, 0.5, 1.6, gz + 0.5, col, r);
     ring(p, top.cx, top.y + 0.1, top.cz, 0.3, col, 0.026, 28); ring(p, top.cx, top.y + 0.28, top.cz, 0.2, N.gold, 0.02, 24);
     neon(p, [[top.cx, top.y, top.cz], [top.cx, top.y + 0.55, top.cz]], N.gold, 0.02, 0.14); glow(p, N.gold, 0.3, () => p.ball(top.cx, top.y + 0.58, top.cz, 0.05, N.gold)); antenna(p, -0.36, 1.5, gz + 0.12, 0.3, N.red);
   }
@@ -167,7 +178,7 @@ function houseB(p, c) {
 }
 
 const houseDraw = (p, c) => {   // bệ neon màu chủ + tháp kính
-  const col = c.color; neonLoop(p, -0.72, c.gz - 0.72, 0.72, c.gz + 0.72, 0.006, col, 0.025, 0.12);
+  const col = c.color; if (!TINT) ownerPad(p, c.gz, col); neonLoop(p, -0.72, c.gz - 0.72, 0.72, c.gz + 0.72, 0.006, col, 0.025, 0.12);
   if (c.level) for (const [x, zz] of [[-0.72, -0.72], [0.72, -0.72], [-0.72, 0.72], [0.72, 0.72]]) glow(p, col, 0.1, () => p.ball(x, 0.02, c.gz + zz, 0.035, col));
   houseB(p, c);
 };
