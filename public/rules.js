@@ -174,12 +174,12 @@
     { id: 'map-1', name: 'Map 1', description: 'Bản đồ Thái Thịnh mặc định', preview: 'maps/map-1/preview.svg', renderer: 'maps/map-1/renderer.js', default: true },
     { id: 'four-seasons', name: 'Bốn Mùa Hà Nội', description: 'Hà Nội qua bốn mùa: Xuân, Hạ, Thu, Đông. Hội chợ bốn mùa và đài phun nước giữa bàn. Bàn 2D nhẹ, hợp máy yếu.', preview: 'maps/four-seasons/preview.svg', renderer: 'maps/four-seasons/renderer.js', tileNames: HANOI_TILE_NAMES },
     { id: 'neon', name: 'Lumina-01', description: 'Đại đô thị neon lúc nửa đêm sau mưa: Back Alley, Nightlife, Cyber Financial, Megacorp HQ. Lõi năng lượng giữa bàn. Bàn 2D.', preview: 'maps/neon/preview.svg', renderer: 'maps/neon/renderer.js', tileNames: NEON_TILE_NAMES,
-      // T25: 4 nhân vật riêng của Lumina-01 (SVG vẽ bằng code, xem maps/neon/assets/pets/build-pets.mjs)
+      // T25 (v4): Vance / Nyx / Seraphina / K-9000 theo docs/maps/neon-concept.md (SVG vẽ bằng code, xem maps/neon/assets/pets/build-pets.mjs)
       pets: [
-        { id: 'neon-runner', n: 'Hacker', c: '#ff2fa0', img: 'maps/neon/assets/pets/neon-runner-avatar.png', tokenImg: 'maps/neon/assets/pets/neon-runner-token.svg' },
-        { id: 'neon-courier', n: 'Shipper', c: '#3d7bff', img: 'maps/neon/assets/pets/neon-courier-avatar.png', tokenImg: 'maps/neon/assets/pets/neon-courier-token.svg' },
-        { id: 'neon-cat', n: 'Mèo Chrome', c: '#9dff2e', img: 'maps/neon/assets/pets/neon-cat-avatar.png', tokenImg: 'maps/neon/assets/pets/neon-cat-token.svg' },
-        { id: 'neon-drone', n: 'Drone', c: '#ff9f1a', img: 'maps/neon/assets/pets/neon-drone-avatar.png', tokenImg: 'maps/neon/assets/pets/neon-drone-token.svg' },
+        { id: 'neon-vance', n: 'Vance', c: '#ffb81f', img: 'maps/neon/assets/pets/neon-vance-avatar.png', tokenImg: 'maps/neon/assets/pets/neon-vance-token.svg' },
+        { id: 'neon-nyx', n: 'Nyx', c: '#1fd8ff', img: 'maps/neon/assets/pets/neon-nyx-avatar.png', tokenImg: 'maps/neon/assets/pets/neon-nyx-token.svg' },
+        { id: 'neon-seraphina', n: 'Seraphina', c: '#ff2fd2', img: 'maps/neon/assets/pets/neon-seraphina-avatar.png', tokenImg: 'maps/neon/assets/pets/neon-seraphina-token.svg' },
+        { id: 'neon-k9000', n: 'K-9000', c: '#a4ff1c', img: 'maps/neon/assets/pets/neon-k9000-avatar.png', tokenImg: 'maps/neon/assets/pets/neon-k9000-token.svg' },
       ] },
   ];
 
