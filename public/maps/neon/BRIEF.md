@@ -38,7 +38,7 @@ Màu người chơi giữ nguyên từ game (mái, cờ, bệ neon dưới nhà)
 
 Bốn cạnh theo thứ tự bàn và tiến trình giá: cạnh 0 (ô 1–7, nhóm A,B, rẻ) **Back Alley** (cam rỉ, dây điện) → cạnh 1 (9–15, C,D) **Nightlife** (magenta/tím) → cạnh 2 (17–23, E,F) **Cyber Financial** (cyan/trắng lạnh) → cạnh 3 (25–31, G,H, đắt nhất) **Megacorp HQ** (đen vàng). Tên 32 ô: `MAPS[].tileNames` trong `public/rules.js`.
 
-Cấp nhà (T12: vẽ bằng bút, 3 phương án đổi bằng `HOUSE_STYLE` trong `skin.js`: A vòng xếp mô-đun, B tháp kính + biển hologram, C bê tông brutalist; mái phẳng, glyph giả katakana, không chữ/logo thương hiệu; bản cũ dùng kit Kenney + neon): 0 đất + cờ → 1 **Kiosk** → 2 **Văn phòng** → 3 **Tháp truyền thông** (antenna + đèn magenta) → 4 **Megacorp Tower** (biển MEGACORP, vòng vàng, tia lên trời).
+Cấp nhà (T12, chủ sản phẩm chọn phương án B ngày 02/11; vẽ bằng bút, mái phẳng, glyph giả katakana, không chữ/logo thương hiệu): tháp kính mảnh trên đế podium tối, cửa sổ dày cyan/vàng/magenta, viền neon dọc, biển hologram nổi (tấm trong suốt + glyph), bệ neon và vòng viền màu chủ. 5 cấp: 0 bãi đất + cờ màu chủ + vòng cyan → 1 **Kiosk** (một tháp 0,95 + khối phụ, antenna) → 2 **Văn phòng** (tháp 1,5 có bậc + tháp phụ, đĩa vệ tinh) → 3 **Tháp truyền thông** (3 tháp nối cầu, 2 biển hologram, antenna đỏ) → 4 **Megacorp Tower** (tháp chính 2,0 + 3 bậc, 3 tháp phụ, vòng chủ + vòng vàng, tia và quả cầu vàng lên trời).
 
 ## 5. Vì sao khác map đang có
 - Bốn Mùa: sáng, pastel, mỗi cạnh một mùa, cỏ + cây. Lumina: nền gần đen, tách cạnh theo **giai tầng đô thị** chứ không theo thời tiết, không cây cỏ, sáng bằng neon.
