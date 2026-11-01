@@ -199,7 +199,7 @@ export default defineSkin({
   packs: ['kenney-iso-buildings'],
   palette: {
     groups: { A: '#c98a4b', B: '#ec4f7c', C: '#2fb5a3', D: '#f7a21b', E: '#ef5a3c', F: '#2f55c9', G: '#8a63e8', H: '#3aa0f0' },
-    ground: '#a6dc8c', priceStrip: '#c6cdd6', priceText: '#5b6676', labelText: '#000000', labelShadow: '#e8eef2',
+    ground: '#a6dc8c', priceStrip: '#c6cdd6', priceText: '#5b6676', labelText: '#000000', labelShadow: '#e8eef2', rentText: '#000000', rentShadow: '#ffffff',
     boardSide: '#7fcfd8', boardSideDark: '#62b6c2', boardTop: '#8fd8e0', tileSide: '#c89d7b', tileSideDark: '#a47c5d', water: '#8fd6ef', sand: '#f7e2b5', resortBand: '#7fd3dd',
   },
   zones: null,
@@ -208,12 +208,13 @@ export default defineSkin({
     house: {
       kind: 'kit',
       levels: [[[0, 0, ['128']]], [[0, 0, ['016'], '069']], [[0, 0, ['016', '047'], '082'], [1, 0, ['055']]], [[0, 0, ['016', '047', '047'], '083'], [1, 0, ['024', '051'], '090']], [[0, 0, ['016', '053', '053', '053']], [1, 0, ['000', '053', '053', '053']]]],
+      bright: 1,
       sign: 'HOTEL',
       under: (p, c) => { if (c.level) p.cubeTree(-c.w / 2 - 0.22, 0.05, 0.95); },
       over: (p, c) => { if (c.level === 0) { p.cubeTree(0.45, 0.3, 0.9); p.cubeTree(-0.45, 0.35, 0.8); } else if (c.level < 4) p.cubeTree(0.1, 0.56, 0.8); },
     },
     resort: { paint: sandPaint, draw: beachDecor },
-    resortHouse: { kind: 'kit', levels: [[[0, 0, ['128']]], [[0, 0, ['039'], '074']], [[0, 0, ['024', '055'], '082'], [1, 0, ['008']]], [[0, 0, ['024', '031', '031']], [1, 0, ['015', '031', '031']]]], heights: [0.1, 0.5, 1.0, 1.4], sign: 'RESORT', signY: 1.29, over: resortOver },
+    resortHouse: { kind: 'kit', bright: 1, levels: [[[0, 0, ['128']]], [[0, 0, ['039'], '074']], [[0, 0, ['024', '055'], '082'], [1, 0, ['008']]], [[0, 0, ['024', '031', '031']], [1, 0, ['015', '031', '031']]]], heights: [0.1, 0.5, 1.0, 1.4], sign: 'RESORT', signY: 1.29, over: resortOver },
     chance: { paint: flat('#fff1d8'), draw: chest },
     tax: { paint: flat('#a7dfe2'), draw: bank },
     start: { paint: (g, c) => c.grass(g, 0, 0, c.cw, c.ch, 5), label: [0.5, 0.62, 80, 0.8], draw: startGate },
