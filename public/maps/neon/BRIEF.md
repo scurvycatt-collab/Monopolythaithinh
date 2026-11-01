@@ -38,7 +38,7 @@ Màu người chơi giữ nguyên từ game (mái, cờ, bệ neon dưới nhà)
 
 Bốn cạnh theo thứ tự bàn và tiến trình giá: cạnh 0 (ô 1–7, nhóm A,B, rẻ) **Back Alley** (cam rỉ, dây điện) → cạnh 1 (9–15, C,D) **Nightlife** (magenta/tím) → cạnh 2 (17–23, E,F) **Cyber Financial** (cyan/trắng lạnh) → cạnh 3 (25–31, G,H, đắt nhất) **Megacorp HQ** (đen vàng). Tên 32 ô: `MAPS[].tileNames` trong `public/rules.js`.
 
-Cấp nhà (kit Kenney + neon): 0 đất + cờ → 1 **Kiosk** → 2 **Văn phòng** → 3 **Tháp truyền thông** (antenna + đèn magenta) → 4 **Megacorp Tower** (biển MEGACORP, vòng vàng, tia lên trời).
+Cấp nhà (T12: vẽ bằng bút, 3 phương án đổi bằng `HOUSE_STYLE` trong `skin.js`: A vòng xếp mô-đun, B tháp kính + biển hologram, C bê tông brutalist; mái phẳng, glyph giả katakana, không chữ/logo thương hiệu; bản cũ dùng kit Kenney + neon): 0 đất + cờ → 1 **Kiosk** → 2 **Văn phòng** → 3 **Tháp truyền thông** (antenna + đèn magenta) → 4 **Megacorp Tower** (biển MEGACORP, vòng vàng, tia lên trời).
 
 ## 5. Vì sao khác map đang có
 - Bốn Mùa: sáng, pastel, mỗi cạnh một mùa, cỏ + cây. Lumina: nền gần đen, tách cạnh theo **giai tầng đô thị** chứ không theo thời tiết, không cây cỏ, sáng bằng neon.
@@ -65,3 +65,4 @@ Những chỗ khung xương hiện cản bản neon đẹp hơn (đề xuất ch
 7. **Nền ngoài bàn**: canvas ngoài bàn trong lúc thử trắng (nền do app/CSS); map tối cần màu nền/vignette trang theo skin (`palette.page`).
 8. **Chữ**: font ô lấy từ khung xương, không có font digital/LED hay chữ Hán/Katakana; chữ nhỏ trên ô thường khó đọc ở `low`.
 9. **Sprite ô góc là ô vuông 3.1**: portal/laser cao dễ bị cắt ở mép trên cửa sổ nướng (−2.4…4.6).
+10. (T12) `kind` nhà không cho kích thước chân đế / mái phẳng / cửa sổ sáng theo tầng: nhà neon phải dùng `draw` thuần nên mất cờ cấp 0, biển cấp 4 và hai cờ tự có của `kit`; tự vẽ lại. Cần hoặc `kit` hỗ trợ mảnh tối + cửa sổ phát sáng, hoặc `kind: 'tower'` (mô-đun xếp tầng, lưới cửa sổ, biển dọc).
