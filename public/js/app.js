@@ -1137,6 +1137,7 @@ function showRoomGate() {
   $('#gmap').innerHTML = MAPS.map((map) => `<option value="${esc(map.id)}">${esc(map.name)}${map.default ? ' (Mặc định)' : ''}</option>`).join('');
   $('#gmap').value = selectedMap;
   renderGateMapPreview();
+  if (!$('#gmap-note')) $('#gmap-preview').insertAdjacentHTML('afterend', '<p id="gmap-note" class="gate-map-note">Bản đồ chỉ áp dụng khi bấm “Tạo phòng”. “Vào phòng” và “Xem” dùng bản đồ do chủ phòng đã chọn.</p>');
   document.body.dataset.screen = 'gate';
   syncMusic();
   $('#loading').classList.add('hidden');
@@ -1152,7 +1153,13 @@ async function enterRoom(create, watch = false) {
   const mapId = $('#gmap').value;
   if (create && !MAPS.some((map) => map.id === mapId)) { toast('Hãy chọn bản đồ'); return $('#gmap').focus(); }
   let loadMapId = mapId;
-  if (!create) {
+  if (create) {
+    // Server chỉ nhận mapId khi phòng còn trống; phòng đã có người thì bỏ qua âm thầm → báo rõ thay vì mở nhầm bản đồ.
+    try {
+      const probe = await fetch(roomEndpoint(location.href, 'api/watch', room), { cache: 'no-store' });
+      if (probe.ok) { toast('Phòng này đã có người, bản đồ do chủ phòng chọn. Hãy đổi mã phòng hoặc bấm Vào phòng.'); return $('#groom').focus(); }
+    } catch (e) { /* không kiểm tra được thì cứ tạo */ }
+  } else {
     try {
       const response = await fetch(roomEndpoint(location.href, 'api/watch', room), { cache: 'no-store' });
       const result = await response.json().catch(() => ({}));
@@ -1178,7 +1185,7 @@ async function enterRoom(create, watch = false) {
   $('#gcreate').disabled = true; $('#gjoin').disabled = true; $('#gwatch').disabled = true;
   try {
     await prepareBoard(loadMapId);
-    me = watch ? null : loadMe();
+    me = watch || create ? null : loadMe(); // tạo phòng mới: bỏ phiên cũ để lần join đầu chắc chắn gửi mapId
     invite = [];
     connect();
     loadInvite();
