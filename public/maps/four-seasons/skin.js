@@ -334,6 +334,18 @@ const FAIR = {
     [[-3.6, 5.4], [3.6, 5.4], [-3.3, 4.4], [3.3, 4.4]].forEach(([u, v]) => A(u, v, (p, x, z) => treeV(p, x, z, 'winter', 'pine', 1.0))); A(1.0, 3.0, (p, x, z) => snowman(p, x, z, 1.3, true));
   },
 };
+/* ---------- nhãn ô góc: bảng tên vẽ SAU CÙNG trong sprite, luôn nằm trên nhà/cây/khán đài ---------- */
+const CORNER_NAMES = { start: 'START', island: 'THÁP RÙA', festival: 'DUYỆT BINH AN LIỄNG', tour: 'ĐÁ VỈA' };
+function cornerPlaque(p, c, text, hk = 0.17) {
+  const [sx, sy] = p.p(1.1, 0.05, 1.1), g = p.ctx, fs = p.k * hk;
+  g.save(); g.font = `900 ${fs}px ${c.font}`; g.textAlign = 'center'; g.textBaseline = 'middle';
+  const w = g.measureText(text).width + fs * 0.9, h = fs * 1.45, r = h / 2;
+  g.fillStyle = 'rgba(23,33,43,.9)'; g.strokeStyle = '#ffffff'; g.lineWidth = fs * 0.1; g.lineJoin = 'round';
+  g.beginPath(); g.moveTo(sx - w / 2 + r, sy - h / 2); g.arcTo(sx + w / 2, sy - h / 2, sx + w / 2, sy + h / 2, r); g.arcTo(sx + w / 2, sy + h / 2, sx - w / 2, sy + h / 2, r); g.arcTo(sx - w / 2, sy + h / 2, sx - w / 2, sy - h / 2, r); g.arcTo(sx - w / 2, sy - h / 2, sx + w / 2, sy - h / 2, r); g.closePath(); g.fill(); g.stroke();
+  g.fillStyle = '#ffffff'; g.fillText(text, sx, sy + fs * 0.04); g.restore();
+}
+const withName = (key, draw) => (p, c) => { draw(p, c); cornerPlaque(p, c, CORNER_NAMES[key]); };
+
 const PLAZA = 2.2;
 function fairGround(g, c) {
   const { T, px } = c, [cx, cy] = T(0, 0), h = c.half;
@@ -384,10 +396,10 @@ export default defineSkin({
     resortHouse: { draw: camp },
     chance: { paint: (g, c) => flat({ spring: '#fdeef3', summer: '#fff1d8', autumn: '#fbe4c4', winter: '#eef4fa' }[sea(c)])(g, c), draw: gift },
     tax: { paint: flat('#dceef3'), draw: treasury },
-    start: { paint: (g, c) => { c.grass(g, 0, 0, c.cw, c.ch, 5, SEA.spring); g.globalAlpha = 0.92; g.fillStyle = '#ffffff'; g.beginPath(); g.moveTo(c.cw * 0.45, 0); g.lineTo(c.cw, 0); g.lineTo(c.cw, c.ch * 0.55); g.closePath(); g.fill(); g.globalAlpha = 1; }, label: [0.62, 0.62, 70, 0.8], draw: startArch },
-    island: { paint: waterPaint, side: ['#7cc3e0', '#5fa9c9'], label: [0.7, 0.8, 33, 0.5], draw: island },
-    festival: { paint: (g, c) => fancy('autumn')(g, c, 0, 0, c.cw, c.ch, 8), draw: arena },
-    tour: { paint: (g, c) => fancy('winter')(g, c, 0, 0, c.cw, c.ch, 12), draw: balloonField },
+    start: { paint: (g, c) => { c.grass(g, 0, 0, c.cw, c.ch, 5, SEA.spring); g.globalAlpha = 0.92; g.fillStyle = '#ffffff'; g.beginPath(); g.moveTo(c.cw * 0.45, 0); g.lineTo(c.cw, 0); g.lineTo(c.cw, c.ch * 0.55); g.closePath(); g.fill(); g.globalAlpha = 1; }, label: false, draw: withName('start', startArch) },
+    island: { paint: waterPaint, side: ['#7cc3e0', '#5fa9c9'], label: false, draw: withName('island', island) },
+    festival: { paint: (g, c) => fancy('autumn')(g, c, 0, 0, c.cw, c.ch, 8), label: false, draw: withName('festival', arena) },
+    tour: { paint: (g, c) => fancy('winter')(g, c, 0, 0, c.cw, c.ch, 12), label: false, draw: withName('tour', balloonField) },
     base: { draw: (p, c) => { const a = c.half + c.margin - 0.1, y = c.y + 0.002; p.line3([[-a, y, a], [a, y, a], [a, y, -a], [-a, y, -a], [-a, y, a]], c.palette.gold || '#f5b934', 0.03); for (const [x, z] of [[a - 0.02, a - 0.02], [-a + 0.02, a - 0.02], [a - 0.02, -a + 0.02]]) { const [sx, sy] = p.p(x, c.y, z), R = p.k * 0.16, g = p.ctx; g.fillStyle = '#f5b934'; g.beginPath(); g.moveTo(sx, sy - R * 0.5); g.lineTo(sx + R, sy); g.lineTo(sx, sy + R * 0.5); g.lineTo(sx - R, sy); g.closePath(); g.fill(); } } },
     center: {
       paint: fairGround,
@@ -397,8 +409,7 @@ export default defineSkin({
   },
   ambient: { animate: { fountain: fountainFx } },
   labels: {
-    start: 'HỒ GƯƠM', island: 'ĐẢO GIỮA HỒ', festival: 'LỄ HỘI HÀ NỘI',
-    tour: 'DU NGOẠN HÀ NỘI', chance: 'CƠ HỘI', tax: 'THUẾ ĐÔ THỊ',
+    ...CORNER_NAMES, chance: 'CƠ HỘI', tax: 'THUẾ ĐÔ THỊ',
     resortLevels: ['Lều trại', 'Trại có hiên', 'Nhà gỗ', 'Glamping'],
   },
 });
