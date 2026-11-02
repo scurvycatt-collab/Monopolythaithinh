@@ -38,5 +38,7 @@ Renderer 2D vẽ ảnh vuông cạnh `H = TOKEN_HEIGHT·K` với điểm chân �
 - tỉ lệ cố định `PPU_OUT = 223` px / đơn vị Blender cho cả 4 quân (đĩa đế ≈ elip của renderer);
 - tâm đế ở `x = 220`, `y = ANCHOR_Y·440 = 376` để cả đĩa đế + quầng nằm gọn trong khung (đáy ≈ 436 px như bộ cũ);
 - quầng sáng (mặt nạ phát sáng làm mờ 3 lớp, `GLOW_R`) nướng sẵn vào alpha, mờ dần ở mép dưới.
+- khung SVG (`svg_wrap`, T24) dời ảnh xuống `DY = (0.94 − 0.855)·220 = 18,7` để tâm đế trùng điểm chân renderer;
+  phần đĩa tràn đáy khung mờ dần (mask 14 đơn vị cuối) vào elip màu chủ renderer tự vẽ.
 
 Chỉnh nhanh: độ to nhân vật `CHAR_K`, độ dày viền `OUTLINE`, ống neon tối thiểu `MIN_EMIT_R`, mảng màu chủ `OWN_OBJ`.

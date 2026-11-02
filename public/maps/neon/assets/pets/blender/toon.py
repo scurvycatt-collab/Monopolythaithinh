@@ -239,9 +239,19 @@ def glow_pass():
 # ---- xuất quân cho game ----
 # Renderer 2D vẽ ảnh vuông cạnh H = TOKEN_HEIGHT*K, điểm chân (tâm đế, z=0) ở (0.5H, 0.94H).
 # Ảnh ra 440x440, 1 đơn vị Blender = PPU_OUT px (đế ≈ elip màu chủ 0.28K của renderer). Tâm đế đặt ở y = ANCHOR_Y*440
-# (cao hơn 0.94 để cả đĩa đế + quầng nằm gọn trong khung, đáy ≈ 436 px như bộ quân trước).
+# (cao hơn 0.94 để cả đĩa đế + quầng nằm gọn trong ảnh PNG). Khung SVG (svg_wrap) dời ảnh xuống DY đơn vị để tâm đế
+# trùng điểm chân 0.94H của renderer; phần đĩa tràn khỏi đáy khung mờ dần vào elip màu chủ renderer tự vẽ (T24).
 IDS = {'vance_b': 'neon-vance', 'nyx_a': 'neon-nyx', 'sera_a': 'neon-seraphina', 'k9_a': 'neon-k9000'}
 OUT_PX, PPU_OUT, SS, ANCHOR_Y = 440, 223.0, 3, 0.855
+RENDER_ANCHOR = 0.94                         # điểm chân renderer 2D (tỉ lệ cạnh ảnh)
+DY = round((RENDER_ANCHOR - ANCHOR_Y) * 220, 2)  # dời ảnh trong khung SVG 220 (= 18.7)
+
+
+def svg_wrap(b64):   # khung SVG 220×220: ảnh dời xuống DY, mép dưới mờ dần 14 đơn vị cuối
+    return ('<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 220 220" width="220" height="220">'
+            '<defs><linearGradient id="f" x1="0" y1="0" x2="0" y2="220" gradientUnits="userSpaceOnUse"><stop offset="0.93" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>'
+            '<mask id="m" maskUnits="userSpaceOnUse" x="0" y="0" width="220" height="220"><rect width="220" height="220" fill="url(#f)"/></mask></defs>'
+            '<image y="%s" width="220" height="220" mask="url(#m)" xlink:href="data:image/png;base64,%s" href="data:image/png;base64,%s"/></svg>\n' % (DY, b64, b64))
 GLOW_R = ((3, 0.6), (8, 0.5), (18, 0.35))   # bán kính quầng sáng (px ở cỡ 440)
 
 
@@ -300,8 +310,7 @@ def export(key, outdir):
     q = im.quantize(256, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.FLOYDSTEINBERG)   # PNG bảng màu cho SVG nhẹ
     buf = io.BytesIO(); q.save(buf, 'PNG', optimize=True)
     b64 = base64.b64encode(buf.getvalue()).decode()
-    svg = ('<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 220 220" width="220" height="220">'
-           '<image width="220" height="220" xlink:href="data:image/png;base64,%s" href="data:image/png;base64,%s"/></svg>\n' % (b64, b64))
+    svg = svg_wrap(b64)
     fn = os.path.join(outdir, IDS[key] + '-token.svg')
     open(fn, 'w').write(svg)
     print('EXPORT', fn, len(svg) // 1024, 'KB')

@@ -1,25 +1,27 @@
 # Lumina-01 (2D, khung xương board2d)
 
-Đô thị neon nửa đêm. Bản duyệt hướng (T24), chưa phải asset cuối. Xem `BRIEF.md`.
+Đô thị neon nửa đêm: 4 zone Back Alley, Nightlife, Cyber Financial, Megacorp HQ; lõi Reactor Core giữa bàn. Brief: `BRIEF.md`, concept: `docs/maps/neon-concept.md`.
 
-## File
+- `renderer.js` gọi `createBoard2D` (không sửa tay); `skin.js` toàn bộ hình (vẽ bằng `Pen`, không sprite ngoài); `preview.svg` ảnh lobby.
+- `assets/pets/`: avatar PNG 512 (`build-pets.mjs`), quân cờ SVG bọc PNG 440 dựng bằng Blender (`blender/README.md`). Tất cả tự dựng bằng code, không asset ngoài, không asset Business Tour.
 
-- `renderer.js` — 3 dòng, gọi `createBoard2D` (không sửa tay).
-- `skin.js` — toàn bộ phong cách: palette, 13 slot (chỗ cần thay có chú thích `THAY:`).
-- `preview.svg` — ảnh lobby tạm, thay bằng ảnh thật.
-- `assets/` — sprite riêng của map (PNG ≤ 512 px, tổng ≤ 1,5 MB). Hiện trống.
+## Nghiệm thu (T24, headless `?low`, 1600×1000)
 
-## Phong cách
+Đạt (kiểm bằng code / headless):
+- Dữ liệu theo index: skin không chứa giá/thuê/nhóm; `tileNames` đủ 32; ô chưa mua (city/resort) không hiện giá mua.
+- 4 nhân vật đủ avatar + quân + màu riêng; quân dùng tỉ lệ chung, tâm đế ở điểm chân 0.94H (khung SVG dời 18,7, T24).
+- Nhà: 4 màu × 5 cấp = 20 hình khác nhau (băm vùng ô); resort: chưa mua + 4 cấp khác nhau, tên cấp ở `labels.resortLevels`.
+- Start, Firewall (Lost Island), Neon Arcade (Championship), Warp Gate (World Tour), 3 Data Cube, Thuế dữ liệu đều có landmark.
+- Mất điện (số vòng + sét) và lễ hội (băng rôn ×2) hiện rõ ở `low`; không lỗi console, không 404 asset.
+- Hiệu năng `low` qua `stats()`: bàn trống 2,3 ms/khung, bàn đầy 3,3 ms/khung (≤ 4 ms); asset map 1,0 MB (≤ 1,5 MB).
+- Giữa bàn: chồng Data Cube dời khỏi cột ăng-ten (T24), không còn đè nhau.
 
-4 zone theo giai tầng: Back Alley, Nightlife, Cyber Financial, Megacorp HQ. Nền tối, neon vẽ bằng bút, lõi Reactor Core giữa bàn.
+Không đạt / lệch checklist:
+- Bàn chuẩn của `rules.js` có 20 thành phố + 4 resort + 8 ô đặc biệt, không phải 22 + 4 + 6 như checklist (luật chung, ngoài phạm vi map).
+- Quân cờ: chỉ có trạng thái thường; chưa có vui / mất lượt / phá sản (khung xương chưa yêu cầu).
+- Thumbnail tĩnh nhà/resort cho popup chưa sinh riêng cho neon (`npm run thumbnails` không đòi).
 
-## Asset
-
-- Kenney Isometric Buildings (CC0), dùng chung ở `public/assets/shared/`.
-- (Ghi nguồn asset CC0 khác nếu thêm. Không dùng asset gốc Business Tour.)
-
-## Còn thiếu
-
-- Thay skin mẫu từng slot: tile, deco, house, resort, resortHouse, 4 góc, chance, tax, base, center.
-- Chọn palette 8 nhóm đất, tên 4 cấp nhà resort (`labels.resortLevels`).
-- Làm `preview.svg` thật; hoàn tất `docs/contracts/map-parity.md` và chạy `npm run verify` trước khi commit.
+Không kiểm được (cần người hoặc máy thật):
+- Duyệt brief/moodboard/ảnh thực tế của chủ sản phẩm; avatar trong lobby/chat/kết quả.
+- Mobile, 60/120/144 Hz, mức trung bình/cao trên GPU thật; bộ nhớ sau nhiều lần vào/rời phòng.
+- Luồng mạng: host/khách/spectator/bot, reconnect, popup thẻ, World Tour/Championship, deploy production.

@@ -283,7 +283,7 @@ const PODIUM = [[1.75, 0.7, 0, 0.3, N.cyan], [1.38, 0.55, 0.3, 0.62, N.mag], [1.
 const RH = 2.5, RW = 0.36, RY = 0.55, RRC = [1.4, 0.9, 0.9, 0.9];   // vành đai: nửa cạnh đường tâm, bề rộng, độ cao, bo góc (trước, trái, sau, phải)
 const PADX = 1.15, PADZ = 1.15, PADR = 1.0;                         // bệ xúc xắc
 const RAMPS = [[1, -1.0], [0, -1.0]];                               // dốc xuống đất: [trục (1 = đi theo +x, 0 = theo +z), toạ độ trục kia]
-const CUBE = [-2.5, 3.45], MAP = [5.0, -3.0], KOI = [-3.45, 1.62];   // chồng Data Cube, bản đồ hologram, tháp biển cá chép
+const CUBE = [0.65, 3.25], MAP = [5.0, -3.0], KOI = [-3.45, 1.62];   // chồng Data Cube (T24: dời khỏi cột ăng-ten, sang phải dốc xuống), bản đồ hologram, tháp biển cá chép
 const VAULT = [2.45, -2.75], ARCO = [-4.6, 3.0], MAST = [-1.55, 4.95], TANKS = [-4.95, -1.3];   // két dữ liệu, khối bậc thang, cột ăng-ten, trạm bồn
 const hMax = (x0, z0) => Math.max(0.3, ((2 * Math.min(x0, z0) + 11.9) * 0.354 - 0.3) / 0.866);   // đỉnh nhà phải thấp hơn mép trong ô phía xa trên màn hình
 function rrPts(cx, cz, h, rs, n = 6) {   // đường bao hình vuông bo góc (rs: số hoặc 4 bán kính theo góc trước, trái, sau, phải), ngược chiều kim đồng hồ từ góc +x+z
