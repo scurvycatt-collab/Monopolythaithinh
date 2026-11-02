@@ -181,16 +181,17 @@ const deco = (p, c) => {   // ô trống: cột đèn, thùng máy, hơi nước
   if (r() < 0.5) { p.box(-x - 0.12, 0, -0.85, 0.24, 0.22, 0.2, '#161d33', { edge: null }); neon(p, [[-x - 0.1, 0.15, -0.649], [-x + 0.1, 0.15, -0.649]], z.acc, 0.02, 0.06); }
 };
 
-/* ---------- giữa bàn (T26 v2): tháp dữ liệu lớn trên bệ vuông bo góc nhiều tầng + đường vành đai ôm sát + cụm cao ốc dày, theo ảnh tham khảo ---------- */
+/* ---------- giữa bàn (T26 v3): lò dữ liệu lớn trên bệ bo góc + vành đai ôm sát + 6 công trình riêng (không lặp kiểu nhà ô) ---------- */
 /*  Bố cục (toạ độ thế giới, camera ở phía +x+z, trái màn hình = −x+z, phải = +x−z): tháp và bệ lùi về sau (TX, TZ);
     xúc xắc khung xương nằm quanh (1, 1) → bệ xúc xắc tròn vạch đồng hồ ở (PADX, PADZ), góc trước vành đai bo rộng để chừa chỗ.
-    Cao ốc phủ phần còn lại theo lưới khối phố, cao gần bệ, thấp dần ra mép và phía trước; chiều cao kẹp bởi hMax() để không che dải giá/nhãn ô phía xa. Không chữ, không logo. */
+    Quanh đó chỉ vài công trình riêng: tháp biển cá chép, khối bậc thang, két dữ liệu, ga monorail + cầu kính, cột ăng-ten, trạm bồn; tránh mép gần (nhà ô vẽ đè lên), chiều cao kẹp bởi hMax(). Không chữ, không logo. */
 const TX = -1.5, TZ = -1.5;                                   // tâm tháp / bệ
 const PODIUM = [[1.75, 0.7, 0, 0.3, N.cyan], [1.38, 0.55, 0.3, 0.62, N.mag], [1.0, 0.42, 0.62, 0.95, N.cyan]];   // [nửa cạnh, bo góc, y0, y1, màu viền]
 const RH = 2.5, RW = 0.36, RY = 0.55, RRC = [1.4, 0.9, 0.9, 0.9];   // vành đai: nửa cạnh đường tâm, bề rộng, độ cao, bo góc (trước, trái, sau, phải)
 const PADX = 1.15, PADZ = 1.15, PADR = 1.0;                         // bệ xúc xắc
 const RAMPS = [[1, -1.0], [0, -1.0]];                               // dốc xuống đất: [trục (1 = đi theo +x, 0 = theo +z), toạ độ trục kia]
-const CUBE = [-2.5, 3.45], MAP = [3.4, -2.5], KOI = [-3.45, 1.62];  // chồng Data Cube, bản đồ hologram, toà biển cá chép
+const CUBE = [-2.5, 3.45], MAP = [5.0, -3.0], KOI = [-3.45, 1.62];   // chồng Data Cube, bản đồ hologram, tháp biển cá chép
+const VAULT = [2.45, -2.75], ARCO = [-4.6, 3.0], MAST = [-1.55, 4.95], TANKS = [-4.95, -1.3];   // két dữ liệu, khối bậc thang, cột ăng-ten, trạm bồn
 const hMax = (x0, z0) => Math.max(0.3, ((2 * Math.min(x0, z0) + 11.9) * 0.354 - 0.3) / 0.866);   // đỉnh nhà phải thấp hơn mép trong ô phía xa trên màn hình
 function rrPts(cx, cz, h, rs, n = 6) {   // đường bao hình vuông bo góc (rs: số hoặc 4 bán kính theo góc trước, trái, sau, phải), ngược chiều kim đồng hồ từ góc +x+z
   const R = Array.isArray(rs) ? rs : [rs, rs, rs, rs], C = [[1, 1], [-1, 1], [-1, -1], [1, -1]], P = [];
@@ -249,13 +250,25 @@ function tower(p) {   // bệ 3 tầng bo góc + tháp: trống đế, thân t�
   for (let i = 0; i < 12; i++) { const a = (i / 12) * 6.283 + 0.26, x = X + Math.cos(a) * 0.85, z = Z + Math.sin(a) * 0.85; if (Math.cos(a) + Math.sin(a) < -0.6) continue; glow(p, N.gold, 0.1, () => p.ball(x, 0.99, z, 0.028, N.gold)); }
   stairs(p, X - 0.3, Z + 1.38, 0, 0.3, 0.62, 0.6, 0.37, 5); stairs(p, X + 1.38, Z - 0.3, 1, 0.3, 0.62, 0.6, 0.37, 5);
   stairs(p, X - 0.3, Z + 1.75, 0, 0, 0.3, 0.6, 0.3, 4); stairs(p, X + 1.75, Z - 0.3, 1, 0, 0.3, 0.6, 0.3, 4);
-  p.cyl(X, 0.95, Z, 0.78, 0.2, N.steel); ring(p, X, 1.16, Z, 0.77, N.mag, 0.03, 44);
+  for (const o of [-1.05, 1.0]) for (const ax of [0, 1]) {   // bồn làm mát trên tầng 1 + ống lên thân lò
+    const x = ax ? X + 1.56 : X + o, z = ax ? Z + o : Z + 1.56, ix = ax ? X + 1.02 : x, iz = ax ? z : Z + 1.02;
+    p.cyl(x, 0.3, z, 0.12, 0.3, '#2b3658'); p.flatEllipse(x, 0.605, z, 0.12, 0.12, '#3d4c7a'); ring(p, x, 0.45, z, 0.124, N.lime, 0.012, 20);
+    pipe(p, [[x, 0.6, z], [x, 0.82, z], [ix, 0.82, iz]], 0.045); }
+  const fin = (front) => { for (let i = 0; i < 24; i++) { const a = (i / 24) * 6.283, f = Math.cos(a) + Math.sin(a) > -0.2; if (f !== front) continue; const c = Math.cos(a), s = Math.sin(a);   // cánh tản nhiệt quanh trống đế
+    p.poly([[X + c * 0.78, 0.95, Z + s * 0.78], [X + c * 0.98, 0.95, Z + s * 0.98], [X + c * 0.98, 1.08, Z + s * 0.98], [X + c * 0.78, 1.2, Z + s * 0.78]], p.u.mix('#1a2340', '#3a4a7a', (c + 1) / 2)); p.line3([[X + c * 0.98, 0.96, Z + s * 0.98], [X + c * 0.98, 1.08, Z + s * 0.98]], hexA(N.cyan, 0.6), 0.008); } };
+  fin(false);
+  p.cyl(X, 0.95, Z, 0.78, 0.2, N.steel); fin(true); ring(p, X, 1.16, Z, 0.77, N.mag, 0.03, 44);
   p.cyl(X, 1.15, Z, 0.55, 0.35, '#121a30'); ring(p, X, 1.51, Z, 0.55, N.cyan, 0.026, 40);
   for (let i = 0; i < 16; i++) { const a = (i / 16) * 6.283; if (Math.cos(a) + Math.sin(a) < -0.3) continue; const x = X + Math.cos(a) * 0.56, z = Z + Math.sin(a) * 0.56; neon(p, [[x, 1.2, z], [x, 1.45, z]], i % 2 ? N.cyan : '#7fd8ff', 0.012, 0.05); }
   H.forEach(([y, r, col]) => { p.flatEllipse(X, y, Z, r, r, hexA(col, 0.06)); arc(p, X, y, Z, r, BACK[0], BACK[1], col, 0.022, 20); });
+  const col4 = (front) => { for (let i = 0; i < 4; i++) { const a = (i / 4) * 6.283 + 0.785; if ((Math.cos(a) + Math.sin(a) > 0) !== front) continue; const c = Math.cos(a), s = Math.sin(a);   // cột giàn đỡ + vòng giàn thép
+      p.line3([[X + c * 0.5, 1.5, Z + s * 0.5], [X + c * 0.5, 2.12, Z + s * 0.5]], '#8592b8', 0.035); p.line3([[X + c * 0.46, 2.2, Z + s * 0.46], [X + c * 0.6, 2.78, Z + s * 0.6]], '#8592b8', 0.03); } };
+  const gantry = (a0, a1) => { for (const y of [1.82, 2.48]) { const P = Array.from({ length: 15 }, (_, i) => { const a = a0 + ((a1 - a0) * i) / 14; return [X + Math.cos(a) * 0.62, y, Z + Math.sin(a) * 0.62]; }); p.line3(P, STEELD, 0.05); p.line3(P.map(([x, yy, z]) => [x, yy + 0.02, z]), STEEL, 0.018); } };
+  col4(false); gantry(BACK[0], BACK[1]);
   glow(p, N.cyan, 0.4, (g) => { g.globalAlpha = 0.3; p.cyl(X, 1.5, Z, 0.4, 1.3, '#27e6ff'); });
   glow(p, N.cyan, 0.6, () => p.line3([[X, 1.5, Z], [X, 2.8, Z]], 'rgba(39,230,255,.6)', 0.5)); glow(p, N.cyan, 0.3, () => p.line3([[X, 1.5, Z], [X, 2.8, Z]], '#7ff2ff', 0.28)); p.line3([[X, 1.5, Z], [X, 2.8, Z]], '#f2feff', 0.12);
   for (const y of [1.75, 2.05, 2.35, 2.62]) arc(p, X, y, Z, 0.4, FRONT[0], FRONT[1], 'rgba(191,246,255,.55)', 0.01, 14);
+  col4(true); gantry(FRONT[0], FRONT[1]); for (const y of [1.82, 2.48]) for (let i = 0; i < 5; i++) { const a = FRONT[0] + (i + 0.5) * ((FRONT[1] - FRONT[0]) / 5); glow(p, N.gold, 0.06, () => p.ball(X + Math.cos(a) * 0.62, y + 0.03, Z + Math.sin(a) * 0.62, 0.016, N.gold)); }
   p.cyl(X, 2.12, Z, 0.5, 0.08, '#121a30'); ring(p, X, 2.21, Z, 0.5, N.gold, 0.025, 32);
   p.cyl(X, 2.78, Z, 0.72, 0.1, N.steel); ring(p, X, 2.89, Z, 0.72, N.cyan, 0.03, 44); ring(p, X, 2.83, Z, 0.74, N.mag, 0.016, 44);
   p.cyl(X, 2.88, Z, 0.42, 0.12, '#121a30'); ring(p, X, 3.01, Z, 0.42, N.cyan, 0.02, 32);
@@ -293,49 +306,121 @@ function koi(p, x0, x1, y0, y1, z) {   // biển quảng cáo cá chép neon (mo
   const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, s = Math.min(x1 - x0, (y1 - y0) * 0.9) * 0.24;
   fish(cx - s * 0.4, cy + (y1 - y0) * 0.2, s, -0.6, '#ff8a3d'); fish(cx + s * 0.5, cy - (y1 - y0) * 0.18, s * 0.9, 2.5, '#ff3fb4');
 }
-function vsign(p, x, y, z, h, col, r) {   // biển neon dọc trên mặt +z: thanh tối + glyph giả
-  p.box(x - 0.045, y, z, 0.09, h, 0.03, '#0a0d1a', { edge: null });
-  glow(p, col, 0.1, () => { for (let yy = y + 0.04; yy < y + h - 0.06; yy += 0.085) { const t = r(); if (t < 0.5) p.quadZ(z + 0.032, x - 0.03, x + 0.03, yy, yy + 0.02, col); else { p.quadZ(z + 0.032, x - 0.03, x - 0.01, yy, yy + 0.05, col); p.quadZ(z + 0.032, x + 0.01, x + 0.03, yy, yy + 0.05, col); } } });
-  neon(p, [[x - 0.045, y, z + 0.031], [x - 0.045, y + h, z + 0.031]], col, 0.008, 0.05);
+/* Công trình giữa bàn (T26 v3): ít mà riêng, mỗi cái một kiến trúc; KHÔNG dùng block / wins / spire / antenna / dish của nhà ô (không lưới cửa sổ). */
+const STEEL = '#7d89ad', STEELD = '#465275';
+function pipe(p, pts, w = 0.04) { p.line3(pts, STEELD, w); p.line3(pts.map(([x, y, z]) => [x, y + w * 0.3, z]), STEEL, w * 0.4); }
+function circ(cx, cy, cz, r, ux, uy, uz, vx, vy, vz, n = 22) { return Array.from({ length: n }, (_, i) => { const a = (i / n) * 6.283, c = Math.cos(a) * r, s = Math.sin(a) * r; return [cx + ux * c + vx * s, cy + uy * c + vy * s, cz + uz * c + vz * s]; }); }
+function dishN(p, cx, cy, cz, r, nx, ny, nz, col) {   // chảo vệ tinh hướng theo pháp tuyến n: đĩa, vành neon, cần thu sóng
+  const l = Math.hypot(nx, ny, nz); nx /= l; ny /= l; nz /= l;
+  let ux = -nz, uz = nx; const ul = Math.hypot(ux, uz) || 1; ux /= ul; uz /= ul; if (Math.abs(nx) + Math.abs(nz) < 0.01) { ux = 1; uz = 0; }
+  const vx = ny * uz, vy = nz * ux - nx * uz, vz = -ny * ux, face = nx + nz + ny * 0.8 > 0;
+  const P = circ(cx, cy, cz, r, ux, 0, uz, vx, vy, vz);
+  p.poly(P, face ? '#c4cde6' : '#4c5678'); p.poly(circ(cx + nx * 0.01, cy + ny * 0.01, cz + nz * 0.01, r * 0.55, ux, 0, uz, vx, vy, vz), face ? '#e6ecfa' : '#3a4364');
+  neon(p, [...P, P[0]], col, 0.01, 0.05);
+  const tip = [cx + nx * r * 0.85, cy + ny * r * 0.85, cz + nz * r * 0.85]; p.line3([[cx, cy, cz], tip], '#9aa6c8', 0.01); glow(p, col, 0.08, () => p.ball(...tip, 0.018, '#ffffff'));
 }
-function tall(p, b) {   // cao ốc tối, cửa sổ sáng, viền neon góc trước; tuỳ chọn biển dọc / hologram / cá chép / antenna
-  const { x, z, w, d, acc } = b, r = p.u.rng(b.seed), h = Math.min(b.h, hMax(x, z)), x0 = x - w / 2, z0 = z - d / 2;
-  p.shadow(x0, z0, w, d, h, 0.3);
-  block(p, x0, 0, z0, w, h, d, '#0c1530', r, { cw: 0.08, ch: 0.11, lit: 0.5, cols: WINB, mx: 0.16, my: 0.22, edge: 'rgba(120,160,255,.18)' });
-  neon(p, [[x0 + w, 0.02, z0 + d], [x0 + w, h, z0 + d]], acc, 0.014, 0.08);
-  neonLoop(p, x0, z0, x0 + w, z0 + d, h + 0.005, acc, 0.012, 0.06);
-  if (h > 0.9 && w > 0.3) p.box(x0 + w * 0.2, h, z0 + d * 0.2, w * 0.6, 0.12, d * 0.6, '#101a34', { edge: 'rgba(120,160,255,.2)' });
-  if (b.sign && h > 0.6) vsign(p, x0 + w * 0.78, h * 0.3, z0 + d, h * 0.55, b.sign, r);
-  if (b.holo && h > 0.6) holo(p, x0 + 0.03, x0 + w - 0.03, h * 0.42, h * 0.82, z0 + d + 0.06, b.holo, r);
-  if (b.koi) koi(p, x0 - 0.04, x0 + w + 0.04, 0.3, h - 0.08, z0 + d + 0.04);
-  if (b.ant && h > 1) antenna(p, x, h + 0.12, z, 0.3, N.red);
+function koiTower(p, X, Z) {   // trụ tròn mảnh + biển cá chép hologram treo nổi trên giá đỡ, giàn thép trên đỉnh biển
+  const H = Math.min(1.55, hMax(X, Z) - 0.14), bz = Z + 0.36, x0 = X - 0.62, x1 = X + 0.62, y0 = 0.42, y1 = H - 0.1;
+  p.ellipseShadow(X, Z, 0.55, 0.3);
+  p.cyl(X, 0, Z, 0.36, 0.12, N.steel); ring(p, X, 0.13, Z, 0.36, N.mag, 0.02, 28);
+  p.cyl(X, 0.12, Z, 0.19, H - 0.12, '#121a30');
+  for (let i = 0; i < 12; i++) { const a = (i / 12) * 6.283; if (Math.cos(a) + Math.sin(a) < 0.1) continue; const x = X + Math.cos(a) * 0.195, z = Z + Math.sin(a) * 0.195; neon(p, [[x, 0.18, z], [x, H - 0.04, z]], i % 2 ? N.mag : '#ff8a3d', 0.008, 0.05); }
+  p.cyl(X, H, Z, 0.27, 0.06, N.steel2); ring(p, X, H + 0.065, Z, 0.27, N.cyan, 0.02, 28);
+  neon(p, [[X, H + 0.06, Z], [X, H + 0.24, Z]], '#9aa6c8', 0.01, 0.02); glow(p, N.red, 0.2, () => p.ball(X, H + 0.26, Z, 0.03, N.red));
+  for (const sx of [-0.32, 0.32]) for (const yy of [y0 + 0.12, y1 - 0.12]) pipe(p, [[X + sx * 0.4, yy, Z + 0.12], [X + sx, yy, bz - 0.01]], 0.03);
+  koi(p, x0, x1, y0, y1, bz);
+  const lat = [[x0, y1 + 0.02], [x1, y1 + 0.02]]; p.line3(lat.map(([x, y]) => [x, y, bz]), STEEL, 0.014); p.line3(lat.map(([x, y]) => [x, y + 0.08, bz]), STEEL, 0.014);
+  for (let i = 0; i <= 8; i++) { const x = x0 + ((x1 - x0) * i) / 8; p.line3([[x, y1 + 0.02, bz], [x + (i % 2 ? -1 : 1) * 0.155, y1 + 0.1, bz]], STEEL, 0.008); }
+  for (let i = 0; i < 6; i++) glow(p, '#fff6c8', 0.06, () => p.ball(x0 + 0.1 + i * 0.21, y1 + 0.11, bz + 0.01, 0.014, '#fff6c8'));
 }
-const CITY = (() => {   // cao ốc: vành nhà sát bệ (trong vành đai) + lưới khối phố bên ngoài
-  const A = [N.cyan, N.mag, N.lime, N.gold, N.violet], L = [], u = (s) => { const v = Math.sin(s * 127.1 + 311.7) * 43758.5453; return v - Math.floor(v); };
-  const put = (x, z, w, d, h, o = {}) => L.push({ x, z, w, d, h, acc: A[L.length % A.length], seed: 300 + L.length * 17, ...o });
-  // trong vành đai, bám quanh bệ: sau / hai bên cao, trước thấp; chừa chỗ cầu thang
-  const g0 = 2.07;
-  for (const t of [-1.55, -1.0, -0.45, 0.1, 0.65, 1.2]) {
-    const back = t < 0.3;
-    put(TX - g0, TZ + t, 0.4, 0.44, back ? 1.6 - t * 0.3 : 0.75, { sign: t === -1.0 ? N.mag : 0 });
-    put(TX + t, TZ - g0, 0.44, 0.4, back ? 1.6 - t * 0.3 : 0.75, { sign: t === -0.45 ? N.cyan : 0, ant: t === -1.55 ? 1 : 0 });
-    if (Math.abs(t + 0.3) > 0.45 && t < 1) { put(TX + g0, TZ + t, 0.4, 0.42, 0.55 + u(t) * 0.35, { holo: t === -1.55 ? N.mag : 0 }); put(TX + t, TZ + g0, 0.42, 0.4, 0.55 + u(t + 9) * 0.35, { sign: t === 0.65 ? N.lime : 0 }); }
-  }
-  put(TX - g0, TZ - g0, 0.46, 0.46, 2.1, { ant: 1 });
-  put(KOI[0], KOI[1], 1.3, 0.5, 1.75, { koi: 1 });
-  // ngoài vành đai: lưới khối phố, chừa phố (lane), bệ xúc xắc, chồng cube, bản đồ, toà cá chép
-  const step = 0.6, free = (x, z) => !inRR(x, z, TX, TZ, RH + RW / 2 + 0.5, RRC[2] + 0.5) && Math.hypot(x - PADX, z - PADZ) > PADR + 0.45 && !(x + z > 1.2 && Math.min(x, z) > -1.4 && Math.max(x, z) < 4.6)
-    && Math.hypot(x - CUBE[0], z - CUBE[1]) > 0.9 && Math.hypot(x - MAP[0], z - MAP[1]) > 0.95 && !(Math.abs(x - KOI[0]) < 1.0 && z > KOI[1] - 0.6 && z < KOI[1] + 1.6)
-    && !(Math.abs(z + 1.0) < 0.45 && x > 0.9) && !(Math.abs(x + 1.0) < 0.45 && z > 0.9) && !(Math.abs(x - 0.3) < 0.4 && z < -3.9) && !(Math.abs(z - 0.3) < 0.4 && x < -3.9);
-  for (let i = 0; i < 20; i++) for (let j = 0; j < 20; j++) {
-    const x = -5.6 + i * step, z = -5.6 + j * step, s = i * 31 + j * 7;
-    if (x > 5.65 || z > 5.65 || !free(x, z) || u(s) < (x + z > 1.2 && Math.min(x, z) > -1.4 ? 0.45 : 0.12)) continue;   // hàng sát mép trước thưa hơn
-    const dt = Math.max(Math.abs(x - TX), Math.abs(z - TZ)) - RH, fr = Math.max(0.22, 1 - Math.max(0, x + z - 1) / 5.5);
-    const ahead = x > TX + RH || z > TZ + RH, h = Math.max(0.55, (0.45 + Math.max(0, 1.9 - dt * 0.42) * (0.6 + u(s + 3) * 0.6)) * fr * (ahead ? 0.6 : 1)), w = 0.4 + u(s + 5) * 0.12, d = 0.4 + u(s + 6) * 0.12, k = u(s + 8);
-    put(x + (u(s + 1) - 0.5) * 0.06, z + (u(s + 2) - 0.5) * 0.06, w, d, h, k < 0.12 ? { sign: N.mag } : k < 0.22 ? { sign: N.cyan } : k < 0.3 ? { holo: N.violet } : k < 0.36 ? { ant: 1 } : {});
-  }
-  return L;
-})();
+function arcology(p, X, Z) {   // khối bậc thang: 4 tầng lùi, dải kính liền ngang, vườn trên sân thượng, mái vòm kính
+  const T = [[0.66, 0.18, N.cyan], [0.5, 0.16, N.lime], [0.35, 0.14, N.cyan], [0.21, 0.1, N.gold]];
+  p.shadow(X - 0.66, Z - 0.66, 1.32, 1.32, 0.7, 0.3);
+  let y = 0;
+  T.forEach(([h, t, col], i) => {
+    p.box(X - h, y, Z - h, 2 * h, t, 2 * h, '#151c36', { top: '#173328', edge: 'rgba(120,160,255,.2)' });
+    glow(p, col, 0.08, () => { p.quadZ(Z + h + 0.002, X - h + 0.04, X + h - 0.04, y + 0.05, y + t - 0.05, hexA(col, 0.32)); p.quadX(X + h + 0.002, Z - h + 0.04, Z + h - 0.04, y + 0.05, y + t - 0.05, hexA(col, 0.22)); });
+    p.line3([[X - h + 0.04, y + t / 2, Z + h + 0.004], [X + h - 0.04, y + t / 2, Z + h + 0.004]], hexA('#ffffff', 0.35), 0.006);
+    neon(p, [[X - h, y + t + 0.004, Z + h], [X + h, y + t + 0.004, Z + h], [X + h, y + t + 0.004, Z - h]], col, 0.014, 0.07);
+    y += t;
+    if (i < T.length - 1) { const m = (h + T[i + 1][0]) / 2, n = Math.round(m * 9);
+      for (let k = 0; k < n; k++) { const s = -m + ((k + 0.5) / n) * 2 * m; p.ball(X + s, y + 0.035, Z + m, 0.035, k % 3 ? '#2fb87a' : '#57e08f'); p.ball(X + m, y + 0.035, Z + s, 0.035, k % 3 ? '#2fb87a' : '#57e08f'); }
+      p.flatEllipse(X + m + 0.02, y + 0.002, Z + m + 0.02, 0.06, 0.06, hexA(N.cyan, 0.5)); }
+  });
+  glow(p, N.cyan, 0.2, () => p.ball(X, y + 0.02, Z, 0.15, 'rgba(120,230,255,.45)')); ring(p, X, y + 0.01, Z, 0.16, N.cyan, 0.016, 24);
+  glow(p, N.lime, 0.2, () => p.ball(X, y + 0.05, Z, 0.05, N.lime));
+}
+function rackBay(p, f, k, a0, a1, y0, y1, seed) {   // khoang kính lộ tủ máy chủ: nền tối, từng tủ có cột đèn LED, vạch quét
+  const r = p.u.rng(seed), q = (b0, b1, c0, c1, col) => Q(p, f, k, b0, b1, c0, c1, col), LED = [N.cyan, N.lime, N.lime, N.cyan, N.gold, N.red];
+  q(a0, a1, y0, y1, '#04060e');
+  const n = Math.max(2, Math.round((a1 - a0) / 0.15)), rw = (a1 - a0) / n;
+  for (let i = 0; i < n; i++) { const b0 = a0 + i * rw + 0.012, b1 = b0 + rw - 0.024; q(b0, b1, y0 + 0.02, y1 - 0.02, '#161c33');
+    for (let yy = y0 + 0.04; yy < y1 - 0.04; yy += 0.032) { q(b0 + 0.01, b1 - 0.01, yy, yy + 0.004, '#0a0e1c'); if (r() < 0.75) { const c = LED[Math.floor(r() * LED.length)], xx = b0 + 0.015 + r() * (b1 - b0 - 0.05); glow(p, c, 0.03, () => q(xx, xx + 0.016, yy + 0.008, yy + 0.02, c)); } } }
+  glow(p, N.mag, 0.12, () => q(a0, a1, y0 + (y1 - y0) * 0.62, y0 + (y1 - y0) * 0.62 + 0.012, 'rgba(255,63,180,.85)'));
+  q(a0, a1, y0, y1, 'rgba(39,230,255,.08)');
+  const o = 0.003, P = f === 'x' ? (a, y) => [k + o, y, a] : (a, y) => [a, y, k + o];
+  neon(p, [P(a0, y0), P(a1, y0), P(a1, y1), P(a0, y1), P(a0, y0)], N.cyan, 0.012, 0.06);
+}
+function dataVault(p, X, Z) {   // két dữ liệu: khối bọc thép trên đế sọc cảnh báo, khoang kính lộ tủ máy chủ, cửa két tròn, quạt làm mát trên mái
+  const w = 1.1, d = 0.86, h = 1.0, x0 = X - w / 2, z0 = Z - d / 2, x1 = x0 + w, z1 = z0 + d;
+  p.shadow(x0 - 0.06, z0 - 0.06, w + 0.12, d + 0.12, h, 0.3);
+  p.box(x0 - 0.07, 0, z0 - 0.07, w + 0.14, 0.12, d + 0.14, '#1a2240', { edge: null, top: '#222c4e' });
+  for (let i = 0; i < 14; i++) { const a = x0 - 0.05 + i * 0.085; p.poly([[a, 0.015, z1 + 0.071], [a + 0.04, 0.015, z1 + 0.071], [a + 0.08, 0.105, z1 + 0.071], [a + 0.04, 0.105, z1 + 0.071]], N.gold); }
+  for (let i = 0; i < 11; i++) { const a = z0 - 0.05 + i * 0.085; p.poly([[x1 + 0.071, 0.015, a], [x1 + 0.071, 0.015, a + 0.04], [x1 + 0.071, 0.105, a + 0.08], [x1 + 0.071, 0.105, a + 0.04]], N.gold); }
+  p.box(x0, 0.12, z0, w, h - 0.12, d, '#0b1226', { top: '#141d3a', edge: 'rgba(120,160,255,.22)' });
+  for (const s of [0.0, 0.35, 0.7]) { p.line3([[x0 + 0.02, 0.2 + s * 0.98, z1 + 0.003], [x1 - 0.02, 0.2 + s * 0.98, z1 + 0.003]], 'rgba(150,170,220,.18)', 0.008); }
+  rackBay(p, 'z', z1 + 0.002, x0 + 0.08, x1 - 0.08, 0.26, 0.86, 71);
+  const cy = 0.56, cz = Z, R = 0.27;   // cửa két tròn trên mặt +x
+  p.poly(circ(x1 + 0.004, cy, cz, R + 0.05, 0, 0, 1, 0, 1, 0), '#2a3456'); p.poly(circ(x1 + 0.008, cy, cz, R, 0, 0, 1, 0, 1, 0), '#3b4770');
+  neon(p, [...circ(x1 + 0.01, cy, cz, R, 0, 0, 1, 0, 1, 0, 30), [x1 + 0.01, cy, cz + R]], N.lime, 0.014, 0.08);
+  for (let i = 0; i < 6; i++) { const a = (i / 6) * 6.283; p.line3([[x1 + 0.012, cy, cz], [x1 + 0.012, cy + Math.sin(a) * R * 0.85, cz + Math.cos(a) * R * 0.85]], '#8d9ac2', 0.016); }
+  glow(p, N.lime, 0.15, () => p.ball(x1 + 0.02, cy, cz, 0.05, N.lime));
+  for (const [fx, fz] of [[X - 0.25, Z - 0.1], [X + 0.25, Z - 0.1]]) { p.cyl(fx, h, fz, 0.19, 0.05, '#1f2844'); p.flatEllipse(fx, h + 0.052, fz, 0.16, 0.16, '#05070f');
+    for (let i = 0; i < 4; i++) { const a = (i / 4) * 6.283 + 0.4; p.line3([[fx, h + 0.055, fz], [fx + Math.cos(a) * 0.15, h + 0.055, fz + Math.sin(a) * 0.15]], '#6f7ca6', 0.025); } ring(p, fx, h + 0.054, fz, 0.17, N.cyan, 0.01, 22); }
+  pipe(p, [[x0 + 0.1, h, z1 - 0.12], [x0 + 0.1, h + 0.22, z1 - 0.12], [x0 + 0.3, h + 0.22, z1 - 0.12]], 0.05);
+  neonLoop(p, x0, z0, x1, z1, h + 0.004, N.lime, 0.014, 0.08);
+}
+function station(p) {   // ga monorail trên vành đai (cạnh phải): sân ga hai bên, mái vòm cong, toa con nhộng đỗ, cầu kính sang két dữ liệu
+  const X = TX + RH, z0 = -2.95, z1 = -2.05, yP = RY + 0.04, yR = RY + 0.52, h = RW / 2;
+  for (const [a, b] of [[X - h - 0.3, X - h - 0.02], [X + h + 0.02, X + h + 0.3]]) { p.box(a, 0, z0, b - a, yP, z1 - z0, '#18213e', { edge: 'rgba(120,160,255,.2)', top: '#2b3a66' }); neon(p, [[b, yP + 0.003, z1], [a, yP + 0.003, z1]], N.gold, 0.012, 0.06); }
+  for (const x of [X - h - 0.26, X + h + 0.26]) for (const z of [z0 + 0.05, z1 - 0.05]) p.box(x - 0.02, yP, z - 0.02, 0.04, yR - yP, 0.04, '#9aa6c8', { edge: null });
+  const A = Array.from({ length: 9 }, (_, i) => { const t = i / 8, x = X - h - 0.34 + t * (2 * h + 0.68); return [x, yR + Math.sin(t * Math.PI) * 0.14]; });
+  for (let i = 0; i < 8; i++) { const [xa, ya] = A[i], [xb, yb] = A[i + 1]; p.poly([[xa, ya, z0 - 0.06], [xb, yb, z0 - 0.06], [xb, yb, z1 + 0.06], [xa, ya, z1 + 0.06]], i < 4 ? '#22305a' : '#2e4174'); }
+  p.poly([...A.map(([x, y]) => [x, y, z1 + 0.06]), [X + h + 0.34, yR - 0.04, z1 + 0.06], [X - h - 0.34, yR - 0.04, z1 + 0.06]], '#141c36');
+  neon(p, A.map(([x, y]) => [x, y + 0.004, z1 + 0.062]), N.cyan, 0.016, 0.1);
+  glow(p, N.cyan, 0.3, () => p.flatEllipse(X, RY + 0.01, (z0 + z1) / 2, 0.3, 0.42, 'rgba(39,230,255,.12)'));
+  const px = X + h + 0.16, pz0 = z0 + 0.12, pz1 = z1 - 0.12;   // toa con nhộng đỗ ở sân ga phải
+  p.box(px - 0.09, yP, pz0, 0.18, 0.16, pz1 - pz0, '#d9e2f6', { top: '#f2f6ff', right: '#b8c4e0', edge: null });
+  p.ball(px, yP + 0.08, pz1, 0.09, '#d9e2f6'); glow(p, N.mag, 0.08, () => p.quadZ(pz1 + 0.002, px - 0.08, px + 0.08, yP + 0.08, yP + 0.12, '#1a0f2a'));
+  p.quadX(px + 0.092, pz0 + 0.04, pz1 - 0.04, yP + 0.08, yP + 0.13, '#0d2a44'); neon(p, [[px + 0.093, yP + 0.03, pz0], [px + 0.093, yP + 0.03, pz1]], N.mag, 0.012, 0.06);
+  const bx0 = X + h + 0.3, bx1 = VAULT[0] - 0.55, by = 0.72, bz = VAULT[1] + 0.15, bw = 0.22;   // cầu kính
+  p.ground(bx0, bz - bw / 2, bx1, bz + bw / 2, 'rgba(120,230,255,.28)', by + 0.16); p.quadZ(bz + bw / 2, bx0, bx1, by, by + 0.16, 'rgba(39,230,255,.2)'); p.quadX(bx1, bz - bw / 2, bz + bw / 2, by, by + 0.16, 'rgba(39,230,255,.16)');
+  for (let i = 1; i < 4; i++) { const x = bx0 + ((bx1 - bx0) * i) / 4; p.line3([[x, by, bz + bw / 2 + 0.002], [x, by + 0.16, bz + bw / 2 + 0.002]], 'rgba(191,246,255,.5)', 0.006); }
+  neonLoop(p, bx0, bz - bw / 2, bx1, bz + bw / 2, by + 0.16, N.cyan, 0.01, 0.06); neon(p, [[bx0, by, bz + bw / 2], [bx1, by, bz + bw / 2]], N.mag, 0.01, 0.06);
+  p.box(bx0 - 0.02, yP, bz - 0.03, 0.04, by - yP, 0.06, '#9aa6c8', { edge: null });
+}
+function mast(p, X, Z) {   // cột ăng-ten giàn tam giác: chân rộng thon dần, giằng chéo, đèn đỏ hàng không, 3 chảo trên cột + 3 chảo mặt đất, nhà máy phát
+  const H = Math.min(2.1, hMax(X, Z) - 0.3), lv = 7, r = (y) => 0.3 - (y / H) * 0.24, leg = (k, y) => { const a = (k / 3) * 6.283 + 0.5; return [X + Math.cos(a) * r(y), y, Z + Math.sin(a) * r(y)]; };
+  p.ellipseShadow(X, Z, 0.5, 0.25);
+  p.box(X - 0.18, 0, Z - 0.78, 0.36, 0.26, 0.3, '#1a2240', { edge: 'rgba(120,160,255,.2)', top: '#273257' }); glow(p, N.gold, 0.08, () => p.quadZ(Z - 0.478, X - 0.08, X + 0.02, 0.03, 0.2, N.gold)); vent0(p, X - 0.14, 0.26, Z - 0.74);
+  p.cyl(X, 0, Z, 0.36, 0.06, N.steel); ring(p, X, 0.065, Z, 0.36, N.red, 0.014, 26);
+  for (let k = 0; k < 3; k++) p.line3([leg(k, 0.06), leg(k, H)], '#8592b8', 0.028);
+  for (let i = 0; i < lv; i++) { const ya = 0.06 + ((H - 0.06) * i) / lv, yb = 0.06 + ((H - 0.06) * (i + 1)) / lv;
+    for (let k = 0; k < 3; k++) { p.line3([leg(k, yb), leg((k + 1) % 3, yb)], '#6f7ca6', 0.012); p.line3([leg(k, ya), leg((k + 1) % 3, yb)], '#55628a', 0.008); p.line3([leg((k + 1) % 3, ya), leg(k, yb)], '#55628a', 0.008); }
+    if (i % 2) glow(p, N.red, 0.12, () => p.ball(...leg(0, yb), 0.022, N.red)); }
+  dishN(p, X + 0.2, H * 0.48, Z + 0.06, 0.15, 1, 0.15, 0.2, N.cyan); dishN(p, X + 0.02, H * 0.66, Z + 0.18, 0.13, 0.1, 0.25, 1, N.mag); dishN(p, X + 0.12, H * 0.82, Z + 0.1, 0.1, 0.9, 0.3, 0.9, N.lime);
+  neon(p, [[X, H, Z], [X, H + 0.32, Z]], '#c9d2ea', 0.012, 0.03); glow(p, N.red, 0.3, () => p.ball(X, H + 0.34, Z, 0.04, N.red));
+  dishN(p, X - 0.5, 0.22, Z + 0.35, 0.18, 0.4, 0.8, 0.8, N.cyan); p.cyl(X - 0.5, 0, Z + 0.35, 0.03, 0.2, STEELD);
+  dishN(p, X + 0.1, 0.18, Z + 0.62, 0.14, 0.7, 0.9, 0.5, N.mag); p.cyl(X + 0.1, 0, Z + 0.62, 0.03, 0.16, STEELD);
+}
+function vent0(p, x, y, z) { p.box(x, y, z, 0.14, 0.06, 0.12, '#2a3456', { edge: null }); for (let i = 0; i < 3; i++) p.line3([[x + 0.02, y + 0.02 + i * 0.015, z + 0.122], [x + 0.12, y + 0.02 + i * 0.015, z + 0.122]], '#0a0e1c', 0.006); }
+function tankFarm(p, X, Z) {   // trạm bồn làm mát: 3 bồn trụ trên sàn thép, ống góp chạy vào lò dưới vành đai
+  p.box(X - 0.36, 0, Z - 0.9, 0.72, 0.06, 1.8, '#141c34', { edge: null, top: '#1c2646' }); neon(p, [[X + 0.36, 0.063, Z - 0.9], [X + 0.36, 0.063, Z + 0.9], [X - 0.36, 0.063, Z + 0.9]], N.lime, 0.012, 0.06);
+  pipe(p, [[X - 0.24, 0.3, Z - 0.9], [X - 0.24, 0.3, Z + 0.85]], 0.045);
+  for (const [dz, r] of [[-0.56, 0.2], [0, 0.23], [0.56, 0.2]]) { const z = Z + dz; p.ellipseShadow(X, z, r + 0.05, 0.3); p.cyl(X, 0.06, z, r, 0.28, '#2b3658'); p.flatEllipse(X, 0.345, z, r, r, '#3a4874'); p.flatEllipse(X, 0.36, z, r * 0.55, r * 0.55, '#4b5a8a');
+    ring(p, X, 0.17, z, r + 0.004, N.lime, 0.014, 26); glow(p, N.lime, 0.1, () => p.quadX(X + r * 0.72, z - 0.04, z + 0.04, 0.09, 0.3, hexA(N.lime, 0.75))); }
+  pipe(p, [[X + 0.1, 0.22, Z], [TX - 1.75, 0.22, Z]], 0.05); pipe(p, [[X + 0.1, 0.12, Z - 0.56], [X + 0.5, 0.12, Z - 0.56], [X + 0.5, 0.12, Z - 0.12], [TX - 1.75, 0.12, Z - 0.12]], 0.035);
+}
 function cubeStack(p, x, z) {   // chồng Data Cube kính (thẻ Cơ hội)
   p.ellipseShadow(x, z, 0.8, 0.25); p.cyl(x, 0, z, 0.78, 0.12, N.steel); ring(p, x, 0.13, z, 0.72, N.mag, 0.035, 40); ring(p, x, 0.06, z, 0.79, N.cyan, 0.02, 40);
   glow(p, N.mag, 0.3, () => p.flatEllipse(x, 0.135, z, 0.62, 0.62, 'rgba(255,63,180,.18)'));
@@ -359,7 +444,8 @@ function centerCity(pen, c) {   // vẽ một lần (cạnh 0), mọi vật vào
   c.add(TX, TZ, tower);
   ROAD.pts.forEach((q, i) => { const b = ROAD.pts[(i + 1) % ROAD.pts.length]; c.add((q[0] + b[0]) / 2, (q[1] + b[1]) / 2, (p) => roadPiece(p, i), 0.05); });
   RAMPS.forEach(([ax, k]) => { const m = TX + RH + RW / 2 + 0.8; c.add(ax ? m : k, ax ? k : m, (p) => ramp(p, ax, k), 0.1); });
-  CITY.forEach((b) => c.add(b.x, b.z, (p) => tall(p, b)));
+  c.add(TX + RH, -2.5, station, 0.3); c.add(VAULT[0], VAULT[1], (p) => dataVault(p, ...VAULT)); c.add(KOI[0], KOI[1], (p) => koiTower(p, ...KOI));
+  c.add(ARCO[0], ARCO[1], (p) => arcology(p, ...ARCO)); c.add(MAST[0], MAST[1], (p) => mast(p, ...MAST)); c.add(TANKS[0], TANKS[1], (p) => tankFarm(p, ...TANKS));
   c.add(CUBE[0], CUBE[1], (p) => cubeStack(p, CUBE[0], CUBE[1])); c.add(MAP[0], MAP[1], (p) => worldPanel(p, MAP[0], MAP[1]));
 }
 function cityFx(p, t) {   // chuyển động rẻ: 6 xe chạy trên nửa trước vành đai + chấm sáng quay trên vòng hologram giữa
