@@ -44,6 +44,10 @@ Nâng một bậc (Haiku→Sonnet→Opus) khi agent hỏng hoặc phải đoán 
 - **Không báo trạng thái hoàn thành trong chat** (02/11): ghi ngắn vào `note` trên board, người dùng tự đọc. Chat chỉ dùng khi cần hỏi/quyết định.
 - Bàn giao sang chat mới sau ~10 task hoặc khi context dày: cập nhật mục "Trạng thái", commit qua PR.
 
+## Phát hành (02/11/2026)
+- **Không làm bản chạy local nữa** (bỏ `build:exe`, không gửi file .exe/mac/linux). Chỉ repo GitHub → Cloudflare.
+- Production: `https://game.nauagency.asia/monopolyThaithinh/` (route trong `wrangler.toml`). Merge vào `main` → workflow `.github/workflows/deploy.yml` tự `wrangler deploy` (cần secret `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`).
+
 ## Uỷ quyền (02/11/2026)
 Người dùng uỷ quyền lead **tự duyệt mọi đề xuất** (ảnh, phương án, merge PR khi CI xanh và verify qua). Vẫn báo kết quả + ảnh cuối cho người dùng xem lại; chỉ hỏi khi quyết định không đảo ngược được hoặc vượt ngưỡng 80% usage.
 
