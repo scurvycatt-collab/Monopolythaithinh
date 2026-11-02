@@ -161,11 +161,26 @@
     'Lễ Hội Hà Nội', 'Gia Lâm', 'Bát Tràng', 'Đông Anh', 'Cơ Hội', 'Sóc Sơn', 'Mê Linh', 'Sơn Tây',
     'Du Ngoạn Hà Nội', 'Ba Vì', 'Thanh Trì', 'Hoài Đức', 'Cơ Hội', 'Quốc Oai', 'Thuế Đô Thị', 'Phúc Thọ',
   ];
+  // Lumina-01: bốn cạnh = Back Alley (A, B) → Nightlife (C, D) → Cyber Financial (E, F) → Megacorp HQ (G, H).
+  const NEON_TILE_NAMES = [
+    'START', 'Hẻm Dây Điện', 'Chợ Linh Kiện', 'Phố Mì Đêm', 'Trạm Sạc Ngầm', 'Xưởng Hack', 'Hẻm Katakana', 'Quán Net 24h',
+    'FIREWALL', 'Quán Bar Koi', 'Khu VR Hub', 'Karaoke Hologram', 'Data Cube', 'Sòng Magenta', 'Ga Spinner', 'Phố Geisha Máy',
+    'NEON ARCADE', 'Sàn Tiền Số', 'Trục Hyperloop', 'Lõi Dữ Liệu', 'Data Cube', 'Ngân Hàng Lượng Tử', 'Quảng Trường Cyan', 'Viện Nơ-ron',
+    'WARP GATE', 'Cảng Skylift', 'Tháp Đen Vàng', 'Penthouse Ánh Vàng', 'Data Cube', 'Megacorp Plaza', 'Thuế Dữ Liệu', 'Megacorp HQ',
+  ];
   // Danh sách map có thể chọn trong room. Map hiện tại là map mặc định;
   // thêm map mới vào đây trước khi nối renderer/asset tương ứng.
   const MAPS = [
     { id: 'map-1', name: 'Map 1', description: 'Bản đồ Thái Thịnh mặc định', preview: 'maps/map-1/preview.svg', renderer: 'maps/map-1/renderer.js', default: true },
     { id: 'four-seasons', name: 'Bốn Mùa Hà Nội', description: 'Hà Nội qua bốn mùa: Xuân, Hạ, Thu, Đông. Hội chợ bốn mùa và đài phun nước giữa bàn. Bàn 2D nhẹ, hợp máy yếu.', preview: 'maps/four-seasons/preview.svg', renderer: 'maps/four-seasons/renderer.js', tileNames: HANOI_TILE_NAMES },
+    { id: 'neon', name: 'Lumina-01', description: 'Đại đô thị neon lúc nửa đêm sau mưa: Back Alley, Nightlife, Cyber Financial, Megacorp HQ. Lõi năng lượng giữa bàn. Bàn 2D.', preview: 'maps/neon/preview.svg', renderer: 'maps/neon/renderer.js', tileNames: NEON_TILE_NAMES,
+      // T25 (v4): Vance / Nyx / Seraphina / K-9000 theo docs/maps/neon-concept.md (SVG vẽ bằng code, xem maps/neon/assets/pets/build-pets.mjs)
+      pets: [
+        { id: 'neon-vance', n: 'Vance', c: '#ffb81f', img: 'maps/neon/assets/pets/neon-vance-avatar.png', tokenImg: 'maps/neon/assets/pets/neon-vance-token.svg' },
+        { id: 'neon-nyx', n: 'Nyx', c: '#1fd8ff', img: 'maps/neon/assets/pets/neon-nyx-avatar.png', tokenImg: 'maps/neon/assets/pets/neon-nyx-token.svg' },
+        { id: 'neon-seraphina', n: 'Seraphina', c: '#ff2fd2', img: 'maps/neon/assets/pets/neon-seraphina-avatar.png', tokenImg: 'maps/neon/assets/pets/neon-seraphina-token.svg' },
+        { id: 'neon-k9000', n: 'K-9000', c: '#a4ff1c', img: 'maps/neon/assets/pets/neon-k9000-avatar.png', tokenImg: 'maps/neon/assets/pets/neon-k9000-token.svg' },
+      ] },
     { id: 'isometric', name: 'Isometric', description: 'Thành phố khối Kenney, đảo nhiệt đới, sân bay giữa bàn', preview: 'maps/isometric/preview.svg', renderer: 'maps/isometric/renderer.js' },
   ];
 
