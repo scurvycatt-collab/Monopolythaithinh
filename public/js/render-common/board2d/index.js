@@ -6,6 +6,7 @@
 import { Pen, P, CX, CY, swapPen, bake, canvas, fitText, shade, mix, light, rgb, rng, hash, wp, FONT } from './pen.js';
 import { loadAssets, ensureAssets, composeKit } from './assets.js';
 import { diceRollDuration, diceRollFrame } from '../dice-roll.js';
+import { animateTokenStep, tokenFollowAlpha, tokenStepDuration } from '../token-motion.js';
 import { TOKEN_HEIGHT, PROPERTY_LEVEL_SCALE, PROPERTY_TILE_RATIO } from '../visual-scale.js';
 
 const REDUCED = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -294,7 +295,6 @@ export async function createBoard2D(ctx, skin) {
   }
   function drawToken(o, pid, now) {
     if (o.hidden) return;
-    if (o.tx !== undefined) { o.x += (o.tx - o.x) * 0.25; o.z += (o.tz - o.z) * 0.25; if (Math.abs(o.tx - o.x) + Math.abs(o.tz - o.z) < 0.002) { o.x = o.tx; o.z = o.tz; delete o.tx; } }
     const K = view.K, b = scr(o.x, 0, o.z), top = scr(o.x, o.y, o.z), im = petImg[o.pet], H = TOKEN_HEIGHT * K;
     g.save(); g.fillStyle = 'rgba(30,50,70,.22)'; g.beginPath(); g.ellipse(b.x, b.y, 0.3 * K, 0.15 * K, 0, 0, 7); g.fill();
     g.fillStyle = o.color; g.strokeStyle = '#ffffff'; g.lineWidth = Math.max(1.5, K * 0.03); g.beginPath(); g.ellipse(top.x, top.y, 0.28 * K, 0.14 * K, 0, 0, 7); g.fill(); g.stroke();
@@ -310,9 +310,10 @@ export async function createBoard2D(ctx, skin) {
   async function hop(pid, path, onStep) {
     const o = tok[pid]; if (!o) return; o.moving = true; delete o.tx;
     for (const pos of path) {
-      o.tile = pos; const [x, z] = spot(pid, pos, posOf), from = { x: o.x, z: o.z }, dur = 210;
-      o.anim = { from, to: { x, z }, t0: performance.now(), dur }; dirty = true; if (running) wake();
-      await sleep(dur); o.x = x; o.z = z; o.y = 0; o.anim = null;
+      o.tile = pos; const [x, z] = spot(pid, pos, posOf), from = { x: o.x, z: o.z }, dur = tokenStepDuration(path.length, REDUCED);
+      o.anim = true; dirty = true; if (running) wake();
+      await animateTokenStep({ from, to: { x, z }, duration: dur, onFrame: (pose) => { Object.assign(o, pose); dirty = true; if (running) wake(); } });
+      o.x = x; o.z = z; o.y = 0; o.anim = null;
       if (onStep) try { onStep(pos); } catch (e) { console.error(e); }
     }
     o.moving = false; placeTokens(false);
@@ -417,8 +418,10 @@ export async function createBoard2D(ctx, skin) {
     drawAnims(now);
     if (q.ambient) drawAmbient(t);
     drawDice(now);
-    for (const [pid, o] of Object.entries(tok)) {
-      if (o.anim) { const u = Math.min(1, (now - o.anim.t0) / o.anim.dur); o.x = o.anim.from.x + (o.anim.to.x - o.anim.from.x) * u; o.z = o.anim.from.z + (o.anim.to.z - o.anim.from.z) * u; o.y = Math.sin(u * Math.PI) * 0.55; }
+    const followAlpha = tokenFollowAlpha(Math.min(0.1, (now - (lastFrame || now)) / 1000));
+    for (const o of Object.values(tok)) if (!o.anim && o.tx !== undefined) {
+      o.x += (o.tx - o.x) * followAlpha; o.z += (o.tz - o.z) * followAlpha;
+      if (Math.abs(o.tx - o.x) + Math.abs(o.tz - o.z) < 0.002) { o.x = o.tx; o.z = o.tz; delete o.tx; }
     }
     Object.entries(tok).sort(([, a], [, b]) => a.x + a.z - (b.x + b.z)).forEach(([pid, o]) => drawToken(o, pid, now));
     drawConfetti(now, Math.min(0.05, (now - lastT) / 1000));

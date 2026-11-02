@@ -14,6 +14,7 @@ Cờ tỷ phú kiểu Business Tour, chơi qua mạng (Node `server.js` hoặc C
 | `public/js/app.js` | UI, lobby, mạng, âm thanh; gọi renderer qua contract | game |
 | `public/maps/<id>/` | Mỗi map một thư mục: `renderer.js`, `preview.svg`, `assets/` | render / art |
 | `public/js/render-common/board2d/` | Khung xương 2D dùng chung: map mới chỉ viết skin | render |
+| `public/js/render-common/token-motion.js` | Nguồn chuẩn timing/quỹ đạo/căn vị trí quân cho mọi renderer | render |
 | `public/assets/shared/` | Asset dùng chung nhiều map (Kenney packs), một bản duy nhất | art |
 | `public/js/houses.js`, `specials.js`, `world.js` | Model 3D của map-1 (sẽ chuyển vào `public/maps/map-1/`) | render |
 | `tools/map-lab/` | Trang thử nghiệm, chọn asset; không vào bản phát hành | art |
