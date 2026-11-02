@@ -24,10 +24,21 @@ const COLORS = [...new Set([...ALL_PETS.map((pet) => pet.c.toLowerCase()), '#9aa
 const CITY_LEVELS = G.LEVEL_NAMES.map((_, level) => level);
 const RESORT_LEVELS = G.CFG.RESORT_TOLL.map((_, level) => level).filter(Boolean);
 const colorId = (color) => color.replace('#', '').toLowerCase();
-const expected = COLORS.flatMap((color) => [
-  ...CITY_LEVELS.map((level) => `city-${colorId(color)}-${level}.png`),
-  ...RESORT_LEVELS.map((level) => `resort-${colorId(color)}-${level}.png`),
-]).sort();
+const NEON = G.MAPS.find((map) => map.id === 'neon');
+const NEON_VARIANTS = [
+  ...(NEON && Array.isArray(NEON.pets) ? NEON.pets.map((pet) => ({ id: pet.id, color: pet.c })) : []),
+  { id: 'neutral', color: '#9aa4b1' },
+];
+const expected = [
+  ...COLORS.flatMap((color) => [
+    ...CITY_LEVELS.map((level) => `city-${colorId(color)}-${level}.png`),
+    ...RESORT_LEVELS.map((level) => `resort-${colorId(color)}-${level}.png`),
+  ]),
+  ...NEON_VARIANTS.flatMap(({ id }) => [
+    ...CITY_LEVELS.map((level) => `neon-city-${id}-${level}.png`),
+    ...RESORT_LEVELS.map((level) => `neon-resort-${id}-${level}.png`),
+  ]),
+].sort();
 const PLAYER_COLORS = G.PETS.map((pet) => colorId(pet.c));
 const MODEL_COLORS = [...new Set([...PLAYER_COLORS, 'ef5a3c', '8a63e8', 'f7a21b', '2fb5a3', '9aa4b1'])];
 const MODEL_TEXTURES = ['suburban', 'commercial'].flatMap((kit) => ['colormap', 'variation-a'].flatMap((source) => MODEL_COLORS.map((color) => `model-${kit}-${source}-${color}.png`)));
@@ -49,6 +60,7 @@ const staticExpected = [
 ].sort();
 const sourceFiles = [
   'public/js/houses.js', 'public/js/specials.js', 'public/js/world.js', 'public/models/bundle.json',
+  'public/maps/neon/skin.js', 'public/js/render-common/board2d/pen.js',
   ...Object.values(G.GROUPS).map((group) => `public/patterns/pattern_${group.pattern}.png`),
   ...['suburban', 'commercial'].flatMap((kit) => ['colormap', 'variation-a'].map((name) => `public/models/${kit}/Textures/${name}.png`)),
 ];
@@ -84,6 +96,8 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { loadKit, building } from '/js/houses.js';
 import { beachHouse, fireworkDotCanvas, chanceCardCanvas, festivalBannerCanvas, festivalPlaqueCanvas } from '/js/specials.js';
 import { worldGroundCanvas, worldWaterCanvas, balloonStripeCanvas } from '/js/world.js';
+import neonSkin from '/maps/neon/skin.js';
+import { bake } from '/js/render-common/board2d/pen.js';
 const bundle = await (await fetch('/models/bundle.json')).json();
 await loadKit('/models', null, bundle, false);
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
@@ -101,6 +115,19 @@ function capture(obj) {
   const data = renderer.domElement.toDataURL('image/png').split(',')[1]; scene.remove(obj); return data;
 }
 const canvasData = (canvas) => canvas.toDataURL('image/png').split(',')[1];
+function neonThumbnail(kind, level, color, seed) {
+  const slot = neonSkin.slots[kind === 'city' ? 'house' : 'resortHouse'];
+  const sprite = bake((pen) => slot.draw(pen, {
+    slot: kind === 'city' ? 'house' : 'resortHouse', level, color, seed,
+    gz: 0, w: 1.7, d: 3.1, zone: neonSkin.zones[0], palette: neonSkin.palette,
+  }), { L: -2.6, R: 2.6, B: -1.8, T: 3.8 }, 110);
+  const out = document.createElement('canvas'); out.width = out.height = 220;
+  const g = out.getContext('2d'), pad = 10;
+  const scale = Math.min((out.width - 2 * pad) / sprite.canvas.width, (out.height - 2 * pad) / sprite.canvas.height);
+  const w = sprite.canvas.width * scale, h = sprite.canvas.height * scale;
+  g.drawImage(sprite.canvas, (out.width - w) / 2, out.height - pad - h, w, h);
+  return canvasData(out);
+}
 const loadImage = (src) => new Promise((resolve, reject) => { const image = new Image(); image.onload = () => resolve(image); image.onerror = reject; image.src = src; });
 function recolorImage(image, hex) {
   const cv = document.createElement('canvas'); cv.width = image.width; cv.height = image.height;
@@ -164,11 +191,15 @@ async function staticAssets() {
   return result;
 }
 window.__generatePropertyThumbnails = async () => {
-  const colors = ${JSON.stringify(COLORS)}, cityLevels = ${JSON.stringify(CITY_LEVELS)}, resortLevels = ${JSON.stringify(RESORT_LEVELS)}, result = [], statics = await staticAssets();
+  const colors = ${JSON.stringify(COLORS)}, cityLevels = ${JSON.stringify(CITY_LEVELS)}, resortLevels = ${JSON.stringify(RESORT_LEVELS)}, neonVariants = ${JSON.stringify(NEON_VARIANTS)}, result = [], statics = await staticAssets();
   for (const color of colors) {
     const id = color.slice(1).toLowerCase();
     for (const level of cityLevels) result.push({ file: 'city-' + id + '-' + level + '.png', data: capture(building('suburb', level, color)) });
     for (const level of resortLevels) result.push({ file: 'resort-' + id + '-' + level + '.png', data: capture(beachHouse(level, color)) });
+  }
+  for (const [variantIndex, variant] of neonVariants.entries()) {
+    for (const level of cityLevels) result.push({ file: 'neon-city-' + variant.id + '-' + level + '.png', data: neonThumbnail('city', level, variant.color, variantIndex * 31 + level + 1) });
+    for (const level of resortLevels) result.push({ file: 'neon-resort-' + variant.id + '-' + level + '.png', data: neonThumbnail('resort', level, variant.color, variantIndex * 31 + level + 17) });
   }
   renderer.dispose(); renderer.forceContextLoss(); return { properties: result, statics };
 };
@@ -234,7 +265,7 @@ async function generate() {
     });
     assert.equal(runtimeCheck.result.value, true, `Texture sinh sẵn không chạy được ở runtime: ${JSON.stringify(runtimeCheck.result.value)}`);
     const generatedHash = sourceHash();
-    fs.writeFileSync(MANIFEST, JSON.stringify({ version: 1, sourceHash: generatedHash, sources: sourceFiles, colors: COLORS, cityLevels: CITY_LEVELS, resortLevels: RESORT_LEVELS, files: expected }, null, 2) + '\n');
+    fs.writeFileSync(MANIFEST, JSON.stringify({ version: 2, sourceHash: generatedHash, sources: sourceFiles, colors: COLORS, cityLevels: CITY_LEVELS, resortLevels: RESORT_LEVELS, mapVariants: { neon: NEON_VARIANTS }, files: expected }, null, 2) + '\n');
     fs.writeFileSync(STATIC_MANIFEST, JSON.stringify({ version: 1, sourceHash: generatedHash, sources: sourceFiles, files: staticExpected }, null, 2) + '\n');
     fs.writeFileSync(VERSION_MODULE, `export const PROPERTY_THUMBNAIL_VERSION = '${generatedHash}';\n`);
     console.log(`Đã tạo ${images.properties.length} thumbnail công trình và ${images.statics.length} asset tĩnh`);

@@ -14,6 +14,11 @@ const { MAPS } = require('../public/rules.js');
 const DEFAULT_RENDERER = 'maps/map-1/renderer.js';
 const REQUIRED_FNS = ['reset', 'sync', 'moveToken', 'rollDice', 'tileScreen', 'pick'];
 const BOARD2D = 'js/render-common/board2d/index.js';
+// Map có công trình riêng phải có bộ thumbnail popup riêng, không được rơi về visual Map 1.
+// Khai báo này là cổng phát hành: thêm map tương tự phải thêm vào đây cùng generator/resolver.
+const MAP_PROPERTY_THUMBNAILS = Object.freeze({
+  neon: { petKeyed: true },
+});
 const errors = [];
 const fail = (id, msg) => errors.push(`Map "${id}": ${msg}`);
 const isFile = (p) => existsSync(p) && statSync(p).isFile();
@@ -110,6 +115,43 @@ for (const [i, entry] of (Array.isArray(MAPS) ? MAPS : []).entries()) {
   const dir = path.dirname(rendererRel);
   if (/^maps\/[^/]+$/.test(dir) && !isFile(path.join(PUBLIC, dir, 'README.md'))) {
     fail(id, `thư mục public/${dir}/ thiếu README.md.`);
+  }
+
+  const thumbnailRule = MAP_PROPERTY_THUMBNAILS[id];
+  if (thumbnailRule) {
+    if (thumbnailRule.petKeyed && (!Array.isArray(entry.pets) || entry.pets.length !== 4)) {
+      fail(id, 'thumbnail công trình theo nhân vật yêu cầu map khai báo đủ 4 `pets`.');
+    } else {
+      for (const pet of [...(entry.pets || []), { id: 'neutral' }]) {
+        for (let level = 0; level <= 4; level++) {
+          const file = path.join(PUBLIC, 'thumbnails', 'property', `${id}-city-${pet.id}-${level}.png`);
+          if (!isFile(file) || statSync(file).size <= 500) fail(id, `thiếu thumbnail công trình riêng hợp lệ: ${path.relative(PUBLIC, file)}.`);
+        }
+        for (let level = 1; level <= 4; level++) {
+          const file = path.join(PUBLIC, 'thumbnails', 'property', `${id}-resort-${pet.id}-${level}.png`);
+          if (!isFile(file) || statSync(file).size <= 500) fail(id, `thiếu thumbnail resort riêng hợp lệ: ${path.relative(PUBLIC, file)}.`);
+        }
+      }
+    }
+  }
+}
+
+// Generator phải băm source visual và app phải route popup/preload theo map + pet + cấp.
+// Kiểm tra cả asset lẫn source để một bộ PNG cũ không thể che lỗi resolver hoặc skin vừa đổi.
+{
+  const app = readFileSync(path.join(PUBLIC, 'js/app.js'), 'utf8');
+  const generator = readFileSync(path.join(ROOT, 'scripts/generate-property-thumbnails.mjs'), 'utf8');
+  if (!/mapId\s*===\s*['"]neon['"]/.test(app) || !/neon-\$\{kind\}-\$\{[^}]*petId[^}]*\}-\$\{level\}\.png/.test(app)) {
+    errors.push('Resolver thumbnail popup phải route Neon theo mapId × loại × petId × cấp.');
+  }
+  if (!/propertyThumbnail\([^\n]*mapId[^\n]*pet/.test(app) || !/preloadMapPropertyThumbnails[\s\S]*propertyThumbnail\([^\n]*mapId[^\n]*pet\.id/.test(app)) {
+    errors.push('Popup/preload thumbnail phải truyền cả mapId và pet của chủ, không chỉ màu.');
+  }
+  if (!/public\/maps\/neon\/skin\.js/.test(generator)) errors.push('Hash thumbnail phải bao gồm source public/maps/neon/skin.js.');
+  if (!/NEON_VARIANTS/.test(generator)
+    || !/['"]neon-city-['"]\s*\+\s*variant\.id\s*\+\s*['"]-['"]\s*\+\s*level/.test(generator)
+    || !/['"]neon-resort-['"]\s*\+\s*variant\.id\s*\+\s*['"]-['"]\s*\+\s*level/.test(generator)) {
+    errors.push('Generator phải sinh thumbnail Neon định danh theo pet và cấp.');
   }
 }
 // khung xương 2D: phải hiện thực đủ hàm ★ của map-renderer contract

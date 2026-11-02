@@ -15,11 +15,12 @@
 - Mất điện (số vòng + sét) và lễ hội (băng rôn ×2) hiện rõ ở `low`; không lỗi console, không 404 asset.
 - Hiệu năng `low` qua `stats()`: bàn trống 2,3 ms/khung, bàn đầy 3,3 ms/khung (≤ 4 ms); asset map 1,0 MB (≤ 1,5 MB).
 - Giữa bàn: chồng Data Cube dời khỏi cột ăng-ten (T24), không còn đè nhau.
+- Popup dùng thumbnail tĩnh sinh từ chính `house`/`resortHouse` của Neon cho đủ từng nhân vật và cấp;
+  client chỉ preload bộ này sau khi vào phòng, không dùng visual công trình Map 1.
 
 Không đạt / lệch checklist:
 - Bàn chuẩn của `rules.js` có 20 thành phố + 4 resort + 8 ô đặc biệt, không phải 22 + 4 + 6 như checklist (luật chung, ngoài phạm vi map).
 - Quân cờ: chỉ có trạng thái thường; chưa có vui / mất lượt / phá sản (khung xương chưa yêu cầu).
-- Thumbnail tĩnh nhà/resort cho popup chưa sinh riêng cho neon (`npm run thumbnails` không đòi).
 
 Không kiểm được (cần người hoặc máy thật):
 - Duyệt brief/moodboard/ảnh thực tế của chủ sản phẩm; avatar trong lobby/chat/kết quả.

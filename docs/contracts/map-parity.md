@@ -48,8 +48,10 @@ có thay đổi bản đồ.
   không tải thumbnail map ở trang chủ và không để popup đầu tiên chờ tải ảnh.
 - Khi thêm nhà, cấp nhà, màu hoặc model: cập nhật generator, chạy `npm run thumbnails`, rồi
   commit cả asset sinh ra và manifest/hash tương ứng.
-- Map có bộ công trình riêng theo nhân vật phải đưa `pet` của chủ vào chữ ký cache sprite, sinh đủ thumbnail
-  cho từng `pet × cấp`, route popup tới đúng thư mục map và có lệnh generator/check riêng trước khi commit.
+- Map có bộ công trình riêng phải định danh thumbnail bằng `mapId × loại × pet/màu × cấp`, đưa `pet`
+  của chủ vào chữ ký cache sprite, sinh đủ mọi biến thể và route popup tới đúng bộ của map. Không được
+  dùng thumbnail công trình Map 1 chỉ vì màu chủ giống nhau. Generator/check chung phải băm cả source
+  skin liên quan và chặn commit nếu thiếu hoặc còn asset cũ.
 - Chỉ dùng asset CC0 hoặc tự dựng; ghi nguồn trong README của map.
 
 ## 5. Tải và hiệu năng
