@@ -21,6 +21,11 @@ Code chính: `scripts/build-exe.mjs`, `scripts/generate-property-thumbnails.mjs`
 
 ## Thumbnail pipeline
 - `npm run thumbnails` (script `scripts/generate-property-thumbnails.mjs`) sinh thumbnail/asset tĩnh (danh sách: `render-map-1.md`).
+- Thumbnail công trình mặc định giữ tên theo `loại × màu × cấp`; map có visual công trình riêng dùng tên
+  theo `mapId × loại × pet/màu × cấp`. Client chỉ preload bộ của map sau khi vào phòng và popup phải dùng
+  cùng resolver, không dựng Canvas/WebGL lúc mở popup hoặc dùng nhầm visual của map mặc định.
+- Hash/manifest phải bao gồm source dựng visual của từng map có thumbnail riêng; thêm hoặc đổi skin,
+  nhân vật, màu hay cấp nhà phải chạy lại `npm run thumbnails` và commit toàn bộ PNG + manifest/version.
 - `npm run verify` kiểm tra hash, danh sách file và cache version; commit/build/deploy dừng nếu quên sinh lại.
 
 ## Verify, CI, kiểm thử

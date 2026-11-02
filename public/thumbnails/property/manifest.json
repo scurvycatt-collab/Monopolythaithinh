@@ -1,11 +1,13 @@
 {
-  "version": 1,
-  "sourceHash": "d59571dbbd9382ff3a693034fafa0cdae3560a1275d1535a890eddf34ca9f4bd",
+  "version": 2,
+  "sourceHash": "440b1f8af507d263e0bd47ad3a55eff688fe3a40a65d56242e3aa8d5b21a8558",
   "sources": [
     "public/js/houses.js",
     "public/js/specials.js",
     "public/js/world.js",
     "public/models/bundle.json",
+    "public/maps/neon/skin.js",
+    "public/js/render-common/board2d/pen.js",
     "public/patterns/pattern_18.png",
     "public/patterns/pattern_72.png",
     "public/patterns/pattern_79.png",
@@ -43,6 +45,30 @@
     3,
     4
   ],
+  "mapVariants": {
+    "neon": [
+      {
+        "id": "neon-vance",
+        "color": "#ffb81f"
+      },
+      {
+        "id": "neon-nyx",
+        "color": "#1fd8ff"
+      },
+      {
+        "id": "neon-seraphina",
+        "color": "#ff2fd2"
+      },
+      {
+        "id": "neon-k9000",
+        "color": "#a4ff1c"
+      },
+      {
+        "id": "neutral",
+        "color": "#9aa4b1"
+      }
+    ]
+  },
   "files": [
     "city-1fd8ff-0.png",
     "city-1fd8ff-1.png",
@@ -89,6 +115,51 @@
     "city-ffb81f-2.png",
     "city-ffb81f-3.png",
     "city-ffb81f-4.png",
+    "neon-city-neon-k9000-0.png",
+    "neon-city-neon-k9000-1.png",
+    "neon-city-neon-k9000-2.png",
+    "neon-city-neon-k9000-3.png",
+    "neon-city-neon-k9000-4.png",
+    "neon-city-neon-nyx-0.png",
+    "neon-city-neon-nyx-1.png",
+    "neon-city-neon-nyx-2.png",
+    "neon-city-neon-nyx-3.png",
+    "neon-city-neon-nyx-4.png",
+    "neon-city-neon-seraphina-0.png",
+    "neon-city-neon-seraphina-1.png",
+    "neon-city-neon-seraphina-2.png",
+    "neon-city-neon-seraphina-3.png",
+    "neon-city-neon-seraphina-4.png",
+    "neon-city-neon-vance-0.png",
+    "neon-city-neon-vance-1.png",
+    "neon-city-neon-vance-2.png",
+    "neon-city-neon-vance-3.png",
+    "neon-city-neon-vance-4.png",
+    "neon-city-neutral-0.png",
+    "neon-city-neutral-1.png",
+    "neon-city-neutral-2.png",
+    "neon-city-neutral-3.png",
+    "neon-city-neutral-4.png",
+    "neon-resort-neon-k9000-1.png",
+    "neon-resort-neon-k9000-2.png",
+    "neon-resort-neon-k9000-3.png",
+    "neon-resort-neon-k9000-4.png",
+    "neon-resort-neon-nyx-1.png",
+    "neon-resort-neon-nyx-2.png",
+    "neon-resort-neon-nyx-3.png",
+    "neon-resort-neon-nyx-4.png",
+    "neon-resort-neon-seraphina-1.png",
+    "neon-resort-neon-seraphina-2.png",
+    "neon-resort-neon-seraphina-3.png",
+    "neon-resort-neon-seraphina-4.png",
+    "neon-resort-neon-vance-1.png",
+    "neon-resort-neon-vance-2.png",
+    "neon-resort-neon-vance-3.png",
+    "neon-resort-neon-vance-4.png",
+    "neon-resort-neutral-1.png",
+    "neon-resort-neutral-2.png",
+    "neon-resort-neutral-3.png",
+    "neon-resort-neutral-4.png",
     "resort-1fd8ff-1.png",
     "resort-1fd8ff-2.png",
     "resort-1fd8ff-3.png",

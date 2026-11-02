@@ -115,13 +115,14 @@ assert.match(app, /preloadSpecialAssets\(CFG\.BONUS_MULT\)/, 'fixed Chance and f
 assert.match(specials, /generatedTexture\('chance-card'\)/, 'Chance card texture must be generated before gameplay');
 assert.match(specials, /generatedTexture\(`festival-banner-\$\{mult\}`\)/, 'festival banner texture must be generated before gameplay');
 assert.match(app, /PROPERTY_THUMBNAIL_VERSION/, 'property thumbnails must use a generated cache version');
-assert.match(app, /const propertyThumbnail = \(kind, level, color\) =>/, 'property dialogs must use prebuilt static thumbnails');
+assert.match(app, /const propertyThumbnail = \(kind, level, color, mapId = boardMapId, petId = ''\) =>/, 'property dialogs must resolve prebuilt static thumbnails by map and owner pet');
+assert.match(app, /mapId === 'neon'[\s\S]*`neon-\$\{kind\}-\$\{petId \|\| 'neutral'\}-\$\{level\}\.png`/, 'Neon dialogs must use the map-specific property thumbnail set');
 assert.match(app, /map\.background \|\| map\.preview/, 'home background may use a dedicated high-resolution map asset instead of stretching the small preview');
 assert.match(app, /async function preloadMapPropertyThumbnails\(mapId\)/, 'selected map thumbnails must be preloaded after entering a room');
 assert.match(app, /const thumbnails = preloadMapPropertyThumbnails\(entry\.id\);[\s\S]*await createBoard\(entry\);[\s\S]*await thumbnails;/, 'board and selected-map thumbnails must load together');
-assert.match(app, /propertyThumbnail\('city', pr\.level, seatOf\[owner\.id\]\.color\)/, 'takeover dialog must use the original owner color thumbnail');
-assert.match(app, /propertyThumbnail\('city', Math\.max\(0, lv\), hex\)/, 'city info cards must use prebuilt owner-color thumbnails');
-assert.match(app, /propertyThumbnail\('resort', Math\.max\(1, n\), hex\)/, 'resort info cards must use prebuilt thumbnails');
+assert.match(app, /propertyThumbnail\('city', pr\.level, seatOf\[owner\.id\]\.color, boardMapId, owner\.pet\)/, 'takeover dialog must use the original owner map/pet thumbnail');
+assert.match(app, /propertyThumbnail\('city', Math\.max\(0, lv\), hex, boardMapId, owner \? owner\.pet : 'neutral'\)/, 'city info cards must use prebuilt map-specific owner thumbnails');
+assert.match(app, /propertyThumbnail\('resort', Math\.max\(1, n\), hex, boardMapId, owner \? owner\.pet : 'neutral'\)/, 'resort info cards must use prebuilt map-specific thumbnails');
 assert.doesNotMatch(app, /deferredSnapshotAttrs|SNAP_PLACEHOLDER|prewarmPropertySnapshots/, 'property thumbnails must not be rendered again in the browser');
 assert.match(app, /sourceButton\.textContent = 'Đang xử lý…'/, 'network actions must show immediate button feedback');
 assert.match(app, /if \(result\.state\) onState\(result\.state\)/, 'actions must apply the state returned by HTTP instead of depending only on SSE');

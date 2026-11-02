@@ -1,11 +1,13 @@
 {
   "version": 1,
-  "sourceHash": "d59571dbbd9382ff3a693034fafa0cdae3560a1275d1535a890eddf34ca9f4bd",
+  "sourceHash": "440b1f8af507d263e0bd47ad3a55eff688fe3a40a65d56242e3aa8d5b21a8558",
   "sources": [
     "public/js/houses.js",
     "public/js/specials.js",
     "public/js/world.js",
     "public/models/bundle.json",
+    "public/maps/neon/skin.js",
+    "public/js/render-common/board2d/pen.js",
     "public/patterns/pattern_18.png",
     "public/patterns/pattern_72.png",
     "public/patterns/pattern_79.png",

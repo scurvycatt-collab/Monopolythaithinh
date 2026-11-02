@@ -17,6 +17,12 @@ try {
   cpSync(path.join(ROOT, 'test/maps.test.mjs'), path.join(tmp, 'test/maps.test.mjs'));
   cpSync(path.join(ROOT, 'docs/contracts'), path.join(tmp, 'docs/contracts'), { recursive: true });
   cpSync(path.join(ROOT, 'public'), path.join(tmp, 'public'), { recursive: true, filter: (s) => !/[\\/]public[\\/](thumbnails|audio|sounds)([\\/]|$)/.test(s) });
+  // maps.test là cổng phát hành và kiểm asset thumbnail riêng của map đã đăng ký.
+  // Fixture chỉ cần sao chép bộ Neon nhỏ này, không cần toàn bộ thumbnail/static nặng.
+  cpSync(path.join(ROOT, 'public/thumbnails/property'), path.join(tmp, 'public/thumbnails/property'), {
+    recursive: true,
+    filter: (s) => !s.endsWith('.png') || /[\\/]neon-(?:city|resort)-/.test(s),
+  });
   const rulesPath = path.join(tmp, 'public/rules.js');
   const before = readFileSync(rulesPath, 'utf8');
   const ID = 'tmp-demo';
