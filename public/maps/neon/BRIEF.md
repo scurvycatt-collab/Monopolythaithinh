@@ -8,7 +8,7 @@ Trung tâm một đại đô thị lúc nửa đêm sau mưa: mặt đường đ
 ## 2. Bảng màu
 | Vai | Màu | Hex |
 |---|---|---|
-| Nền chung (T12) | mặt ô, tâm bàn, mặt bàn: navy đặc, phẳng, không lưới / mạch | `#0d1932` (Chance `#150f33`, Tax `#0c2030`, Resort `#0b1630`) |
+| Nền chung (T12) | mặt ô, tâm bàn, mặt bàn: navy đặc, phẳng, không lưới / mạch | `#0d1932` (Chance `#150f33`, Tax `#0c2030`, Resort = mặt bãi biển, xem mục 4) |
 | Đế bàn / thành | obsidian | `#0b0f1c` `#070a14` `#121a2e` |
 | Neon cyan | công nghệ, dữ liệu, viền bàn | `#27e6ff` |
 | Neon magenta | giải trí, may rủi (Data Cube) | `#ff3fb4` |
@@ -33,7 +33,7 @@ Màu người chơi lấy từ game (palette neon mới T25); xem mục Màu ch�
 | World Tour = Warp Gate | 24 `WARP GATE` | cổng xoáy tím + vòng cyan |
 | Chance | 12, 20, 28 | Data Cube magenta nổi, dấu ? |
 | Tax | 30 | cổng thu thuế acid green |
-| Resort | 4, 14, 18, 25 | bệ sạc → 1–4 trụ pin màu chủ (Trạm sạc, Cụm pin, Trạm điện, Nhà máy năng lượng) |
+| Resort | 4, 14, 18, 25 | T31: cyber beach club. Mặt ô = biển hologram + bờ neon cyan + cát tím; chưa mua = bãi trống, cọ neon, phao. 3 phương án `RESORT_STYLE` trong `skin.js` (đang chọn **A**): A hồ bơi + ghế nằm → cabana mái màu chủ + quầy bar → sân khấu DJ, dây đèn → khách sạn biển bậc thang (Hồ bơi neon, Beach club, Sân khấu DJ, Khách sạn biển); B cầu tàu + cano → du thuyền → hồ bơi nổi → câu lạc bộ cánh buồm; C nhà nghỉ pastel hồ bơi sân thượng → 2 tầng + cột deco → tháp tròn → tháp hồ bơi trời. Màu chủ: bệ sáng thu nhỏ + nước hồ bơi, mái, viền LED, ban công, buồm |
 | Giữa bàn | | Lò dữ liệu + đường vành đai + 6 công trình riêng (T26 v3, xem mục Giữa bàn) |
 
 Bốn cạnh theo thứ tự bàn và tiến trình giá: cạnh 0 (ô 1–7, nhóm A,B, rẻ) **Back Alley** (cam rỉ, dây điện) → cạnh 1 (9–15, C,D) **Nightlife** (magenta/tím) → cạnh 2 (17–23, E,F) **Cyber Financial** (cyan/trắng lạnh) → cạnh 3 (25–31, G,H, đắt nhất) **Megacorp HQ** (đen vàng). Tên 32 ô: `MAPS[].tileNames` trong `public/rules.js`.

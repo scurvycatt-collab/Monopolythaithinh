@@ -90,17 +90,6 @@ function taxTerminal(p) {
   neonText(p, 'TAX', 0, 0.38, 0.27, 0.16, '#0b1a05'); neonLoop(p, -0.45, -0.25, 0.45, 0.25, 0.7, N.lime, 0.02, 0.1);
   for (let i = 0; i < 3; i++) glow(p, N.lime, 0.1, () => p.cyl(0.6, i * 0.03, 0.4, 0.1, 0.025, N.lime));
 }
-function chargePad(p, c) {   // resort chưa mua: bệ sạc
-  const z = c.gz; p.ellipseShadow(0, z, 0.7, 0.2); p.cyl(0, 0, z, 0.62, 0.08, N.steel); ring(p, 0, 0.09, z, 0.5, N.cyan, 0.03);
-  for (let i = 0; i < 3; i++) { const x = (i - 1) * 0.3; p.box(x - 0.08, 0.08, z - 0.1, 0.16, 0.3, 0.2, '#16223a', { edge: null }); neon(p, [[x, 0.14, z + 0.101], [x, 0.34, z + 0.101]], N.lime, 0.03, 0.08); }
-}
-function chargeHub(p, c) {   // resort đã mua: n trụ pin màu chủ trên bệ
-  const z = c.gz, n = c.level, col = mixHex(c.color, OWN); ownerPad(p, z, c.color, 0.56, 0.6); p.ellipseShadow(0, z, 0.8, 0.2); p.cyl(0, 0, z, 0.72, 0.1, N.steel); ring(p, 0, 0.11, z, 0.62, col, 0.035);
-  const P = [[-0.35, -0.2], [0.35, -0.2], [-0.35, 0.3], [0.35, 0.3]];
-  for (let i = 0; i < n; i++) { const [dx, dz] = P[i], h = 0.45 + i * 0.12; p.cyl(dx, 0.1, z + dz, 0.12, h, '#16223a'); glow(p, col, 0.16, () => p.cyl(dx, 0.1 + h, z + dz, 0.12, 0.05, col)); neon(p, [[dx, 0.2, z + dz + 0.121], [dx, h, z + dz + 0.121]], col, 0.03, 0.08); }
-  if (n === 4) neon(p, [[-0.35, 1.05, z - 0.2], [0.35, 1.05, z - 0.2], [0.35, 1.05, z + 0.3], [-0.35, 1.05, z + 0.3], [-0.35, 1.05, z - 0.2]], col, 0.02);
-}
-
 /* ---------- nhà: cyberpunk anime, vẽ bằng bút (tháp kính mảnh + biển hologram; chủ sản phẩm chọn 02/11) ---------- */
 /*  Chỉ dựng chung, KHÔNG chữ/logo/nhãn hiệu có thật: biển chỉ là khối glyph giả katakana vẽ bằng hình chữ nhật. */
 const hexA = (h, a) => `rgba(${parseInt(h.slice(1, 3), 16)},${parseInt(h.slice(3, 5), 16)},${parseInt(h.slice(5, 7), 16)},${a})`;
@@ -133,6 +122,190 @@ function lot(p, c, extra) {   // cấp 0: bãi đất trống, cờ neon màu ch
   neon(p, [[0.38, 0.04, gz - 0.38], [0.38, 0.72, gz - 0.38]], '#aab4d6', 0.02, 0.03);
   p.flag(0.38, gz - 0.38, 0.72, col); neonLoop(p, -0.5, gz - 0.5, 0.5, gz + 0.5, 0.045, col, 0.02, 0.1);
   extra(p, gz);
+}
+
+
+/* ---------- resort: cyber beach club (T31). 3 phương án, chọn bằng RESORT_STYLE ---------- */
+/*  A câu lạc bộ bãi biển + hồ bơi vô cực · B bến du thuyền nổi · C tháp resort hồ bơi sân thượng.
+    Mặt ô (paint) là bãi biển đêm: biển hologram phía xa (−z), bờ neon cyan, cát tím synthwave phía dải giá.
+    Màu chủ như nhà: bệ sáng ownerPad + nhuốm phần chính (nước hồ bơi, mái cabana, viền LED, dải ban công, buồm). */
+const RESORT_STYLE = 'A';
+const SHORE = { A: -1.02, B: -0.12, C: -1.12 }[RESORT_STYLE] ?? -1.02;   // z mép nước
+const RESORT_LEVELS = {
+  A: ['Hồ bơi neon', 'Beach club', 'Sân khấu DJ', 'Khách sạn biển'],
+  B: ['Cầu tàu', 'Bến du thuyền', 'Hồ bơi nổi', 'Câu lạc bộ cánh buồm'],
+  C: ['Nhà nghỉ biển', 'Resort 2 tầng', 'Resort sân thượng', 'Tháp hồ bơi trời'],
+}[RESORT_STYLE];
+const SAND = '#21173f', DECK = '#3b4a78', WHITE = '#d6dcf4', LAV = '#9a8fd6', WARM = '#ffd08a';
+function resortPaint(g, c) {
+  const k = c.px, half = (c.d || 3.1) / 2, y0 = Math.max(0, Math.min(c.ch, (SHORE + half) * k)), sw = (x, i) => Math.sin(x * 0.07 + i * 1.9) * 2.4;
+  g.fillStyle = SAND; g.fillRect(0, 0, c.cw, c.ch);
+  g.save(); g.strokeStyle = 'rgba(255,63,180,.13)'; g.lineWidth = 2; for (let y = y0 + 22; y < c.ch; y += 26) { g.beginPath(); g.moveTo(0, y); g.lineTo(c.cw, y); g.stroke(); } g.restore();   // vạch cát synthwave mờ
+  const gr = g.createLinearGradient(0, 0, 0, y0); gr.addColorStop(0, '#041128'); gr.addColorStop(1, '#105495'); g.fillStyle = gr; g.fillRect(0, 0, c.cw, y0 + 3);
+  g.save(); g.strokeStyle = 'rgba(39,230,255,.5)'; g.lineWidth = 2.5;
+  for (let i = 1; i * 24 < y0; i++) { const y = y0 - i * 24; g.beginPath(); for (let x = 0; x <= c.cw; x += 6) g.lineTo(x, y + sw(x, i)); g.stroke(); }
+  g.shadowColor = N.cyan; g.shadowBlur = 12; g.strokeStyle = '#8ff6ff'; g.lineWidth = 4; g.beginPath(); for (let x = 0; x <= c.cw; x += 6) g.lineTo(x, y0 + sw(x, 0)); g.stroke(); g.restore();
+  g.strokeStyle = 'rgba(0,0,0,.45)'; g.lineWidth = 4; g.strokeRect(2, 2, c.cw - 4, c.ch - 4);
+}
+const scene = (p, items) => items.sort((a, b) => a[0] + a[1] + (a[3] || 0) - (b[0] + b[1] + (b[3] || 0))).forEach((it) => it[2](p));   // vẽ xa → gần (x + z)
+function palm(p, x, z, h, col = N.mag, lean = 0.1) {   // cọ neon: thân tím 2 tông, tán lá đa giác + gân neon
+  p.ellipseShadow(x, z, 0.16, 0.22);
+  h *= 1.2; const T = (t) => [x + lean * t * t, h * t, z - lean * 0.5 * t * t], tr = Array.from({ length: 7 }, (_, i) => T(i / 6));
+  p.line3(tr, '#2b2148', 0.065); p.line3(tr.map(([a, b, cz]) => [a + 0.014, b, cz]), '#5a4690', 0.022);
+  const [tx, ty, tz] = T(1), F = Array.from({ length: 7 }, (_, k) => k / 7 * 6.283 + 0.4).sort((a, b) => Math.cos(a) + Math.sin(a) - Math.cos(b) - Math.sin(b));
+  F.forEach((a, k) => {
+    const ca = Math.cos(a), sa = Math.sin(a), L = 0.4 + (k % 2) * 0.08, sp = (s) => [tx + ca * L * s, ty + 0.06 + 0.1 * s - 0.34 * s * s, tz + sa * L * s];
+    const A = [], B = [], S = []; for (let j = 0; j <= 6; j++) { const s = j / 6, [qx, qy, qz] = sp(s), w = 0.085 * Math.sin(Math.PI * (0.08 + s * 0.92)); S.push([qx, qy, qz]); A.push([qx - sa * w, qy, qz + ca * w]); B.unshift([qx + sa * w, qy, qz - ca * w]); }
+    p.poly(A.concat(B), k % 2 ? '#0f4656' : '#16305e'); neon(p, S, col, 0.014, 0.08);
+  });
+  glow(p, N.gold, 0.12, () => { p.ball(tx + 0.03, ty - 0.02, tz + 0.03, 0.03, N.gold); p.ball(tx - 0.03, ty - 0.03, tz + 0.02, 0.028, N.gold); });
+}
+function lounger(p, x, z, col) {   // ghế nằm dọc x, khăn màu chủ, viền LED
+  p.box(x - 0.12, 0, z - 0.05, 0.24, 0.03, 0.1, '#141c32', { edge: null });
+  p.poly([[x - 0.15, 0.065, z - 0.06], [x - 0.15, 0.065, z + 0.06], [x - 0.22, 0.19, z + 0.06], [x - 0.22, 0.19, z - 0.06]], '#aab4d8');
+  p.box(x - 0.15, 0.03, z - 0.06, 0.3, 0.035, 0.12, WHITE, { edge: null }); p.ground(x - 0.04, z - 0.055, x + 0.13, z + 0.055, col, 0.066);
+  neon(p, [[x - 0.13, 0.025, z + 0.062], [x + 0.14, 0.025, z + 0.062]], col, 0.012, 0.06);
+}
+function parasol(p, x, z, col, y = 0) { p.box(x - 0.01, y, z - 0.01, 0.02, 0.36, 0.02, '#9aa6c8', { edge: null }); p.cone(x, y + 0.28, z, 0.2, 0.12, col); ring(p, x, y + 0.282, z, 0.2, p.u.light(col, 0.3), 0.012, 24); }
+function pool(p, x0, z0, x1, z1, col, y = 0, h = 0.07) {   // hồ bơi sáng màu chủ (vô cực: mặt nước tràn mép xa)
+  p.box(x0, y, z0, x1 - x0, h, z1 - z0, '#5a6698', { top: '#b9c3e8', edge: 'rgba(20,30,70,.6)' });
+  const i = 0.05, t = y + h + 0.002;
+  glow(p, col, 0.3, () => p.ground(x0 + i, z0 + 0.012, x1 - i, z1 - i, hexA(col, 0.92), t));
+  p.ground(x0 + i + 0.04, z0 + 0.05, x1 - i - 0.04, z1 - i - 0.04, hexA('#ffffff', 0.16), t + 0.001);
+  for (let k = 1; k < 3; k++) { const zz = z0 + (z1 - z0) * k / 3; p.line3([[x0 + i + 0.06, t + 0.002, zz], [x1 - i - 0.06, t + 0.002, zz + 0.02]], hexA('#ffffff', 0.5), 0.008); }
+  neon(p, [[x0 + i, t + 0.003, z1 - i], [x1 - i, t + 0.003, z1 - i], [x1 - i, t + 0.003, z0 + 0.012]], p.u.light(col, 0.45), 0.012, 0.06);
+}
+function cabana(p, x, z, col, s = 0.36) {   // chòi giường nằm: mái màu chủ, rèm trắng, viền LED
+  const a = s / 2, h = 0.34, post = (px, pz) => p.box(px - 0.012, 0.04, pz - 0.012, 0.024, h - 0.04, 0.024, '#c9d2ea', { edge: null });
+  p.box(x - a, 0, z - a, s, 0.04, s, DECK, { edge: null }); post(x - a + 0.02, z - a + 0.02); post(x + a - 0.02, z - a + 0.02); post(x - a + 0.02, z + a - 0.02);
+  p.box(x - a + 0.05, 0.04, z - a + 0.06, s - 0.1, 0.07, s - 0.12, WHITE, { edge: null }); p.ground(x - a + 0.07, z - a + 0.08, x - a + 0.16, z + a - 0.08, col, 0.112);
+  p.quadX(x + a - 0.02, z - a + 0.02, z - a + 0.1, 0.06, h - 0.02, 'rgba(230,236,255,.8)'); post(x + a - 0.02, z + a - 0.02);
+  p.hip(x - a - 0.03, h, z - a - 0.03, s + 0.06, s + 0.06, 0.15, col); neonLoop(p, x - a - 0.03, z - a - 0.03, x + a + 0.03, z + a + 0.03, h, p.u.light(col, 0.4), 0.012, 0.1);
+}
+function tikiBar(p, x, z, w = 0.42, d = 0.28) {   // quầy bar: quầy tối, mặt quầy cyan, mái tím viền magenta
+  const post = (px, pz) => p.box(px - 0.012, 0.3, pz - 0.012, 0.024, 0.2, 0.024, '#9aa6c8', { edge: null });
+  p.box(x - w / 2, 0, z - d / 2, w, 0.3, d, '#1b2438', { top: '#26304d', edge: 'rgba(150,180,255,.25)' }); screen(p, x, 0.07, z + d / 2 + 0.002, w - 0.08, 0.14, N.cyan);
+  neon(p, [[x - w / 2, 0.3, z + d / 2], [x + w / 2, 0.3, z + d / 2], [x + w / 2, 0.3, z - d / 2]], N.mag, 0.016, 0.08);
+  [[x - w / 2 + 0.03, z - d / 2 + 0.03], [x + w / 2 - 0.03, z - d / 2 + 0.03], [x - w / 2 + 0.03, z + d / 2 - 0.03], [x + w / 2 - 0.03, z + d / 2 - 0.03]].forEach(([a, b]) => post(a, b));
+  [N.lime, N.gold, N.mag].forEach((cl, i) => glow(p, cl, 0.08, () => p.cyl(x - 0.1 + i * 0.1, 0.3, z, 0.022, 0.07, cl)));
+  p.hip(x - w / 2 - 0.05, 0.5, z - d / 2 - 0.05, w + 0.1, d + 0.1, 0.14, '#3a1f5c'); neonLoop(p, x - w / 2 - 0.05, z - d / 2 - 0.05, x + w / 2 + 0.05, z + d / 2 + 0.05, 0.5, N.mag, 0.012, 0.1);
+  for (const dx of [-0.14, 0.02, 0.18]) p.cyl(x + dx, 0, z + d / 2 + 0.09, 0.03, 0.14, '#39446a');
+}
+function djStage(p, x, z, col) {   // sân khấu DJ: loa đôi, bàn mix, vòm khung màu chủ
+  p.box(x - 0.32, 0, z - 0.17, 0.64, 0.08, 0.34, '#1b2438', { top: '#2a3350' }); neon(p, [[x - 0.32, 0.08, z + 0.17], [x + 0.32, 0.08, z + 0.17]], N.cyan, 0.014, 0.08);
+  neon(p, [[x - 0.34, 0.08, z + 0.05], [x - 0.34, 0.62, z + 0.05], [x, 0.78, z + 0.05], [x + 0.34, 0.62, z + 0.05], [x + 0.34, 0.08, z + 0.05]], col, 0.03, 0.18);
+  for (const sx of [-0.26, 0.26]) { p.box(x + sx - 0.065, 0.08, z - 0.06, 0.13, 0.4, 0.12, '#10162a', { edge: 'rgba(150,180,255,.25)' }); for (const yy of [0.2, 0.38]) { p.ball(x + sx, 0.08 + yy, z + 0.065, 0.045, '#05070f'); ring(p, x + sx, 0.08 + yy, z + 0.062, 0.05, N.mag, 0.008, 16); } }
+  p.box(x - 0.14, 0.08, z - 0.04, 0.28, 0.16, 0.12, '#1a1430', { top: '#2a2050', edge: null });
+  [0.05, 0.1, 0.07, 0.12, 0.06, 0.09].forEach((hh, i) => Q(p, 'z', z + 0.082, x - 0.12 + i * 0.042, x - 0.09 + i * 0.042, 0.1, 0.1 + hh, i % 2 ? N.cyan : N.lime));
+  glow(p, N.lime, 0.1, () => p.ground(x - 0.12, z - 0.03, x + 0.12, z + 0.07, '#b6ff3c', 0.242));
+}
+function stringLights(p, a, b, n = 7) { const pts = Array.from({ length: n + 1 }, (_, i) => { const t = i / n; return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t - Math.sin(Math.PI * t) * 0.12, a[2] + (b[2] - a[2]) * t]; }); p.line3(pts, '#4a5578', 0.006); pts.slice(1, -1).forEach((q, i) => glow(p, [N.gold, N.mag, N.cyan][i % 3], 0.1, () => p.ball(q[0], q[1] - 0.02, q[2], 0.022, [N.gold, N.mag, N.cyan][i % 3]))); }
+function terraceHotel(p, x0, z0, col) {   // khách sạn biển bậc thang: mặt pastel, dải ban công ngang màu chủ (khác tháp kính dọc của ô đất)
+  const F = [[0, 0.8, 0.62, 0.3], [0.04, 0.72, 0.48, 0.26], [0.08, 0.64, 0.36, 0.26], [0.12, 0.56, 0.26, 0.24]]; let y = 0;
+  F.forEach(([ix, w, d, h], i) => {
+    const x = x0 + ix; p.box(x, y, z0, w, h, d, LAV, { top: '#c9c2f0', edge: 'rgba(40,30,90,.5)' });
+    Q(p, 'z', z0 + d + 0.002, x + 0.04, x + w - 0.04, y + 0.07, y + h - 0.09, '#2a2550'); Q(p, 'x', x + w + 0.002, z0 + 0.04, z0 + d - 0.04, y + 0.07, y + h - 0.09, '#2a2550');
+    for (let k = 0; k < Math.floor((w - 0.08) / 0.09); k++) Q(p, 'z', z0 + d + 0.003, x + 0.06 + k * 0.09, x + 0.11 + k * 0.09, y + 0.09, y + h - 0.11, k % 3 ? WARM : N.cyan);
+    p.box(x - 0.02, y + h - 0.035, z0 + d - 0.02, w + 0.04, 0.035, 0.06, WHITE, { edge: null }); neon(p, [[x - 0.02, y + h - 0.035, z0 + d + 0.04], [x + w + 0.02, y + h - 0.035, z0 + d + 0.04], [x + w + 0.02, y + h - 0.035, z0]], col, 0.016, 0.1);
+    y += h;
+  });
+  const [ix, w, d] = F[3]; pool(p, x0 + ix + 0.06, z0 + 0.04, x0 + ix + w - 0.06, z0 + d - 0.04, col, y, 0.04);
+  neonText(p, 'HOTEL', x0 + 0.4, y + 0.14, z0 + 0.15, 0.1, N.mag);
+}
+/* B: bến du thuyền */
+function pier(p, x0, z0, x1, z1, col) {
+  for (let z = z0 + 0.06; z < z1; z += 0.22) for (const x of [x0 + 0.02, x1 - 0.04]) p.box(x, -0.02, z, 0.03, 0.09, 0.03, '#141c32', { edge: null });
+  p.box(x0, 0.07, z0, x1 - x0, 0.03, z1 - z0, '#4a3d6e', { top: '#5d4d88', edge: 'rgba(20,20,60,.6)' });
+  for (let z = z0 + 0.06; z < z1; z += 0.07) p.line3([[x0 + 0.01, 0.101, z], [x1 - 0.01, 0.101, z]], '#43366a', 0.006);
+  neon(p, [[x1, 0.085, z0], [x1, 0.085, z1], [x0, 0.085, z1]], col, 0.014, 0.1); neon(p, [[x0, 0.085, z0], [x0, 0.085, z1]], col, 0.01, 0.06);
+}
+function bollard(p, x, z) { p.cyl(x, 0.1, z, 0.022, 0.1, '#39446a'); glow(p, N.cyan, 0.12, () => p.ball(x, 0.21, z, 0.024, N.cyan)); }
+function hull(p, x, z, L, W, hh, col) {   // thân tàu trắng mũi nhọn hướng −z, dải LED màu chủ
+  glow(p, col, 0.2, () => p.flatEllipse(x, 0.003, z, W * 0.8, L * 0.6, hexA(col, 0.3)));
+  p.solid([[x - W * 0.08, 0, z - L / 2 + 0.03], [x + W * 0.08, 0, z - L / 2 + 0.03], [x + W * 0.36, 0, z + L / 2], [x - W * 0.36, 0, z + L / 2], [x - 0.012, hh, z - L / 2 - 0.05], [x + 0.012, hh, z - L / 2 - 0.05], [x + W / 2, hh, z + L / 2], [x - W / 2, hh, z + L / 2]], WHITE);
+  neon(p, [[x + 0.012, hh * 0.7, z - L / 2 - 0.02], [x + W * 0.47, hh * 0.7, z + L / 2]], col, 0.014, 0.08); neon(p, [[x + W * 0.47, hh * 0.7, z + L / 2], [x - W * 0.47, hh * 0.7, z + L / 2]], col, 0.012, 0.06);
+}
+function yacht(p, x, z, col, L = 0.82, W = 0.32) {
+  hull(p, x, z, L, W, 0.1, col);
+  p.box(x - W * 0.32, 0.1, z - L * 0.12, W * 0.64, 0.12, L * 0.48, '#1b2438', { top: WHITE, edge: 'rgba(150,180,255,.3)' });
+  Q(p, 'x', x + W * 0.32 + 0.002, z - L * 0.08, z + L * 0.32, 0.14, 0.19, N.cyan); Q(p, 'z', z + L * 0.36 + 0.002, x - W * 0.26, x + W * 0.26, 0.14, 0.19, N.cyan);
+  p.box(x - W * 0.22, 0.22, z - L * 0.05, W * 0.44, 0.08, L * 0.26, WHITE, { top: '#eef1ff', edge: 'rgba(40,40,90,.4)' }); Q(p, 'x', x + W * 0.22 + 0.002, z - L * 0.02, z + L * 0.18, 0.245, 0.28, '#1b2438');
+  glow(p, col, 0.16, () => p.ground(x - W * 0.25, z + L * 0.3, x + W * 0.25, z + L * 0.44, hexA(col, 0.85), 0.104));
+  antenna(p, x, 0.3, z + L * 0.06, 0.16, N.lime);
+}
+function speedboat(p, x, z, col) { hull(p, x, z, 0.6, 0.24, 0.08, col); p.poly([[x - 0.07, 0.07, z - 0.02], [x + 0.07, 0.07, z - 0.02], [x + 0.06, 0.13, z + 0.03], [x - 0.06, 0.13, z + 0.03]], hexA(N.cyan, 0.75)); p.box(x - 0.06, 0.07, z + 0.06, 0.12, 0.04, 0.1, '#1b2438', { edge: null }); }
+function floatPool(p, x, z, col) {
+  p.cyl(x, 0, z, 0.33, 0.08, '#b9c3e8'); glow(p, col, 0.3, () => p.flatEllipse(x, 0.082, z, 0.25, 0.25, hexA(col, 0.92))); p.flatEllipse(x - 0.03, 0.083, z - 0.03, 0.12, 0.12, hexA('#ffffff', 0.18));
+  ring(p, x, 0.083, z, 0.25, p.u.light(col, 0.45), 0.012, 30); ring(p, x, 0.02, z, 0.34, N.cyan, 0.01, 30); parasol(p, x + 0.14, z - 0.14, N.mag, 0.08);
+}
+function sailClub(p, x, z, col) {   // câu lạc bộ đầu cầu tàu: sàn nổi + 3 cánh buồm che nắng màu chủ
+  p.box(x - 0.36, 0, z - 0.2, 0.72, 0.1, 0.4, '#4a3d6e', { top: '#5d4d88', edge: 'rgba(20,20,60,.6)' }); neon(p, [[x + 0.36, 0.1, z - 0.2], [x + 0.36, 0.1, z + 0.2], [x - 0.36, 0.1, z + 0.2]], col, 0.014, 0.1);
+  const M = [[x - 0.3, z - 0.15, 1.1], [x + 0.3, z - 0.12, 0.8], [x - 0.05, z + 0.16, 0.9]];
+  M.forEach(([mx, mz, h]) => p.box(mx - 0.012, 0.1, mz - 0.012, 0.024, h - 0.1, 0.024, '#c9d2ea', { edge: null }));
+  p.box(x - 0.16, 0.1, z - 0.06, 0.3, 0.16, 0.1, '#1b2438', { edge: null }); screen(p, x - 0.01, 0.13, z + 0.042, 0.26, 0.08, N.mag);
+  const S = [[M[0], [x + 0.18, 0.56, z - 0.16], [x - 0.12, 0.5, z + 0.12]], [M[1], [x - 0.05, 0.6, z - 0.18], [x + 0.2, 0.48, z + 0.16]], [M[2], [x - 0.3, 0.5, z + 0.0], [x + 0.18, 0.54, z + 0.06]]];
+  S.forEach(([m, b, cc]) => { const a = [m[0], m[2], m[1]]; p.poly([a, b, cc], hexA(col, 0.5)); neon(p, [a, b, cc, a], p.u.light(col, 0.35), 0.012, 0.12); });
+}
+function buoy(p, x, z, col = N.mag) { p.cyl(x, 0, z, 0.035, 0.06, '#e8ecff'); glow(p, col, 0.14, () => p.ball(x, 0.08, z, 0.025, col)); }
+/* C: tháp resort hồ bơi sân thượng (pastel kiểu Miami, ban công trắng ngang) */
+function decoFloor(p, x, y, z, w, d, h, col) {
+  p.box(x, y, z, w, h, d, LAV, { top: '#c9c2f0', edge: 'rgba(40,30,90,.5)' });
+  const n = Math.max(1, Math.floor((w - 0.06) / 0.09)), m = Math.max(1, Math.floor((d - 0.06) / 0.09));
+  for (let k = 0; k < n; k++) Q(p, 'z', z + d + 0.002, x + 0.05 + k * ((w - 0.06) / n), x + 0.05 + k * ((w - 0.06) / n) + 0.05, y + 0.06, y + h - 0.07, k % 3 ? WARM : '#2a2550');
+  for (let k = 0; k < m; k++) Q(p, 'x', x + w + 0.002, z + 0.05 + k * ((d - 0.06) / m), z + 0.05 + k * ((d - 0.06) / m) + 0.05, y + 0.06, y + h - 0.07, k % 2 ? WARM : '#2a2550');
+  p.box(x - 0.03, y + h - 0.03, z - 0.0, w + 0.06, 0.03, d + 0.04, WHITE, { edge: null }); neon(p, [[x - 0.03, y + h - 0.03, z + d + 0.04], [x + w + 0.03, y + h - 0.03, z + d + 0.04], [x + w + 0.03, y + h - 0.03, z]], col, 0.014, 0.1);
+}
+function decoFin(p, x, z, h, col) { p.box(x - 0.03, 0, z - 0.1, 0.06, h, 0.2, WHITE, { edge: 'rgba(40,30,90,.5)' }); neon(p, [[x + 0.032, 0.06, z + 0.1], [x + 0.032, h - 0.04, z + 0.1]], col, 0.02, 0.14); for (let y = 0.14; y < h - 0.05; y += 0.12) glow(p, col, 0.08, () => p.ball(x + 0.035, y, z, 0.018, p.u.light(col, 0.4))); }
+function turret(p, x, z, h, col) { p.cyl(x, 0, z, 0.17, h, LAV); for (let y = 0.2; y < h; y += 0.22) { p.cyl(x, y - 0.025, z, 0.19, 0.025, WHITE); ring(p, x, y, z, 0.19, y > h - 0.25 ? col : N.cyan, 0.012, 28); } p.cyl(x, h, z, 0.12, 0.08, WHITE); glow(p, col, 0.2, () => p.ball(x, h + 0.13, z, 0.045, col)); }
+function skyTower(p, x0, z0, col, y0 = 0.5) {   // tháp mảnh + sàn hồ bơi trên trời đua ra hai bên (màu chủ)
+  const w = 0.42, d = 0.34; let y = y0; for (let i = 0; i < 5; i++) { decoFloor(p, x0, y, z0, w, d, 0.24, col); y += 0.24; }
+  p.box(x0 - 0.16, y, z0 - 0.04, w + 0.42, 0.1, d + 0.08, WHITE, { top: '#eef1ff', edge: 'rgba(40,30,90,.5)' });
+  neon(p, [[x0 - 0.16, y, z0 + d + 0.04], [x0 + w + 0.26, y, z0 + d + 0.04], [x0 + w + 0.26, y, z0 - 0.04]], col, 0.024, 0.2);
+  pool(p, x0 - 0.12, z0, x0 + w + 0.22, z0 + d, col, y + 0.1, 0.03); parasol(p, x0 + 0.1, z0 + 0.1, N.mag, y + 0.13);
+}
+
+function resortEmpty(p, c) {   // resort chưa mua: bãi biển neon trống, 2 cây cọ, phao
+  const s = RESORT_STYLE, it = [];
+  if (s === 'B') { for (let z = -1.3; z < -0.1; z += 0.26) it.push([0.0, z, (q) => { q.box(-0.02, -0.02, z, 0.04, 0.12, 0.04, '#2a3350', { edge: null }); glow(q, N.cyan, 0.1, () => q.ball(0, 0.12, z + 0.02, 0.018, N.cyan)); }]); it.push([-0.5, -0.8, (q) => buoy(q, -0.5, -0.8)], [0.5, -1.2, (q) => buoy(q, 0.5, -1.2, N.lime)], [0.55, 0.05, (q) => palm(q, 0.55, 0.05, 0.62, N.lime)]); }
+  else { it.push([-0.45, -1.3, (q) => buoy(q, -0.45, -1.3)], [0.35, -1.35, (q) => buoy(q, 0.35, -1.35, N.lime)], [-0.5, -0.55, (q) => palm(q, -0.5, -0.55, 0.78, N.mag)], [0.45, -0.25, (q) => palm(q, 0.45, -0.25, 0.6, N.lime, -0.08)], [0.05, -0.05, (q) => parasol(q, 0.05, -0.05, '#2a3350')]); }
+  scene(p, it);
+}
+function resortA(p, n, col, it) {
+  const big = n >= 4;
+  it.push([0, -0.7, (q) => pool(q, big ? -0.05 : -0.4, -0.98, big ? 0.62 : 0.32, -0.5, col)]);
+  it.push([-0.3, -0.18, (q) => lounger(q, -0.3, -0.18, col)], [0.05, -0.18, (q) => lounger(q, 0.05, -0.18, col)], [0.5, -0.12, (q) => parasol(q, 0.5, -0.12, N.mag)]);
+  if (!big) it.push([-0.62, -1.22, (q) => palm(q, -0.62, -1.22, 0.86, N.mag)]);
+  if (n >= 2) it.push([0.56, -0.74, (q) => cabana(q, 0.56, -0.74, col, 0.44)], [-0.58, -0.2, (q) => tikiBar(q, -0.58, -0.2, 0.34, 0.26)]);
+  if (n >= 3) it.push([0.42, -1.3, (q) => djStage(q, 0.42, -1.3, col)], [0.7, 0.0, (q) => palm(q, 0.7, 0.02, 0.7, N.cyan, -0.06)], [0.75, -0.3, (q) => stringLights(q, [0.68, 0.62, 0.02], [0.66, 0.5, -0.66])]);
+  if (big) it.push([-0.8, -1.5, (q) => terraceHotel(q, -0.84, -1.5, col), -0.2]);
+}
+function resortB(p, n, col, it) {
+  it.push([0, -0.8, (q) => pier(q, -0.17, -1.45, 0.17, -0.1, col)]);
+  it.push([0.5, -0.5, (q) => speedboat(q, 0.5, -0.5, col)], [-0.6, 0.06, (q) => palm(q, -0.6, 0.06, 0.62, N.mag)]);
+  for (const z of [-1.0, -0.45]) it.push([0.2, z, (q) => bollard(q, 0.14, z), 0.1]);
+  if (n >= 2) it.push([-0.5, -0.85, (q) => yacht(q, -0.5, -0.82, col, 1.05, 0.44)]);
+  if (n >= 3) it.push([0.5, -1.15, (q) => floatPool(q, 0.5, -1.15, col)], [0.6, 0.08, (q) => palm(q, 0.62, 0.08, 0.55, N.lime, -0.06)]);
+  if (n >= 4) it.push([0, -1.42, (q) => sailClub(q, 0.0, -1.38, col), 0.15]);
+}
+function resortC(p, n, col, it) {
+  const x0 = -0.62, z0 = -1.32, w = 1.0, d = 0.5;
+  it.push([-0.2, -1.0, (q) => { decoFloor(q, x0, 0, z0, w, d, 0.26, col); if (n === 1) { pool(q, x0 + 0.42, z0 + 0.06, x0 + w - 0.06, z0 + d - 0.06, col, 0.26, 0.03); parasol(q, x0 + 0.18, z0 + 0.2, N.mag, 0.26); } }, -0.2]);
+  if (n >= 2) it.push([-0.25, -1.05, (q) => {
+    decoFloor(q, x0, 0.26, z0, w * 0.62, d * 0.8, 0.24, col); if (n === 2) cabana(q, x0 + 0.24, z0 + 0.18, col, 0.26);
+    if (n <= 3) pool(q, x0 + w * 0.62 + 0.04, z0 + 0.06, x0 + w - 0.06, z0 + d - 0.06, col, 0.26, 0.03);
+    decoFin(q, x0 + w * 0.62, z0 + d - 0.05, n >= 3 ? 1.0 : 0.72, col);
+  }, -0.1]);
+  if (n === 3) it.push([-0.4, -1.1, (q) => { decoFloor(q, x0, 0.5, z0, 0.42, d * 0.7, 0.24, col); decoFloor(q, x0, 0.74, z0, 0.42, d * 0.7, 0.24, col); palm(q.at(0, 0.5, 0), x0 + 0.52, z0 + 0.14, 0.4, N.lime); }, 0]);
+  if (n >= 3) it.push([0.6, -0.95, (q) => turret(q, 0.6, -0.95, n >= 4 ? 0.95 : 0.7, col)]);
+  if (n >= 4) it.push([-0.4, -1.1, (q) => skyTower(q, x0 + 0.02, z0 + 0.04, col), 0.05]);
+  it.push([-0.5, -0.25, (q) => palm(q, -0.55, -0.3, 0.7, N.mag)], [0.05, -0.2, (q) => lounger(q, 0.05, -0.2, col)]);
+  if (n >= 2) it.push([0.45, -0.1, (q) => parasol(q, 0.45, -0.12, N.cyan)]);
+}
+function resortHouseDraw(p, c) {   // resort đã mua, cấp 1–4: mỗi cấp thêm công trình mới
+  const n = c.level, col = mixHex(c.color, OWN), it = [];
+  ownerPad(p, c.gz + 0.15, c.color, 0.3, 0.45);   // bệ thu nhỏ để vẫn thấy bãi biển
+  ({ A: resortA, B: resortB, C: resortC }[RESORT_STYLE] || resortA)(p, n, col, it);
+  scene(p, it);
 }
 
 const WINB = ['#27e6ff', '#bff6ff', '#ffe14d', '#ff3fb4', '#7fd8ff'];
@@ -473,8 +646,8 @@ export default defineSkin({
     tile: { paint: tilePaint },
     deco: { draw: deco },
     house: { draw: houseDraw },
-    resort: { paint: (g, c) => floor(g, c, '#0b1630'), draw: chargePad },
-    resortHouse: { draw: chargeHub },
+    resort: { paint: resortPaint, draw: resortEmpty },
+    resortHouse: { draw: resortHouseDraw },
     chance: { paint: (g, c) => floor(g, c, '#150f33'), draw: dataCube },
     tax: { paint: (g, c) => floor(g, c, '#0c2030'), draw: taxTerminal },
     start: { paint: cornerPaint('#0a1a10', '#16301c', N.lime), label: false, draw: named(powerGrid, 'START', N.lime) },
@@ -485,5 +658,5 @@ export default defineSkin({
     center: { paint: cityFloor, draw: centerCity },
   },
   ambient: { animate: { cityFx } },
-  labels: { chance: 'DATA CUBE', tax: 'THUẾ DỮ LIỆU', resortLevels: ['Trạm sạc', 'Cụm pin', 'Trạm điện', 'Nhà máy năng lượng'] },
+  labels: { chance: 'DATA CUBE', tax: 'THUẾ DỮ LIỆU', resortLevels: RESORT_LEVELS },
 });
