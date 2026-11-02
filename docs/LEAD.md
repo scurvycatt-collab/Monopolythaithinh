@@ -41,6 +41,7 @@ Nâng một bậc (Haiku→Sonnet→Opus) khi agent hỏng hoặc phải đoán 
 - Báo cáo agent ≤ 10 dòng. Không đọc transcript agent.
 - **Ngưỡng 80% usage (giới hạn 5 giờ):** khi ước lượng đã dùng ~80%, không giao task mới; làm nốt task đang chạy, cập nhật checkpoint, rồi hỏi người dùng duyệt trước khi chạy tiếp.
 - **Checkpoint thay cho đọc lại context:** mỗi task dở dang phải có checkpoint đủ để làm tiếp (mục "Trạng thái" bên dưới + `note` trên board + commit trên nhánh). Chat mới / agent mới chỉ đọc checkpoint + file trong phạm vi task, không đọc lại hội thoại cũ hay transcript.
+- **Không báo trạng thái hoàn thành trong chat** (02/11): ghi ngắn vào `note` trên board, người dùng tự đọc. Chat chỉ dùng khi cần hỏi/quyết định.
 - Bàn giao sang chat mới sau ~10 task hoặc khi context dày: cập nhật mục "Trạng thái", commit qua PR.
 
 ## Uỷ quyền (02/11/2026)
