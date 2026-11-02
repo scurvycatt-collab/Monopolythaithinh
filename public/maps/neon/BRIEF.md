@@ -33,7 +33,7 @@ Màu người chơi lấy từ game (palette neon mới T25); xem mục Màu ch�
 | World Tour = Warp Gate | 24 `WARP GATE` | cổng xoáy tím + vòng cyan |
 | Chance | 12, 20, 28 | Data Cube magenta nổi, dấu ? |
 | Tax | 30 | cổng thu thuế acid green |
-| Resort | 4, 14, 18, 25 | T31: cyber beach club. Mặt ô = biển hologram + bờ neon cyan + cát tím; chưa mua = bãi trống, cọ neon, phao. 3 phương án `RESORT_STYLE` trong `skin.js` (đang chọn **A**): A hồ bơi + ghế nằm → cabana mái màu chủ + quầy bar → sân khấu DJ, dây đèn → khách sạn biển bậc thang (Hồ bơi neon, Beach club, Sân khấu DJ, Khách sạn biển); B cầu tàu + cano → du thuyền → hồ bơi nổi → câu lạc bộ cánh buồm; C nhà nghỉ pastel hồ bơi sân thượng → 2 tầng + cột deco → tháp tròn → tháp hồ bơi trời. Màu chủ: bệ sáng thu nhỏ + nước hồ bơi, mái, viền LED, ban công, buồm |
+| Resort | 4, 14, 18, 25 | T31: cyber beach club. Mặt ô = biển hologram + bờ neon cyan + cát tím; chưa mua = bãi trống, cọ neon, phao. phương án A (beach club) do chủ chọn 02/11: cấp 1 hồ bơi neon lớn viền màu chủ, 2 ghế nằm, dù, cọ neon → cấp 2 cabana mái màu chủ + quầy bar → cấp 3 sân khấu DJ, dây đèn → cấp 4 khách sạn biển bậc thang (Hồ bơi neon, Beach club, Sân khấu DJ, Khách sạn biển). Màu chủ: bệ sáng thu nhỏ + nước hồ bơi, mái, viền LED, ban công |
 | Giữa bàn | | Lò dữ liệu + đường vành đai + 6 công trình riêng (T26 v3, xem mục Giữa bàn) |
 
 Bốn cạnh theo thứ tự bàn và tiến trình giá: cạnh 0 (ô 1–7, nhóm A,B, rẻ) **Back Alley** (cam rỉ, dây điện) → cạnh 1 (9–15, C,D) **Nightlife** (magenta/tím) → cạnh 2 (17–23, E,F) **Cyber Financial** (cyan/trắng lạnh) → cạnh 3 (25–31, G,H, đắt nhất) **Megacorp HQ** (đen vàng). Tên 32 ô: `MAPS[].tileNames` trong `public/rules.js`.
