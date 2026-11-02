@@ -192,6 +192,20 @@ for (const [i, entry] of (Array.isArray(MAPS) ? MAPS : []).entries()) {
   if (/path\.resolve\(`\.qa-cdp-profile-/.test(capture)) errors.push('Script review map không được tạo profile QA lẻ trong workspace.');
 }
 {
+  const tokenMotionPath = path.join(PUBLIC, 'js/render-common/token-motion.js');
+  if (!isFile(tokenMotionPath)) errors.push('Thiếu nguồn chuẩn chuyển động quân token-motion.js.');
+  else {
+    const tokenMotion = readFileSync(tokenMotionPath, 'utf8');
+    for (const name of ['tokenStepDuration', 'tokenFollowAlpha', 'tokenHopPose', 'animateTokenStep']) if (!tokenMotion.includes(`function ${name}`)) errors.push(`token-motion.js thiếu ${name}.`);
+    const map1 = readFileSync(path.join(PUBLIC, DEFAULT_RENDERER), 'utf8');
+    const board2d = readFileSync(path.join(PUBLIC, BOARD2D), 'utf8');
+    for (const [name, source] of [['Map 1', map1], ['khung 2D', board2d]]) {
+      if (!/token-motion\.js/.test(source) || !/animateTokenStep/.test(source) || !/tokenStepDuration/.test(source) || !/tokenFollowAlpha/.test(source)) errors.push(`${name} phải dùng đầy đủ nguồn chuyển động quân chung.`);
+    }
+    if (/await sleep\(dur\)/.test(board2d) || /o\.x \+= \(o\.tx - o\.x\) \* 0\.25/.test(board2d)) errors.push('Khung 2D không được kết thúc bước bằng timer hoặc follow cố định theo frame.');
+  }
+}
+{
   const dicePath = path.join(PUBLIC, 'js', 'render-common', 'dice-roll.js');
   if (!isFile(dicePath)) errors.push('Thiếu quỹ đạo xúc xắc dùng chung public/js/render-common/dice-roll.js.');
   else {

@@ -51,7 +51,7 @@ export default async function createRenderer(ctx) → Board
 |---|---|---|
 | ★ `reset(view)` | ván mới, vào giữa ván, đổi người | Dựng lại toàn bộ theo `view`, **không** hoạt ảnh |
 | ★ `sync(view) → Promise<ms>` | sau mỗi hành động | Cập nhật nhà, chủ đất, lễ hội, mất điện, Championships; trả về số ms hoạt ảnh xây nhà còn chạy (để UI hoãn đếm tiền) |
-| ★ `moveToken(pid, path, opts) → Promise` | quân đi | `path`: mảng ô (0–31). `opts.jump`: đặt thẳng, không nhảy. `opts.onStep(tile)` gọi khi chạm từng ô. `opts.view` (tuỳ chọn): `view` mới nhất, để xếp chỗ đứng với các quân khác trên ô đích |
+| ★ `moveToken(pid, path, opts) → Promise` | quân đi | `path`: mảng ô (0–31). `opts.jump`: đặt thẳng, không nhảy. `opts.onStep(tile)` gọi khi chạm từng ô. `opts.view` (tuỳ chọn): `view` mới nhất, để xếp chỗ đứng với các quân khác trên ô đích. Mọi renderer phải dùng `render-common/token-motion.js`; Promise chỉ resolve sau frame cuối thực sự. |
 | ★ `rollDice(a, b) → Promise` | đổ xúc xắc | Dùng `public/js/render-common/dice-roll.js`; hai viên nảy/lăn tại chỗ theo chuẩn Map 2 và resolve khi cả hai dừng |
 | ★ `tileScreen(i, lift = 0) → {x, y}` | đặt overlay DOM | Toạ độ CSS px trong canvas của tâm ô `i`; `lift` (đơn vị thế giới, tuỳ chọn) nâng điểm lên trên mặt ô — dùng cho nhãn giá khi bán đất. Map 2D được bỏ qua `lift` |
 | ★ `pick(x, y) → i \| null` | chạm / click | Ô dưới điểm CSS px |
@@ -80,4 +80,7 @@ không phải hướng dẫn tuỳ chọn.
 - Không chặn luồng chính quá 50 ms khi tải; tải asset trong `createRenderer`, trước khi trả `Board`.
 - Mức `low`: ≤ 200 draw call (3D) hoặc ≤ 4 ms/khung (2D) trên bàn trống.
 - Asset chỉ Kenney CC0 hoặc tự dựng bằng code. Không dùng asset gốc Business Tour.
+- Quỹ đạo, thời lượng bước nhảy và hệ số căn nhiều quân theo delta-time lấy duy nhất từ
+  `public/js/render-common/token-motion.js`. Renderer chỉ đổi ô sang tọa độ và áp pose; không tự đặt timer,
+  duration hoặc tỷ lệ follow theo frame.
 - Thay đổi contract = PR riêng, cập nhật file này trước rồi mới sửa code.

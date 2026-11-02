@@ -9,6 +9,7 @@ import { colosseum, worldTour, lostIsland, startGate, chanceBox, beachHouse, fes
 import { centerWorld, preloadWorldAssets } from '../../js/world.js';
 import { PROPERTY_THUMBNAIL_VERSION } from '../../thumbnails/property/version.js';
 import { diceRollDuration, diceRollFrame } from '../../js/render-common/dice-roll.js';
+import { animateTokenStep, tokenFollowAlpha, tokenStepDuration } from '../../js/render-common/token-motion.js';
 import { TOKEN_HEIGHT, PROPERTY_LEVEL_SCALE } from '../../js/render-common/visual-scale.js';
 const HK = { loadKit, building: houseBuilding, colosseum, worldTour, lostIsland, startGate, chanceBox, beachHouse, festivalFlag, festivalPlaque, preloadSpecialAssets, BEACH_LEVELS };
 
@@ -633,16 +634,8 @@ export default async function createRenderer(ctx) {
       const from = t.position.clone(); dispPos[pid] = pos;
       const to = tokenSpot(pid, pos); to.y = TOPY;
       t.rotation.y = FACE_CAM;
-      const dur = REDUCED ? (path.length > 10 ? 90 : 120) : (path.length > 10 ? 120 : 190);
-      const t0 = performance.now();
-      await new Promise((res) => {
-        const step = () => {
-          const k = Math.min(1, (performance.now() - t0) / dur);
-          t.position.lerpVectors(from, to, k); t.position.y = TOPY + Math.sin(k * Math.PI) * 0.6;
-          if (k < 1) requestAnimationFrame(step); else res();
-        };
-        step();
-      });
+      const dur = tokenStepDuration(path.length, REDUCED);
+      await animateTokenStep({ from, to, duration: dur, onFrame: (pose) => t.position.set(pose.x, TOPY + pose.y, pose.z) });
       onTile && onTile(pos);
     }
     t.userData.to = tokenSpot(pid, path[path.length - 1]);
@@ -835,7 +828,7 @@ export default async function createRenderer(ctx) {
     lastRenderedAt = lastRenderedAt ? lastRenderedAt + frameInterval * Math.max(1, Math.floor((now - lastRenderedAt) / frameInterval)) : now;
     stepAnims(now);
     if (!REDUCED && GRAPHICS[graphicsLevel].worldMotion) { specials.forEach((o) => o.userData.update && o.userData.update(clockT, dt)); bonusFlags.forEach((o, k) => o.userData.update(clockT + k * 0.7));  if (tourTex) tourTex.offset.set((-clockT * 0.035) % 1, (-clockT * 0.035) % 1); }
-    const followAlpha = 1 - Math.pow(1 - 0.25, dt * 60);
+    const followAlpha = tokenFollowAlpha(dt);
     for (const p of S ? S.players : []) { const t = tokens[p.id]; if (t && t.userData.to && dispPos[p.id] === undefined) { followTarget.set(t.userData.to.x, TOPY, t.userData.to.z); t.position.lerp(followTarget, followAlpha); } }
     Object.values(tokens).forEach((t) => { const g = t.userData.controlGlow; if (g && g.visible) { const pulse = 1.075 + Math.sin(clockT * 4.5) * 0.012; g.scale.setScalar(pulse); t.userData.glowMaterial.opacity = 0.58 + Math.sin(clockT * 4.5) * 0.12; } });
     placeOverlays(); stepConfetti(now, dt);

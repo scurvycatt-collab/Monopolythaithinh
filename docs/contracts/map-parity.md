@@ -37,6 +37,9 @@ có thay đổi bản đồ.
   cùng danh sách qua `Game.petsForMap(mapId)`, không trộn nhân vật từ map khác.
 - Mũi tên theo màu người chơi; quân của người đang điều khiển có viền sáng.
 - Nhiều quân trên cùng ô phải được tách vị trí, không che hoàn toàn nhau.
+- Map 1 và mọi khung renderer khác dùng chung `render-common/token-motion.js` cho thời lượng, quỹ đạo
+  bước nhảy, hoàn tất theo frame thực tế và căn vị trí theo delta-time. Không dùng `sleep(duration)` hoặc
+  tỷ lệ follow cố định mỗi frame vì sẽ giật khi FPS thay đổi.
 - Mỗi map giữ phong cách và asset hiển thị độc lập. Map chỉ được dùng chung engine/contract trong
   `public/js/render-common/` và luật gameplay; không import skin, nhân vật hay công trình từ thư mục map khác.
 

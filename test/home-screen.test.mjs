@@ -7,6 +7,7 @@ const appOnly = fs.readFileSync(new URL('../public/js/app.js', import.meta.url),
 // T06: phần vẽ 3D chuyển sang renderer của map-1; các kiểm tra mã nguồn bên dưới đọc cả hai file.
 const mapRenderer = fs.readFileSync(new URL('../public/maps/map-1/renderer.js', import.meta.url), 'utf8');
 const visualScale = fs.readFileSync(new URL('../public/js/render-common/visual-scale.js', import.meta.url), 'utf8');
+const tokenMotion = fs.readFileSync(new URL('../public/js/render-common/token-motion.js', import.meta.url), 'utf8');
 const app = appOnly + '\n' + mapRenderer;
 const houses = fs.readFileSync(new URL('../public/js/houses.js', import.meta.url), 'utf8');
 const specials = fs.readFileSync(new URL('../public/js/specials.js', import.meta.url), 'utf8');
@@ -61,7 +62,8 @@ assert.match(app, /MODE === 'net' \? 'Đến lượt bạn!' : `Đến lượt \
 assert.match(app, /const MONEY_DEBIT_MS = REDUCED \? 400 : 700;/, 'debit animation must remain visible in reduced-motion mode');
 assert.match(app, /const duration = to < from \? MONEY_DEBIT_MS : moneyMs\(\);/, 'only money deductions should use the faster animation');
 assert.doesNotMatch(app, /REDUCED \? 1 :/, 'reduced-motion mode must not collapse animations to one millisecond');
-assert.match(app, /const followAlpha = 1 - Math\.pow\(1 - 0\.25, dt \* 60\)/, 'token following must be refresh-rate independent');
+assert.match(mapRenderer, /tokenFollowAlpha\(dt\)/, 'Map 1 must consume shared refresh-rate-independent token following');
+assert.match(tokenMotion, /1 - Math\.pow\(1 - strength, dt \* 60\)/, 'shared token following must be refresh-rate independent');
 assert.match(app, /Math\.pow\(0\.985, dt \* 60\)/, 'confetti drag must be refresh-rate independent');
 assert.match(houses, /orange = hsl\.s > 0\.35/);
 assert.match(houses, /green \|\| orange/, 'orange source roofs must follow the player ownership color');
