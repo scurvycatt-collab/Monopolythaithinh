@@ -4,7 +4,7 @@
 // Phong cách: anime trưởng thành, cel-shading 3 lớp tự động (bóng cứng dưới-phải, rim light màu chủ mép phải,
 // highlight mép trên-trái), viền tối mảnh. Quân cờ có viền tối + quầng màu chủ để tách khỏi nền (kể cả cyan của bàn).
 // Mỗi nhân vật -> <id>-avatar.png (512x512, chân dung bán thân, nền tối + quầng màu chủ; PNG vì test maps yêu cầu)
-//              (quân cờ <id>-token.svg: xem build-tokens.mjs — bản vẽ phẳng cũ chỉ còn qua cờ --svg-tokens, ra *-token-flat.svg)
+//              (quân cờ <id>-token.svg: dựng bằng Blender, xem blender/README.md — bản vẽ phẳng cũ chỉ còn qua cờ --svg-tokens, ra *-token-flat.svg)
 import fs from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
@@ -547,7 +547,7 @@ const avatar = (p) => svg(p.c, DRAW[p.id][0](p.c),
   `<radialGradient id="ag" cx="50%" cy="40%" r="65%"><stop offset="0" stop-color="${p.c}" stop-opacity=".55"/><stop offset=".55" stop-color="#141a33"/><stop offset="1" stop-color="#0b0f1c"/></radialGradient><clipPath id="av"><rect x="3" y="3" width="214" height="214" rx="32"/></clipPath>`);
 
 for (const p of CAST) {
-  // T25 v6: quân cờ (<id>-token.svg) giờ do build-tokens.mjs dựng 3D cơ khí; file này chỉ sinh avatar.
+  // T30: quân cờ (<id>-token.svg) dựng bằng Blender toon (blender/toon.py); file này chỉ sinh avatar.
   if (process.argv.includes('--svg-tokens')) fs.writeFileSync(path.join(OUT, `${p.id}-token-flat.svg`), token(p));
   await sharp(Buffer.from(avatar(p)), { density: 384 }).resize(512, 512).png({ compressionLevel: 9 }).toFile(path.join(OUT, `${p.id}-avatar.png`));
 }
