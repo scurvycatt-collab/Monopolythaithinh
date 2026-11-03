@@ -122,6 +122,16 @@ export async function createBoard2D(ctx, skin) {
   const ownerOf = (i) => { const pr = S && S.props && S.props[i]; return pr ? (S.players.find((p) => p.id === pr.owner) || null) : null; };
   const colorOf = (p) => { if (!p) return '#9aa4b1'; const def = PETS.find((x) => x.id === p.pet); return def ? def.c : p.color || '#9aa4b1'; };
   const contrastOn = (hex) => { const [r, g, b] = rgb(hex); return (r * 0.299 + g * 0.587 + b * 0.114) / 255 > 0.62 ? '#17212b' : '#ffffff'; };
+  const splitLabel = (value, maxLines = 1) => {
+    const words = String(value).trim().split(/\s+/);
+    if (maxLines < 2 || words.length < 2) return [words.join(' ')];
+    let best = 1, delta = Infinity;
+    for (let cut = 1; cut < words.length; cut++) {
+      const next = Math.abs(words.slice(0, cut).join(' ').length - words.slice(cut).join(' ').length);
+      if (next < delta) { best = cut; delta = next; }
+    }
+    return [words.slice(0, best).join(' '), words.slice(best).join(' ')];
+  };
   function tileTex(i) {
     const t = TILES[i], f = frame(i), own = ownerOf(i), out = own && G.outaged(S, i), slot = SL[slotOf(t)] || {};
     if (f.corner) {
@@ -140,7 +150,16 @@ export async function createBoard2D(ctx, skin) {
     if (t.price) {
       const nameInk = cityBandH ? contrastOn(band) : pal.labelText || '#fff';
       const nameShadow = cityBandH ? (nameInk === '#ffffff' ? 'rgba(0,0,0,.38)' : 'rgba(255,255,255,.48)') : pal.labelShadow;
-      fitText(c2, displayName(i).toUpperCase(), cw / 2, gH - 26, 34, cw - 12, 0, nameInk, nameShadow);
+      const nameStyle = skin.cityLabelStyle || {};
+      const nameY = cityBandH ? gH - cityBandH / 2 : gH - 26;
+      const nameOutline = nameStyle.outline ? (nameInk === '#ffffff' ? 'rgba(2,7,17,.96)' : 'rgba(255,255,255,.92)') : null;
+      const effectiveNameShadow = nameStyle.shadow === false ? null : nameShadow;
+      const nameLines = splitLabel(displayName(i).toUpperCase(), nameStyle.maxLines || 1);
+      const lineGap = (nameStyle.size || 34) * (nameStyle.lineGap || 0.58);
+      nameLines.forEach((line, lineIndex) => {
+        const lineY = nameY + (lineIndex - (nameLines.length - 1) / 2) * lineGap;
+        fitText(c2, line, cw / 2, lineY, nameStyle.size || 34, cw - (nameStyle.padding || 6) * 2, 0, nameInk, effectiveNameShadow, nameOutline, nameStyle.outlineWidth || 0.16, nameStyle.font || FONT, nameStyle.weight || 900);
+      });
       if (out) fitText(c2, `${outRounds(i)} ⚡`, cw / 2, sy, 60, cw - 16, 0, '#ffd23a', 'rgba(0,0,0,.45)');
       else if (own) fitText(c2, shortK(G.rentOf(S, i)), cw / 2, sy, 58, cw - 16, 0, pal.rentText || '#ffffff', pal.rentShadow || 'rgba(0,0,0,.35)');
     } else fitText(c2, LB[t.type] || t.type.toUpperCase(), cw / 2, sy, 40, cw - 16, 0, ink, inkSh);

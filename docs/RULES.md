@@ -1,4 +1,4 @@
-# Luật chơi Thái Thịnh Monopoly — v1.8.2
+# Luật chơi Thái Thịnh Monopoly — v1.8.3
 
 > Tự sinh từ `public/rules.js` bằng `npm run rules:doc`. Không sửa tay file này: sửa `rules.js`, chạy `npm run verify`.
 
@@ -116,7 +116,7 @@ stateDiagram-v2
 |---|---|---|
 | `roll` | Chờ đổ xúc xắc | **roll**: Đổ 2 xúc xắc, đi tổng số ô → giải quyết ô dừng. Đổ đôi: được đổ thêm sau khi xong ô (đôi lần 3 → Lost Island). |
 | `island` | Đang kẹt ở Lost Island | **roll**: Ra đôi → thoát và đi luôn; không ra đôi → mất 1 lượt (hết 3 lượt thì tự rời đảo và đi).<br>**payIsland**: Trả phí rời đảo → về bước roll.<br>**useCard**: Dùng thẻ Thoát đảo → về bước roll. |
-| `tour` | Lượt sau khi dừng ở World Tour | **tour**: Trả vé, bay tới thành phố chưa có chủ hoặc thành phố của mình.<br>**skip**: Không bay → về bước roll. |
+| `tour` | Lượt sau khi dừng ở World Tour | **tour**: Trả vé, bay tới thành phố hoặc bãi biển chưa có chủ hoặc của mình.<br>**skip**: Không bay → về bước roll. |
 | `flight` | Vừa rút thẻ Vé máy bay | **flight**: Bấm OK trên thẻ → đi tới World Tour → giải quyết ô dừng. |
 | `hostFestival` | Vừa rút thẻ Tổ chức lễ hội | **hostFestival**: Bấm OK trên thẻ → đi tới Championships → giải quyết ô dừng. |
 | `buy` | Dừng ở ô chưa có chủ, đủ tiền mua đất | **buy**: Mua đất + xây tới cấp chọn (≤ giới hạn vòng) → kiểm tra thắng → kết thúc ô.<br>**skip**: Không mua → kết thúc ô. |
@@ -202,7 +202,9 @@ stateDiagram-v2
 | S4 | Đang kẹt, dùng thẻ Thoát đảo | Rời đảo miễn phí và hiện thông báo |
 | S5 | Dừng ở World Tour | Lượt sau được bay |
 | S6 | Bay từ World Tour tới Madrid | Trả vé 50, qua Start +300, tính 1 vòng |
-| S7 | Còn thành phố trống nhưng chọn ô của người khác | Bị từ chối |
+| S6B | Bay từ World Tour tới bãi biển chưa có chủ | Trả vé 50 và được mua bãi biển |
+| S7 | Chọn thành phố hoặc bãi biển của người khác | Bị từ chối |
+| S7B | Chọn bãi biển của người khác | Bị từ chối |
 | S8 | Dừng ở Tax, tổng tài sản 2000 | Nộp 10% = 200 |
 | S9 | Dừng ở Championships, chuyển giải tới đất của mình | Trả 50K, hệ số lên ×2 |
 

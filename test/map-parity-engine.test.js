@@ -54,6 +54,8 @@ for (const map of G.MAPS) {
     s.props[1] = { owner: p.id, level: 0 };
     p.pos = G.RULES.CONFIG.TOUR_IDX; p.tourPending = true; p.money = 2000; s.step = { kind: 'tour' };
     assert.ok(G.tourTargets(s, p).includes(1), `${map.id}: World Tour phải cho chọn đất của chính mình`);
+    const beach = G.RULES.TILES.find((tile) => tile.type === 'resort').i;
+    assert.ok(G.tourTargets(s, p).includes(beach), `${map.id}: World Tour phải cho chọn bãi biển chưa có chủ`);
     G.act(s, p.id, 'tour', { tile: 1 });
     assert.equal(p.pos, 1, `${map.id}: World Tour phải bay được vào đất của chính mình`);
   }

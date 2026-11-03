@@ -10,7 +10,7 @@
    ============================================================================ */
 (function (root) {
   'use strict';
-  const VERSION = '1.8.2';
+  const VERSION = '1.8.3';
 
   /* ===================== LỚP 1 — THÔNG SỐ ===================== */
   const CONFIG = {
@@ -46,7 +46,7 @@
      Chuỗi trong TILE_INFO dùng placeholder {name}; app.js chỉ thay dữ liệu động,
      không tự giữ thêm một bản mô tả luật riêng. */
   const RULE_TEXT = {
-    TOUR_DESTINATION: 'một thành phố chưa có chủ hoặc thành phố của mình',
+    TOUR_DESTINATION: 'một thành phố hoặc bãi biển chưa có chủ hoặc của mình',
   };
 
   const TILE_INFO = {
@@ -189,7 +189,7 @@
   const STATES = {
     roll: { desc: 'Chờ đổ xúc xắc', actions: { roll: 'Đổ 2 xúc xắc, đi tổng số ô → giải quyết ô dừng. Đổ đôi: được đổ thêm sau khi xong ô (đôi lần 3 → Lost Island).' } },
     island: { desc: 'Đang kẹt ở Lost Island', actions: { roll: 'Ra đôi → thoát và đi luôn; không ra đôi → mất 1 lượt (hết 3 lượt thì tự rời đảo và đi).', payIsland: 'Trả phí rời đảo → về bước roll.', useCard: 'Dùng thẻ Thoát đảo → về bước roll.' } },
-    tour: { desc: 'Lượt sau khi dừng ở World Tour', actions: { tour: 'Trả vé, bay tới thành phố chưa có chủ hoặc thành phố của mình.', skip: 'Không bay → về bước roll.' } },
+    tour: { desc: 'Lượt sau khi dừng ở World Tour', actions: { tour: 'Trả vé, bay tới thành phố hoặc bãi biển chưa có chủ hoặc của mình.', skip: 'Không bay → về bước roll.' } },
     flight: { desc: 'Vừa rút thẻ Vé máy bay', actions: { flight: 'Bấm OK trên thẻ → đi tới World Tour → giải quyết ô dừng.' } },
     hostFestival: { desc: 'Vừa rút thẻ Tổ chức lễ hội', actions: { hostFestival: 'Bấm OK trên thẻ → đi tới Championships → giải quyết ô dừng.' } },
     buy: { desc: 'Dừng ở ô chưa có chủ, đủ tiền mua đất', actions: { buy: 'Mua đất + xây tới cấp chọn (≤ giới hạn vòng) → kiểm tra thắng → kết thúc ô.', skip: 'Không mua → kết thúc ô.' } },
@@ -259,7 +259,9 @@
     D('Ô đặc biệt', 'S4', 'Đang kẹt, dùng thẻ Thoát đảo', 'Rời đảo miễn phí và hiện thông báo', { pos: 8, island: 3, escapeCards: 1, step: 'island' }, [['useCard']], { me: 2000, island: 0, escapeCards: 0, notice: 'escapeUsed', step: 'roll' }),
     D('Ô đặc biệt', 'S5', 'Dừng ở World Tour', 'Lượt sau được bay', { pos: 21, dice: [1, 2] }, [['roll']], { pos: 24, tourPending: true, step: 'next' }),
     D('Ô đặc biệt', 'S6', 'Bay từ World Tour tới Madrid', 'Trả vé 50, qua Start +300, tính 1 vòng', { pos: 24, tourPending: true, step: 'tour' }, [['tour', { tile: 3 }]], { pos: 3, me: 2250, laps: 1, step: 'buy' }),
-    D('Ô đặc biệt', 'S7', 'Còn thành phố trống nhưng chọn ô của người khác', 'Bị từ chối', { pos: 24, tourPending: true, step: 'tour', props: { 3: ['op', 1] } }, [['tour', { tile: 3 }]], { error: true }),
+    D('Ô đặc biệt', 'S6B', 'Bay từ World Tour tới bãi biển chưa có chủ', 'Trả vé 50 và được mua bãi biển', { pos: 24, tourPending: true, step: 'tour' }, [['tour', { tile: 25 }]], { pos: 25, me: 1950, step: 'buy' }),
+    D('Ô đặc biệt', 'S7', 'Chọn thành phố hoặc bãi biển của người khác', 'Bị từ chối', { pos: 24, tourPending: true, step: 'tour', props: { 3: ['op', 1] } }, [['tour', { tile: 3 }]], { error: true }),
+    D('Ô đặc biệt', 'S7B', 'Chọn bãi biển của người khác', 'Bị từ chối', { pos: 24, tourPending: true, step: 'tour', props: { 25: ['op', 0] } }, [['tour', { tile: 25 }]], { error: true }),
     D('Ô đặc biệt', 'S8', 'Dừng ở Tax, tổng tài sản 2000', 'Nộp 10% = 200', { pos: 27, dice: [1, 2] }, [['roll']], { pos: 30, me: 1800 }),
     D('Ô đặc biệt', 'S9', 'Dừng ở Championships, chuyển giải tới đất của mình', 'Trả 50K, hệ số lên ×2', { pos: 13, dice: [1, 2], props: { 3: ['me', 1] } }, [['roll'], ['festival', { tile: 3 }]], { me: 1950, festival: 3, festLevel: 1 }),
     // ---- thẻ Chance

@@ -555,6 +555,7 @@ export default defineSkin({
   id: 'neon',
   packs: ['kenney-iso-buildings'],
   cityLabelBand: 0.18,
+  cityLabelStyle: { size: 50, padding: 11, outline: false, shadow: false, maxLines: 1, font: 'Fredoka', weight: 700 },
   palette: {
     // A rỉ cam · B lục tối (Back Alley) · C magenta · D tím (Nightlife) · E cyan · F xanh điện (Cyber Financial) · G vàng đậm · H vàng sáng (Megacorp)
     groups: { A: '#e8742a', B: '#2fb87a', C: '#ff3fb4', D: '#9b6bff', E: '#27e6ff', F: '#3d7bff', G: '#d9a521', H: '#ffe14d' },

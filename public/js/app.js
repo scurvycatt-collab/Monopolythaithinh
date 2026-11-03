@@ -456,7 +456,7 @@ function renderHub() {
     const ok = p.money >= CFG.TOUR_FEE;
     const targets = G.tourTargets(S, p);
     setPick('tour', new Set(ok ? targets : []), (i) => { clearPick(); act('tour', { tile: i }); },
-      ok ? `${esc(p.name)}: chọn thành phố chưa có chủ hoặc thành phố của bạn (vé ${shortK(CFG.TOUR_FEE)})` : `${esc(p.name)} không đủ ${shortK(CFG.TOUR_FEE)} mua vé`, 'Không bay');
+      ok ? `${esc(p.name)}: chọn thành phố hoặc bãi biển chưa có chủ hoặc của bạn (vé ${shortK(CFG.TOUR_FEE)})` : `${esc(p.name)} không đủ ${shortK(CFG.TOUR_FEE)} mua vé`, 'Không bay');
   }
   if (st.kind === 'festival') {
     const next = CFG.FEST_MULT[Math.min(CFG.FEST_MULT.length - 1, (S.festLevel || 0) + 1)];

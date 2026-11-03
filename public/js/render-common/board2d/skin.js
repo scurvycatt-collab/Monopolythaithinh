@@ -39,6 +39,18 @@ export function defineSkin(skin) {
   Object.keys(pal.groups).forEach((g) => { if (!GROUP_KEYS.includes(g)) err('palette.groups', `có khoá lạ "${g}" (chỉ A…H như rules.GROUPS).`); });
   for (const [k, v] of Object.entries(pal)) if (k !== 'groups' && !HEX.test(v)) err(`palette.${k}`, 'phải là màu "#rrggbb".');
   if (skin.cityLabelBand !== undefined && (!Number.isFinite(skin.cityLabelBand) || skin.cityLabelBand <= 0 || skin.cityLabelBand > 0.3)) err('cityLabelBand', 'phải là tỷ lệ > 0 và ≤ 0.3 chiều sâu ô.');
+  if (skin.cityLabelStyle !== undefined) {
+    if (!skin.cityLabelStyle || typeof skin.cityLabelStyle !== 'object' || Array.isArray(skin.cityLabelStyle)) err('cityLabelStyle', 'phải là object.');
+    if (!Number.isFinite(skin.cityLabelStyle.size) || skin.cityLabelStyle.size < 10 || skin.cityLabelStyle.size > 80) err('cityLabelStyle.size', 'phải nằm trong khoảng 10–80.');
+    if (!Number.isFinite(skin.cityLabelStyle.padding) || skin.cityLabelStyle.padding < 0 || skin.cityLabelStyle.padding > 40) err('cityLabelStyle.padding', 'phải nằm trong khoảng 0–40.');
+    if (typeof skin.cityLabelStyle.outline !== 'boolean') err('cityLabelStyle.outline', 'phải là boolean.');
+    if (skin.cityLabelStyle.shadow !== undefined && typeof skin.cityLabelStyle.shadow !== 'boolean') err('cityLabelStyle.shadow', 'phải là boolean.');
+    if (skin.cityLabelStyle.outlineWidth !== undefined && (!Number.isFinite(skin.cityLabelStyle.outlineWidth) || skin.cityLabelStyle.outlineWidth < 0.04 || skin.cityLabelStyle.outlineWidth > 0.25)) err('cityLabelStyle.outlineWidth', 'phải nằm trong khoảng 0.04–0.25.');
+    if (skin.cityLabelStyle.font !== undefined && (typeof skin.cityLabelStyle.font !== 'string' || !skin.cityLabelStyle.font.trim())) err('cityLabelStyle.font', 'phải là tên font không rỗng.');
+    if (skin.cityLabelStyle.weight !== undefined && (!Number.isFinite(skin.cityLabelStyle.weight) || skin.cityLabelStyle.weight < 400 || skin.cityLabelStyle.weight > 900)) err('cityLabelStyle.weight', 'phải nằm trong khoảng 400–900.');
+    if (skin.cityLabelStyle.maxLines !== undefined && ![1, 2].includes(skin.cityLabelStyle.maxLines)) err('cityLabelStyle.maxLines', 'chỉ nhận 1 hoặc 2.');
+    if (skin.cityLabelStyle.lineGap !== undefined && (!Number.isFinite(skin.cityLabelStyle.lineGap) || skin.cityLabelStyle.lineGap < 0.4 || skin.cityLabelStyle.lineGap > 1)) err('cityLabelStyle.lineGap', 'phải nằm trong khoảng 0.4–1.');
+  }
 
   if (skin.zones !== null && skin.zones !== undefined) {
     if (!Array.isArray(skin.zones) || skin.zones.length !== 4) err('zones', 'phải là mảng đúng 4 phần tử (cạnh 0…3) hoặc null.');

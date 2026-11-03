@@ -77,7 +77,7 @@
   }
   function tourTargets(s, p) {
     return TILES
-      .filter((t) => t.type === 'city' && (!s.props[t.i] || s.props[t.i].owner === p.id))
+      .filter((t) => isBuyable(t) && (!s.props[t.i] || s.props[t.i].owner === p.id))
       .map((t) => t.i);
   }
   function festivalTargets(s, p) {
@@ -655,7 +655,7 @@
       case 'tour': {
         need('tour');
         const i = tileArg();
-        if (!tourTargets(s, p).includes(i)) fail('Chỉ được bay tới thành phố chưa có chủ hoặc thành phố của bạn');
+        if (!tourTargets(s, p).includes(i)) fail('Chỉ được bay tới thành phố hoặc bãi biển chưa có chủ hoặc của bạn');
         if (p.money < CFG.TOUR_FEE) fail('Không đủ tiền mua vé');
         p.tourPending = false;
         transfer(p, null, CFG.TOUR_FEE);

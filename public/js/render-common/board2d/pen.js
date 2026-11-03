@@ -208,7 +208,12 @@ export function bake(fn, win, k) {
   return { canvas: out, ax: ax - x0, ay: ay - y0, k };
 }
 // chữ vừa khung trên texture phẳng (tên ô, nhãn góc)
-export function fitText(c, str, x, y, size, maxW, rot = 0, color = '#fff', shadow = 'rgba(52,72,84,.55)') {
-  c.save(); c.translate(x, y); c.rotate(rot); let f = size; do { c.font = `900 ${f}px ${FONT}`; f -= 2; } while (c.measureText(str).width > maxW && f > 10);
-  c.textAlign = 'center'; c.textBaseline = 'middle'; if (shadow) { c.fillStyle = shadow; c.fillText(str, 0, Math.max(2, size * 0.07)); } c.fillStyle = color; c.fillText(str, 0, 0); c.restore();
+export function fitText(c, str, x, y, size, maxW, rot = 0, color = '#fff', shadow = 'rgba(52,72,84,.55)', outline = null, outlineWidth = 0.16, fontFamily = FONT, fontWeight = 900) {
+  c.save(); c.translate(x, y); c.rotate(rot); let f = size; do { c.font = `${fontWeight} ${f}px ${fontFamily}`; f -= 2; } while (c.measureText(str).width > maxW && f > 10);
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  if (shadow) { c.fillStyle = shadow; c.fillText(str, 0, Math.max(2, size * 0.07)); }
+  if (outline) {
+    c.lineJoin = 'round'; c.miterLimit = 2; c.lineWidth = Math.max(2, (f + 2) * outlineWidth); c.strokeStyle = outline; c.strokeText(str, 0, 0);
+  }
+  c.fillStyle = color; c.fillText(str, 0, 0); c.restore();
 }
